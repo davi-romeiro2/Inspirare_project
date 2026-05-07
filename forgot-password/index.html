@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspirare - Recuperar Senha</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
+
+    <div class="container">
+        <div class="forgot-card">
+            <div class="forgot-header">
+                <h1>Inspirare</h1>
+                <p id="header-desc">Recupere o acesso à sua conta</p>
+            </div>
+
+            <!-- Step 1: Identify User -->
+            <div id="step-1" class="forgot-step active">
+                <div class="input-group">
+                    <label for="identifier">E-mail ou Nome de Usuário</label>
+                    <input type="text" id="identifier" placeholder="ex: usuario@email.com" required>
+                </div>
+                <button type="button" id="send-code-btn" class="btn-primary">Enviar código de validação</button>
+            </div>
+
+            <!-- Step 2: Verification Code -->
+            <div id="step-2" class="forgot-step">
+                <p style="font-size: 0.9rem; margin-bottom: 10px;">Insira o código de 6 dígitos enviado para seu e-mail</p>
+                <div class="code-grid">
+                    <input type="text" class="code-input" maxlength="1">
+                    <input type="text" class="code-input" maxlength="1">
+                    <input type="text" class="code-input" maxlength="1">
+                    <input type="text" class="code-input" maxlength="1">
+                    <input type="text" class="code-input" maxlength="1">
+                    <input type="text" class="code-input" maxlength="1">
+                </div>
+                <button type="button" id="verify-code-btn" class="btn-primary">Verificar Código</button>
+            </div>
+
+            <!-- Step 3: New Password -->
+            <div id="step-3" class="forgot-step">
+                <div class="input-group">
+                    <label for="new-password">Nova Senha</label>
+                    <ul class="password-requirements">
+                        <li class="req-item" id="req-upper">Uma letra maiúscula</li>
+                        <li class="req-item" id="req-special">Um caractere especial (@#$%&*)</li>
+                        <li class="req-item" id="req-number">Um número</li>
+                        <li class="req-item" id="req-length">No mínimo 8 caracteres</li>
+                    </ul>
+                    <div class="password-wrapper">
+                        <input type="password" id="new-password" placeholder="••••••••" required>
+                        <button type="button" id="toggle-pw" class="toggle-password">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="confirm-password">Confirmar Nova Senha</label>
+                    <input type="password" id="confirm-password" placeholder="••••••••" required>
+                </div>
+                <button type="button" id="reset-password-btn" class="btn-primary">Alterar Senha</button>
+            </div>
+
+            <a href="../login/index.html" class="btn-back">Voltar para o Login</a>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const steps = {
+            1: document.getElementById('step-1'),
+            2: document.getElementById('step-2'),
+            3: document.getElementById('step-3')
+        };
+        const headerDesc = document.getElementById('header-desc');
+
+        function goToStep(stepNum) {
+            Object.values(steps).forEach(step => step.classList.remove('active'));
+            steps[stepNum].classList.add('active');
+
+            if(stepNum === 2) headerDesc.innerText = 'Validação de Identidade';
+            if(stepNum === 3) headerDesc.innerText = 'Crie sua nova senha';
+        }
+
+        // Step 1 -> Step 2
+        document.getElementById('send-code-btn').onclick = () => {
+            const id = document.getElementById('identifier').value;
+            if(id.trim() === '') {
+                alert('Por favor, insira seu e-mail ou usuário.');
+                return;
+            }
+            goToStep(2);
+        };
+
+        // Step 2: Auto-focus next input
+        const codeInputs = document.querySelectorAll('.code-input');
+        codeInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value && index < codeInputs.length - 1) {
+                    codeInputs[index + 1].focus();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    codeInputs[index - 1].focus();
+                }
+            });
+        });
+
+        // Step 2 -> Step 3
+        document.getElementById('verify-code-btn').onclick = () => {
+            const codeInputs = document.querySelectorAll('.code-input');
+            let fullCode = '';
+            codeInputs.forEach(input => fullCode += input.value);
+
+            if(fullCode.length < 6) {
+                alert('Por favor, preencha todos os 6 dígitos do código.');
+                return;
+            }
+
+            // Simulação de validação de código
+            goToStep(3);
+        };
+
+        // Step 3: Reset Password
+        const newPassInput = document.getElementById('new-password');
+        const requirements = {
+            upper: document.getElementById('req-upper'),
+            special: document.getElementById('req-special'),
+            number: document.getElementById('req-number'),
+            length: document.getElementById('req-length'),
+        };
+
+        newPassInput.addEventListener('input', () => {
+            const val = newPassInput.value;
+            updateReq(requirements.upper, /[A-Z]/.test(val));
+            updateReq(requirements.special, /[@#$%&*]/.test(val));
+            updateReq(requirements.number, /[0-9]/.test(val));
+            updateReq(requirements.length, val.length >= 8);
+        });
+
+        function updateReq(el, isValid) {
+            isValid ? el.classList.add('valid') : el.classList.remove('valid');
+        }
+
+        document.getElementById('reset-password-btn').onclick = () => {
+            const pass = newPassInput.value;
+            const confirm = document.getElementById('confirm-password').value;
+
+            const allValid = Object.values(requirements).every(el => el.classList.contains('valid'));
+            if(!allValid) {
+                alert('Por favor, atenda a todos os requisitos da senha.');
+                return;
+            }
+
+            if(!confirm) {
+                alert('Por favor, confirme a senha.');
+                return;
+            }
+            if(pass !== confirm) {
+                alert('As senhas não coincidem.');
+                return;
+            }
+            alert('Senha alterada com sucesso! Agora você pode fazer login.');
+            window.location.href = '../login/index.html';
+        };
+
+        // Password Toggle
+        const togglePw = document.getElementById('toggle-pw');
+        // Use a different variable name to avoid collision with the one declared in Step 3
+        const passInputForToggle = document.getElementById('new-password');
+        togglePw.onclick = () => {
+            const type = passInputForToggle.type === 'password' ? 'text' : 'password';
+            passInputForToggle.type = type;
+            togglePw.innerHTML = `<i data-lucide="${type === 'password' ? 'eye' : 'eye-off'}"></i>`;
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+  <html lang="pt-br">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Inspirare - Editar Perfil</title>
+      <link rel="stylesheet" href="style.css">
+      <link rel="stylesheet" href="profile-style.css">
+      <link rel="stylesheet" href="../menu/style.css">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link
+  href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap"
+   rel="stylesheet">
+      <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body>
+      <!-- Botão Hambúrguer Global -->
+      <button class="menu-toggle" onclick="toggleMenu()" aria-label="Abrir Menu">
+          <i data-lucide="menu"></i>
+      </button>
+
+      <!-- Sidebar Navigation -->
+      <nav class="sidebar" id="main-sidebar">
+          <div class="sidebar-brand">
+              <h1>Inspirare</h1>
+          </div>
+          <ul class="menu-list">
+              <li>
+                  <a href="index.html" class="menu-item">
+                      <i data-lucide="home"></i> <span>Home</span>
+                  </a>
+              </li>
+              <li>
+                  <a href="about.html" class="menu-item">
+                      <i data-lucide="info"></i> <span>Sobre a Inspirare</span>
+                  </a>
+              </li>
+              <li>
+                  <a href="profile.html" class="menu-item active">
+                      <i data-lucide="user"></i> <span>Editar Perfil</span>
+                  </a>
+              </li>
+              <li style="margin-top: auto;">
+                  <a href="../../login/index.html" class="menu-item logout-item">
+                      <i data-lucide="log-out"></i> <span>Logout</span>
+                  </a>
+              </li>
+          </ul>
+      </nav>
+
+      <div class="main-content" id="main-content">
+          <header class="main-header">
+              <h1>Meu Perfil</h1>
+              <div class="user-profile-nav">
+                  <span>Olá, Usuário</span>
+                  <div class="nav-avatar"></div>
+              </div>
+          </header>
+
+          <!-- Custom Modal -->
+          <div id="custom-modal" class="custom-modal-overlay">
+              <div class="custom-modal">
+                  <h3 id="modal-title">Aviso</h3>
+                  <p id="modal-text">Mensagem aqui</p>
+                  <button class="btn-modal" id="modal-btn">Ok</button>
+              </div>
+          </div>
+
+          <div class="profile-container">
+              <div class="profile-card">
+                  <div class="profile-avatar-section">
+                      <div class="avatar-wrapper">
+                          <img src="https://via.placeholder.com/150" id="profile-img" alt="Foto de Perfil">
+                          <label for="file-upload" class="upload-btn">
+                              <i data-lucide="camera"></i>
+                          </label>
+                          <input type="file" id="file-upload" hidden accept="image/*" onchange="previewImage(this)">
+                      </div>
+                      <p>Alterar Foto de Perfil</p>
+                  </div>
+
+                  <form class="profile-form" onsubmit="event.preventDefault(); showModal('Perfil Atualizado', 'Seu perfil foi atualizado com sucesso!');">
+                      <div class="form-grid">
+                          <div class="input-group">
+                              <label>Nome Completo</label>
+                              <input type="text" value="Usuário Inspirare" required>
+                          </div>
+                          <div class="input-group">
+                              <label>E-mail</label>
+                              <input type="email" value="usuario@email.com" required>
+                          </div>
+                          <div class="input-group">
+                              <label>E-mail do Responsável</label>
+                              <input type="email" placeholder="email.responsavel@email.com">
+                          </div>
+                          <div class="input-group">
+                              <label>Telefone</label>
+                              <input type="text" value="(11) 99999-9999" required>
+                          </div>
+                          <div class="input-group">
+                              <label>Telefone do Responsável</label>
+                              <input type="text" placeholder="(00) 00000-0000">
+                          </div>
+                          <div class="input-group">
+                              <label>Idade</label>
+                              <input type="number" value="25" required>
+                          </div>
+                          <div class="input-group">
+                              <label>Gênero</label>
+                              <select class="profile-select">
+                                  <option value="masculino">Masculino</option>
+                                  <option value="feminino">Feminino</option>
+                                  <option value="outro">Outro</option>
+                                  <option value="prefiro-nao-dizer">Prefiro não dizer</option>
+                              </select>
+                          </div>
+                      </div>
+                      <button type="submit" class="btn-save-profile">Salvar Alterações</button>
+                  </form>
+              </div>
+          </div>
+      </div>
+
+      <script src="index.js"></script>
+  </body>
+  </html>
