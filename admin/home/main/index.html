@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Home</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../../user/menu/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body style="display: block;">
+    <!-- Botão Hambúrguer Global -->
+    <button class="menu-toggle" onclick="toggleMenu()" aria-label="Abrir Menu">
+        <i data-lucide="menu"></i>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="main-sidebar">
+        <div class="sidebar-brand">
+            <h1>Inspirare</h1>
+        </div>
+        <ul class="menu-list">
+            <li>
+                <a href="index.html" class="menu-item active">
+                    <i data-lucide="home"></i> <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="menu-item">
+                    <i data-lucide="bell"></i> <span>Notificações</span>
+                </a>
+            </li>
+            <li style="margin-top: auto;">
+                <a href="../../../login/index.html" class="menu-item logout-item">
+                    <i data-lucide="log-out"></i> <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="main-content" id="main-content">
+        <header class="main-header">
+            <h1>Inspirare</h1>
+            <div class="user-profile-nav">
+                <span>Olá, Administrador</span>
+                <div class="nav-avatar"></div>
+            </div>
+        </header>
+
+        <!-- Custom Modal -->
+        <div id="custom-modal" class="custom-modal-overlay">
+            <div class="custom-modal">
+                <h3 id="modal-title">Aviso</h3>
+                <p id="modal-text">Mensagem aqui</p>
+                <button class="btn-modal" id="modal-btn">Ok</button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="view-home" class="dashboard-grid">
+            <div class="menu-card" onclick="alert('Em desenvolvimento: Consultas marcadas')">
+                <div class="icon-box"><i data-lucide="calendar-check"></i></div>
+                <h3>Consultas marcadas</h3>
+            </div>
+            <div class="menu-card" onclick="alert('Em desenvolvimento: Lista de pacientes')">
+                <div class="icon-box"><i data-lucide="users"></i></div>
+                <h3>Lista de pacientes</h3>
+            </div>
+            <div class="menu-card" onclick="alert('Em desenvolvimento: Meu perfil')">
+                <div class="icon-box"><i data-lucide="user"></i></div>
+                <h3>Meu perfil</h3>
+            </div>
+        </div>
+
+        <!-- Placeholder for future flows (can keep same as user but hidden) -->
+        <!-- We'll keep the same flow containers but they are not used; can be omitted for simplicity -->
+        <!-- For brevity, we omit the extensive flow sections; but to keep same structure we can keep them hidden -->
+        <!-- However, to keep the page lightweight, we can remove them. The user didn't require flows. -->
+        <!-- We'll just keep the essential parts: header, sidebar, modal, dashboard. -->
+        <!-- We'll keep the script for toggleMenu and modal functions. -->
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function toggleMenu() {
+            const sidebar = document.getElementById('main-sidebar');
+            const content = document.getElementById('main-content');
+            sidebar.classList.toggle('open');
+            if (window.innerWidth > 768) {
+                content.classList.toggle('with-menu');
+                if (!sidebar.classList.contains('open')) {
+                    content.classList.remove('with-menu');
+                } else {
+                    content.classList.add('with-menu');
+                }
+            }
+            const icon = document.querySelector('.menu-toggle i');
+            if (sidebar.classList.contains('open')) {
+                icon.setAttribute('data-lucide', 'x');
+            } else {
+                icon.setAttribute('data-lucide', 'menu');
+            }
+            lucide.createIcons();
+        }
+
+        function showModal(title, text, callback = null) {
+            const modal = document.getElementById('custom-modal');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-text').innerText = text;
+            modal.style.display = 'flex';
+            document.getElementById('modal-btn').onclick = () => {
+                modal.style.display = 'none';
+                if (callback) callback();
+            };
+        }
+
+        // Optional: keep other functions if needed; but we can leave them out.
+    </script>
+</body>
+
+</html>
