@@ -16,7 +16,19 @@
 </head>
 
 <body style="display: block;">
+    <!-- Botão de Ajuda Circular -->
+    <div class="help-container">
+        <button class="help-btn" onclick="toggleHelpMenu()" aria-label="Ajuda">
+            <i data-lucide="help-circle"></i>
+        </button>
+        <div class="help-menu" id="help-menu">
+            <div class="help-option" onclick="selectHelpOption('marcar')">Como marcar consulta</div>
+            <div class="help-option" onclick="selectHelpOption('cancelar')">Como cancelar consulta</div>
+        </div>
+    </div>
+
     <!-- Botão Hambúrguer Global -->
+
     <button class="menu-toggle" onclick="toggleMenu()" aria-label="Abrir Menu">
         <i data-lucide="menu"></i>
     </button>
@@ -371,6 +383,20 @@
                 item.querySelector('.btn-cancel').style.display = 'none';
                 filterAppts('scheduled');
             });
+        }
+
+        function toggleHelpMenu() {
+            const menu = document.getElementById('help-menu');
+            menu.classList.toggle('active');
+        }
+
+        function selectHelpOption(option) {
+            if (option === 'marcar') {
+                // Tutorial de marcação será implementado aqui
+            } else if (option === 'cancelar') {
+                // Tutorial de cancelamento será implementado aqui
+            }
+            document.getElementById('help-menu').classList.remove('active');
         }
     </script>
 </body>
