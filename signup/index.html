@@ -24,41 +24,11 @@
                 <p id="step-title">Crie sua conta para começar</p>
             </div>
 
-            <!-- Step 1: Age Question -->
-            <div id="age-selection-step" class="age-selection">
-                <p class="question">Quantos anos você tem?</p>
-                <div class="age-options">
-                    <label class="age-option">
-                        <input type="radio" name="user-age-group" value="child">
-                        Criança (5-11 anos)
-                    </label>
-                    <label class="age-option">
-                        <input type="radio" name="user-age-group" value="teen">
-                        Adolescente (12-17 anos)
-                    </label>
-                    <label class="age-option">
-                        <input type="radio" name="user-age-group" value="adult">
-                        Adulto (+18 anos)
-                    </label>
-                </div>
-                <a href="../login/index.html" class="btn-back-login" style="margin-top: 20px; display: block; text-align: center; text-decoration: none; color: var(--accent-color);">Voltar para o Login</a>
-            </div>
-
-            <!-- Step 2: Form -->
-            <form id="signup-form" class="signup-form">
-                <div style="display: flex; justify-content: flex-start; margin-bottom: 10px;">
-                    <button type="button" id="btn-change-age" class="btn-back-login" style="font-weight: 600; color: var(--primary-color);">← Alterar idade</button>
-                </div>
-
-                <!-- Profile Photo -->
-                <div class="profile-upload">
-                    <label>Foto de Perfil (Opcional)</label>
-                    <div class="profile-circle" id="profile-circle">
-                        <span class="plus-icon">+</span>
-                        <img id="preview-img" src="" alt="Preview" style="display: none;">
-                    </div>
-                    <button type="button" id="remove-photo" class="btn-remove-photo" style="display: none;">Retirar foto</button>
-                    <input type="file" id="photo-input" accept="image/*" style="display: none;">
+            <form id="signup-form" class="signup-form" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Full Name -->
+                <div class="input-group">
+                    <label for="fullname">Nome Completo</label>
+                    <input type="text" id="fullname" required placeholder="Nome Completo">
                 </div>
 
                 <!-- Email -->
@@ -67,10 +37,10 @@
                     <input type="email" id="email" required placeholder="seu@email.com">
                 </div>
 
-                <!-- Guardian Email (Children/Teens) -->
-                <div class="input-group guardian-field">
-                    <label for="guardian-email">E-mail do Responsável</label>
-                    <input type="email" id="guardian-email" placeholder="responsavel@email.com">
+                <!-- Phone -->
+                <div class="input-group">
+                    <label for="user-phone">Telefone</label>
+                    <input type="tel" id="user-phone" required placeholder="(00) 00000-0000">
                 </div>
 
                 <!-- Password -->
@@ -90,44 +60,6 @@
                     </div>
                 </div>
 
-                <!-- Full Name -->
-                <div class="input-group">
-                    <label for="fullname">Nome Completo</label>
-                    <input type="text" id="fullname" required placeholder="Nome Completo">
-                </div>
-
-                <!-- Age Selector -->
-                <div class="input-group">
-                    <label>Idade</label>
-                    <div id="age-selector" class="age-selector-grid">
-                        <!-- Buttons will be generated here -->
-                    </div>
-                    <input type="number" id="age-input-adult" style="display: none;" placeholder="Digite sua idade">
-                </div>
-
-                <!-- Gender -->
-                <div class="input-group">
-                    <label for="gender">Gênero</label>
-                    <select id="gender" required>
-                        <option value="" disabled selected>Selecione</option>
-                        <option value="feminino">Feminino</option>
-                        <option value="masculino">Masculino</option>
-                        <option value="outro">Outro</option>
-                        <option value="prefiro-nao-dizer">Prefiro não dizer</option>
-                    </select>
-                </div>
-
-                <!-- Phones -->
-                <div class="input-group guardian-field">
-                    <label for="guardian-phone">Telefone do Responsável</label>
-                    <input type="tel" id="guardian-phone" placeholder="(00) 00000-0000">
-                </div>
-
-                <div class="input-group">
-                    <label for="user-phone">Seu Telefone</label>
-                    <input type="tel" id="user-phone" required placeholder="(00) 00000-0000">
-                </div>
-
                 <div class="btn-group">
                     <button type="submit" class="btn-signup">Finalizar Cadastro</button>
                     <a href="../login/index.html" class="btn-back-login">Voltar para o Login</a>
@@ -138,100 +70,6 @@
 
     <script>
         lucide.createIcons();
-
-        const ageSelectionStep = document.getElementById('age-selection-step');
-        const signupForm = document.getElementById('signup-form');
-        const stepTitle = document.getElementById('step-title');
-        const ageRadios = document.getElementsByName('user-age-group');
-        const ageSelector = document.getElementById('age-selector');
-        const ageInputAdult = document.getElementById('age-input-adult');
-        const guardianFields = document.querySelectorAll('.guardian-field');
-
-        // Handle Age Group Selection
-        ageRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const group = e.target.value;
-                ageSelectionStep.style.display = 'none';
-                signupForm.style.display = 'flex';
-                stepTitle.innerText = 'Preencha seus dados';
-
-                setupAgeRange(group);
-                setupGuardianFields(group);
-            });
-        });
-
-        function setupAgeRange(group) {
-            ageSelector.innerHTML = '';
-            ageInputAdult.style.display = 'none';
-
-            if (group === 'child') {
-                ageSelector.style.display = 'grid';
-                for (let i = 5; i <= 11; i++) createAgeBtn(i);
-            } else if (group === 'teen') {
-                ageSelector.style.display = 'grid';
-                for (let i = 12; i <= 17; i++) createAgeBtn(i);
-            } else {
-                ageSelector.style.display = 'none';
-                ageInputAdult.style.display = 'block';
-            }
-        }
-
-        function createAgeBtn(age) {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'age-btn';
-            btn.innerText = age;
-            btn.onclick = () => {
-                document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-            };
-            ageSelector.appendChild(btn);
-        }
-
-        function setupGuardianFields(group) {
-            guardianFields.forEach(field => {
-                field.style.display = group === 'adult' ? 'none' : 'flex';
-            });
-        }
-
-        // Logic to go back to age selection
-        document.getElementById('btn-change-age').onclick = () => {
-            signupForm.style.display = 'none';
-            ageSelectionStep.style.display = 'flex';
-            stepTitle.innerText = 'Crie sua conta para começar';
-            document.querySelector('input[name="user-age-group"]:checked').checked = false;
-        };
-
-        // Profile Picture Logic
-        const profileCircle = document.getElementById('profile-circle');
-        const photoInput = document.getElementById('photo-input');
-        const previewImg = document.getElementById('preview-img');
-        const removePhoto = document.getElementById('remove-photo');
-        const plusIcon = profileCircle.querySelector('.plus-icon');
-
-        profileCircle.onclick = () => photoInput.click();
-
-        photoInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    previewImg.src = event.target.result;
-                    previewImg.style.display = 'block';
-                    plusIcon.style.display = 'none';
-                    removePhoto.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-
-        removePhoto.onclick = (e) => {
-            e.stopPropagation();
-            photoInput.value = '';
-            previewImg.style.display = 'none';
-            plusIcon.style.display = 'block';
-            removePhoto.style.display = 'none';
-        };
 
         // Password Validation Logic
         const password = document.getElementById('password');
@@ -263,7 +101,7 @@
             lucide.createIcons();
         };
 
-        // Phone Masking (Corrected Version)
+        // Phone Masking
         const phoneInputs = document.querySelectorAll('input[type="tel"]');
         phoneInputs.forEach(input => {
             input.addEventListener('input', (e) => {
@@ -284,7 +122,6 @@
             });
         });
 
-        // Fix for phone mask to avoid symbols
         phoneInputs.forEach(input => {
             input.addEventListener('keypress', (e) => {
                 if (!/[0-9]/.test(e.key)) e.preventDefault();

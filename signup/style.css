@@ -58,46 +58,6 @@ body {
     font-weight: 300;
 }
 
-/* Step 1: Age Selection */
-.age-selection {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    align-items: center;
-}
-
-.age-options {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-    max-width: 300px;
-}
-
-.age-option {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px;
-    border: 1.5px solid var(--neutral-color);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 1rem;
-    text-align: left;
-}
-
-.age-option:hover {
-    border-color: var(--accent-color);
-    background-color: #f0f4f0;
-}
-
-.age-option input {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--primary-color);
-}
-
 /* Form Transition */
 .signup-form {
     display: none;
@@ -140,64 +100,6 @@ body {
     box-shadow: 0 0 0 4px rgba(145, 166, 151, 0.2);
 }
 
-/* Profile Picture */
-.profile-upload {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 10px;
-}
-
-.profile-circle {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 3px dashed var(--accent-color);
-    position: relative;
-    cursor: pointer;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #f0f0f0;
-}
-
-.profile-circle img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.profile-circle .plus-icon {
-    font-size: 2rem;
-    color: var(--accent-color);
-    z-index: 1;
-}
-
-.profile-circle .remove-photo {
-    display: none;
-}
-
-.btn-remove-photo {
-    background: none;
-    border: none;
-    color: var(--error-color);
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'Poppins', sans-serif;
-    margin-bottom: 15px;
-    text-decoration: underline;
-}
-
-.btn-remove-photo:hover {
-    color: #c0392b;
-}
-
 /* Password Requirements */
 .password-requirements {
     list-style: none;
@@ -228,34 +130,6 @@ body {
     content: '○';
 }
 
-/* Age Selection Buttons (Children/Teens) */
-.age-selector-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.age-btn {
-    padding: 8px;
-    border: 1.5px solid var(--neutral-color);
-    border-radius: 8px;
-    background: var(--white);
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    transition: all 0.2s;
-}
-
-.age-btn.selected {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-/* Phone Inputs */
-.phone-input-wrapper {
-    position: relative;
-}
 
 /* Button Layout */
 .btn-group {
