@@ -80,6 +80,15 @@
             </div>
         </div>
 
+        <!-- Tutorial Overlay -->
+        <div id="tutorial-overlay" class="tutorial-overlay">
+            <div id="tutorial-balloon" class="tutorial-balloon">
+                <p id="tutorial-text"></p>
+                <div class="balloon-arrow"></div>
+                <button class="btn-tutorial-next" onclick="closeTutorial()">Parar tutorial</button>
+            </div>
+        </div>
+
         <!-- Main Dashboard -->
         <div id="view-home" class="dashboard-grid">
             <div class="menu-card" onclick="openFlow('schedule')">
@@ -392,11 +401,46 @@
 
         function selectHelpOption(option) {
             if (option === 'marcar') {
-                // Tutorial de marcação será implementado aqui
+                startScheduleTutorial();
             } else if (option === 'cancelar') {
                 // Tutorial de cancelamento será implementado aqui
             }
             document.getElementById('help-menu').classList.remove('active');
+        }
+
+        function startScheduleTutorial() {
+            const overlay = document.getElementById('tutorial-overlay');
+            const balloon = document.getElementById('tutorial-balloon');
+            const text = document.getElementById('tutorial-text');
+            const target = document.querySelector('.menu-card[onclick="openFlow(\'schedule\')"]');
+
+            text.innerText = 'Comece clicando aqui para agendar sua consulta!';
+
+            // Reposiciona a tela para que o botão fique visível e centralizado
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Aguarda o scroll terminar para calcular a posição exata do balão
+            setTimeout(() => {
+                const rect = target.getBoundingClientRect();
+
+                // Forçamos o balão a ter o tamanho correto antes de calcular a posição
+                balloon.style.display = 'block';
+                const balloonWidth = balloon.offsetWidth;
+                balloon.style.display = '';
+
+                balloon.style.top = (rect.bottom + 20) + 'px';
+                balloon.style.left = (rect.left + (rect.width / 2) - (balloonWidth / 2) - 110) + 'px';
+
+                overlay.classList.add('active');
+                target.classList.add('tutorial-highlight');
+                document.body.style.overflow = 'hidden';
+            }, 400);
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorial-overlay').classList.remove('active');
+            document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+            document.body.style.overflow = '';
         }
     </script>
 </body>
