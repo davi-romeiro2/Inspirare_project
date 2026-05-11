@@ -66,57 +66,40 @@
                   <button class="btn-modal" id="modal-btn">Ok</button>
               </div>
           </div>
+          <!-- Password Modal -->
+          <div id="password-modal" class="custom-modal-overlay">
+              <div class="custom-modal">
+                  <h3 id="password-modal-title">Confirmação de senha</h3>
+                  <p id="password-modal-text">Por favor, insira sua senha atual para confirmar a alteração de e-mail:</p>
+                  <input type="password" id="password-input" class="password-input" placeholder="Senha atual" required>
+                  <div class="modal-buttons">
+                      <button class="btn-modal" id="password-cancel">Cancelar</button><button class="btn-modal" id="password-confirm">Confirmar</button>
+                  </div>
+              </div>
+          </div>
 
           <div class="profile-container">
               <div class="profile-card">
-                  <div class="profile-avatar-section">
-                      <div class="avatar-wrapper">
-                          <img src="https://via.placeholder.com/150" id="profile-img" alt="Foto de Perfil">
-                          <label for="file-upload" class="upload-btn">
-                              <i data-lucide="camera"></i>
-                          </label>
-                          <input type="file" id="file-upload" hidden accept="image/*" onchange="previewImage(this)">
-                      </div>
-                      <p>Alterar Foto de Perfil</p>
-                  </div>
 
-                  <form class="profile-form" onsubmit="event.preventDefault(); showModal('Perfil Atualizado', 'Seu perfil foi atualizado com sucesso!');">
-                      <div class="form-grid">
-                          <div class="input-group">
-                              <label>Nome Completo</label>
-                              <input type="text" value="Usuário Inspirare" required>
-                          </div>
-                          <div class="input-group">
-                              <label>E-mail</label>
-                              <input type="email" value="usuario@email.com" required>
-                          </div>
-                          <div class="input-group">
-                              <label>E-mail do Responsável</label>
-                              <input type="email" placeholder="email.responsavel@email.com">
-                          </div>
-                          <div class="input-group">
-                              <label>Telefone</label>
-                              <input type="text" value="(11) 99999-9999" required>
-                          </div>
-                          <div class="input-group">
-                              <label>Telefone do Responsável</label>
-                              <input type="text" placeholder="(00) 00000-0000">
-                          </div>
-                          <div class="input-group">
-                              <label>Idade</label>
-                              <input type="number" value="25" required>
-                          </div>
-                          <div class="input-group">
-                              <label>Gênero</label>
-                              <select class="profile-select">
-                                  <option value="masculino">Masculino</option>
-                                  <option value="feminino">Feminino</option>
-                                  <option value="outro">Outro</option>
-                                  <option value="prefiro-nao-dizer">Prefiro não dizer</option>
-                              </select>
-                          </div>
+                  <form class="profile-form">
+                    <div class="edit-btn-wrapper">
+                      <button type="button" class="edit-profile-btn"><i data-lucide="edit"></i> Editar</button>
+                    </div>
+                    <div class="form-grid">
+                      <div class="input-group">
+                        <label>Nome Completo</label>
+                        <input type="text" value="Usuário Inspirare" required disabled>
                       </div>
-                      <button type="submit" class="btn-save-profile">Salvar Alterações</button>
+                      <div class="input-group">
+                        <label>E-mail</label>
+                        <input type="email" value="usuario@email.com" required disabled>
+                      </div>
+                      <div class="input-group">
+                        <label>Telefone</label>
+                        <input type="text" value="(11) 99999-9999" required disabled>
+                      </div>
+                    </div>
+                    <button type="submit" class="btn-save-profile" disabled>Salvar Alterações</button>
                   </form>
               </div>
           </div>
