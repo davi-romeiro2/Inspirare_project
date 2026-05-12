@@ -16,7 +16,19 @@
 </head>
 
 <body style="display: block;">
+    <!-- Botão de Ajuda Circular -->
+    <div class="help-container">
+        <button class="help-btn" onclick="toggleHelpMenu()" aria-label="Ajuda">
+            <i data-lucide="help-circle"></i>
+        </button>
+        <div class="help-menu" id="help-menu">
+            <div class="help-option" onclick="selectHelpOption('marcar')">Como marcar consulta</div>
+            <div class="help-option" onclick="selectHelpOption('cancelar')">Como cancelar consulta</div>
+        </div>
+    </div>
+
     <!-- Botão Hambúrguer Global -->
+
     <button class="menu-toggle" onclick="toggleMenu()" aria-label="Abrir Menu">
         <i data-lucide="menu"></i>
     </button>
@@ -65,6 +77,15 @@
                 <h3 id="modal-title">Aviso</h3>
                 <p id="modal-text">Mensagem aqui</p>
                 <button class="btn-modal" id="modal-btn">Ok</button>
+            </div>
+        </div>
+
+        <!-- Tutorial Overlay -->
+        <div id="tutorial-overlay" class="tutorial-overlay">
+            <div id="tutorial-balloon" class="tutorial-balloon">
+                <p id="tutorial-text"></p>
+                <div class="balloon-arrow"></div>
+                <button class="btn-tutorial-next" onclick="closeTutorial()">Parar tutorial</button>
             </div>
         </div>
 
@@ -371,6 +392,55 @@
                 item.querySelector('.btn-cancel').style.display = 'none';
                 filterAppts('scheduled');
             });
+        }
+
+        function toggleHelpMenu() {
+            const menu = document.getElementById('help-menu');
+            menu.classList.toggle('active');
+        }
+
+        function selectHelpOption(option) {
+            if (option === 'marcar') {
+                startScheduleTutorial();
+            } else if (option === 'cancelar') {
+                // Tutorial de cancelamento será implementado aqui
+            }
+            document.getElementById('help-menu').classList.remove('active');
+        }
+
+        function startScheduleTutorial() {
+            const overlay = document.getElementById('tutorial-overlay');
+            const balloon = document.getElementById('tutorial-balloon');
+            const text = document.getElementById('tutorial-text');
+            const target = document.querySelector('.menu-card[onclick="openFlow(\'schedule\')"]');
+
+            text.innerText = 'Comece clicando aqui para agendar sua consulta!';
+
+            // Reposiciona a tela para que o botão fique visível e centralizado
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Aguarda o scroll terminar para calcular a posição exata do balão
+            setTimeout(() => {
+                const rect = target.getBoundingClientRect();
+
+                // Forçamos o balão a ter o tamanho correto antes de calcular a posição
+                balloon.style.display = 'block';
+                const balloonWidth = balloon.offsetWidth;
+                balloon.style.display = '';
+
+                balloon.style.top = (rect.bottom + 20) + 'px';
+                balloon.style.left = (rect.left + (rect.width / 2) - (balloonWidth / 2) - 110) + 'px';
+
+                overlay.classList.add('active');
+                target.classList.add('tutorial-highlight');
+                document.body.style.overflow = 'hidden';
+            }, 400);
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorial-overlay').classList.remove('active');
+            document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+            document.body.style.overflow = '';
         }
     </script>
 </body>
