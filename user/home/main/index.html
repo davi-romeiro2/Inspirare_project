@@ -85,7 +85,10 @@
             <div id="tutorial-balloon" class="tutorial-balloon">
                 <p id="tutorial-text"></p>
                 <div class="balloon-arrow"></div>
-                <button class="btn-tutorial-next" onclick="closeTutorial()">Parar tutorial</button>
+                <div class="tutorial-buttons">
+                    <button class="btn-tutorial-stop" onclick="closeTutorial()">Parar tutorial</button>
+                    <button class="btn-tutorial-next" id="btn-tutorial-next" onclick="nextTutorialStep()">Próximo</button>
+                </div>
             </div>
         </div>
 
@@ -408,39 +411,153 @@
             document.getElementById('help-menu').classList.remove('active');
         }
 
+        // =========================
+        // TUTORIAL INTERATIVO
+        // =========================
+        let tutorialCurrentStep = 0;
+        let tutorialSteps = [];
+
         function startScheduleTutorial() {
+            // Define todos os passos do tutorial
+            tutorialSteps = [
+                {
+                    targets: ['.menu-card[onclick="openFlow(\'schedule\')"]'],
+                    text: 'Comece clicando aqui para agendar sua consulta!',
+                    beforeShow: () => {
+                        closeFlow();
+                    }
+                },
+                {
+                    targets: [
+                        '#sched-step-1 .option-card:nth-child(1)',
+                        '#sched-step-1 .option-card:nth-child(2)'
+                    ],
+                    text: 'Agora escolha entre Consulta Avulsa ou Plano Mensal de acordo com sua preferência.',
+                    beforeShow: () => {
+                        openFlow('schedule');
+                        resetScheduleFlow();
+                    }
+                }
+            ];
+
+            tutorialCurrentStep = 0;
+            showTutorialStep(0);
+        }
+
+        function showTutorialStep(stepIndex) {
+            // Limpa destaques anteriores
+            document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+            document.querySelectorAll('.tutorial-clone').forEach(el => el.remove());
+
+            const step = tutorialSteps[stepIndex];
+            if (!step) {
+                closeTutorial();
+                return;
+            }
+
+            // Executa ação preparatória (mudar de tela, abrir fluxo, etc.)
+            if (step.beforeShow) step.beforeShow();
+
             const overlay = document.getElementById('tutorial-overlay');
             const balloon = document.getElementById('tutorial-balloon');
             const text = document.getElementById('tutorial-text');
-            const target = document.querySelector('.menu-card[onclick="openFlow(\'schedule\')"]');
+            const nextBtn = document.getElementById('btn-tutorial-next');
 
-            text.innerText = 'Comece clicando aqui para agendar sua consulta!';
+            text.innerText = step.text;
 
-            // Reposiciona a tela para que o botão fique visível e centralizado
-            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Texto do botão muda no último passo
+            if (stepIndex === tutorialSteps.length - 1) {
+                nextBtn.innerText = 'Finalizar';
+            } else {
+                nextBtn.innerText = 'Próximo';
+            }
 
-            // Aguarda o scroll terminar para calcular a posição exata do balão
+            // Aguarda renderização antes de buscar os elementos
             setTimeout(() => {
-                const rect = target.getBoundingClientRect();
+                const targetElements = step.targets
+                    .map(selector => document.querySelector(selector))
+                    .filter(el => el !== null);
 
-                // Forçamos o balão a ter o tamanho correto antes de calcular a posição
-                balloon.style.display = 'block';
-                const balloonWidth = balloon.offsetWidth;
-                balloon.style.display = '';
+                if (targetElements.length === 0) {
+                    console.warn('Nenhum elemento alvo encontrado para o passo', stepIndex);
+                    return;
+                }
 
-                balloon.style.top = (rect.bottom + 20) + 'px';
-                balloon.style.left = (rect.left + (rect.width / 2) - (balloonWidth / 2) - 110) + 'px';
+                // Scroll para o primeiro elemento
+                targetElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                overlay.classList.add('active');
-                target.classList.add('tutorial-highlight');
-                document.body.style.overflow = 'hidden';
-            }, 400);
+                // Aguarda o scroll terminar para criar os clones e posicionar o balão
+                setTimeout(() => {
+                    // Ativa o overlay
+                    overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+
+                    // Cria um clone visual de cada elemento destacado, posicionado em fixed
+                    // acima do overlay. Os originais ficam escurecidos junto com o resto do modal.
+                    targetElements.forEach(el => {
+                        const rect = el.getBoundingClientRect();
+                        const clone = el.cloneNode(true);
+                        clone.classList.add('tutorial-clone', 'tutorial-highlight');
+                        clone.style.position = 'fixed';
+                        clone.style.top = rect.top + 'px';
+                        clone.style.left = rect.left + 'px';
+                        clone.style.width = rect.width + 'px';
+                        clone.style.height = rect.height + 'px';
+                        clone.style.margin = '0';
+                        clone.style.pointerEvents = 'none';
+                        document.body.appendChild(clone);
+                    });
+
+                    // Posiciona o balão abaixo do conjunto de elementos destacados
+                    const boundingBox = getCombinedBoundingBox(targetElements);
+                    balloon.style.display = 'block';
+                    const balloonWidth = balloon.offsetWidth;
+                    balloon.style.top = (boundingBox.bottom + 25) + 'px';
+                    balloon.style.left = (boundingBox.left + (boundingBox.width / 2) - (balloonWidth / 2)) + 'px';
+                    balloon.style.transform = 'none';
+                }, 400);
+            }, 150);
+        }
+
+        function getCombinedBoundingBox(elements) {
+            let minLeft = Infinity;
+            let minTop = Infinity;
+            let maxRight = -Infinity;
+            let maxBottom = -Infinity;
+
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                minLeft = Math.min(minLeft, rect.left);
+                minTop = Math.min(minTop, rect.top);
+                maxRight = Math.max(maxRight, rect.right);
+                maxBottom = Math.max(maxBottom, rect.bottom);
+            });
+
+            return {
+                left: minLeft,
+                top: minTop,
+                right: maxRight,
+                bottom: maxBottom,
+                width: maxRight - minLeft,
+                height: maxBottom - minTop
+            };
+        }
+
+        function nextTutorialStep() {
+            tutorialCurrentStep++;
+            if (tutorialCurrentStep >= tutorialSteps.length) {
+                closeTutorial();
+            } else {
+                showTutorialStep(tutorialCurrentStep);
+            }
         }
 
         function closeTutorial() {
             document.getElementById('tutorial-overlay').classList.remove('active');
             document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+            document.querySelectorAll('.tutorial-clone').forEach(el => el.remove());
             document.body.style.overflow = '';
+            tutorialCurrentStep = 0;
         }
     </script>
 </body>
