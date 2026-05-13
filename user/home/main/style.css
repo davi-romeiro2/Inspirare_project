@@ -782,6 +782,14 @@ body {
     border-bottom: 20px solid white;
 }
 
+/* Quando o balão está acima dos elementos, a seta aponta para baixo */
+.tutorial-balloon.balloon-above .balloon-arrow {
+    top: auto;
+    bottom: -20px;
+    border-bottom: none;
+    border-top: 20px solid white;
+}
+
 /* Destaque do tutorial - eleva elemento acima do overlay e adiciona borda pulsante */
 .tutorial-highlight {
     position: relative;

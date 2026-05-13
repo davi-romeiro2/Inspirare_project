@@ -87,7 +87,6 @@
                 <div class="balloon-arrow"></div>
                 <div class="tutorial-buttons">
                     <button class="btn-tutorial-stop" onclick="closeTutorial()">Parar tutorial</button>
-                    <button class="btn-tutorial-next" id="btn-tutorial-next" onclick="nextTutorialStep()">Próximo</button>
                 </div>
             </div>
         </div>
@@ -445,9 +444,11 @@
         }
 
         function showTutorialStep(stepIndex) {
-            // Limpa destaques anteriores
+            // Limpa destaques anteriores e esconde o balão imediatamente
             document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
             document.querySelectorAll('.tutorial-clone').forEach(el => el.remove());
+            const balloon = document.getElementById('tutorial-balloon');
+            balloon.style.display = 'none';
 
             const step = tutorialSteps[stepIndex];
             if (!step) {
@@ -455,24 +456,13 @@
                 return;
             }
 
-            // Executa ação preparatória (mudar de tela, abrir fluxo, etc.)
             if (step.beforeShow) step.beforeShow();
 
             const overlay = document.getElementById('tutorial-overlay');
-            const balloon = document.getElementById('tutorial-balloon');
             const text = document.getElementById('tutorial-text');
-            const nextBtn = document.getElementById('btn-tutorial-next');
 
             text.innerText = step.text;
 
-            // Texto do botão muda no último passo
-            if (stepIndex === tutorialSteps.length - 1) {
-                nextBtn.innerText = 'Finalizar';
-            } else {
-                nextBtn.innerText = 'Próximo';
-            }
-
-            // Aguarda renderização antes de buscar os elementos
             setTimeout(() => {
                 const targetElements = step.targets
                     .map(selector => document.querySelector(selector))
@@ -483,20 +473,27 @@
                     return;
                 }
 
-                // Scroll para o primeiro elemento
-                targetElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Calcula se os elementos + balão cabem na viewport SEM travar o scroll ainda
+                const boundingBox = getCombinedBoundingBox(targetElements);
+                const balloonHeight = 150;
+                const extraPadding = 30;
+                const neededBottom = boundingBox.bottom + balloonHeight + extraPadding;
+                const viewportHeight = window.innerHeight;
 
-                // Aguarda o scroll terminar para criar os clones e posicionar o balão
+                // Scroll ANTES de ativar o overlay e travar o body
+                if (neededBottom > viewportHeight) {
+                    const scrollAmount = neededBottom - viewportHeight;
+                    window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+                }
+
+                // Aguarda o scroll terminar, SÓ ENTÃO ativa o overlay e trava o body
                 setTimeout(() => {
-                    // Ativa o overlay
                     overlay.classList.add('active');
                     document.body.style.overflow = 'hidden';
 
-                    // Cria um clone visual de cada elemento destacado, posicionado em fixed
-                    // acima do overlay. Os originais ficam escurecidos junto com o resto do modal.
-                    targetElements.forEach(el => {
-                        const rect = el.getBoundingClientRect();
-                        const clone = el.cloneNode(true);
+                    targetElements.forEach(originalEl => {
+                        const rect = originalEl.getBoundingClientRect();
+                        const clone = originalEl.cloneNode(true);
                         clone.classList.add('tutorial-clone', 'tutorial-highlight');
                         clone.style.position = 'fixed';
                         clone.style.top = rect.top + 'px';
@@ -504,18 +501,48 @@
                         clone.style.width = rect.width + 'px';
                         clone.style.height = rect.height + 'px';
                         clone.style.margin = '0';
-                        clone.style.pointerEvents = 'none';
+                        clone.style.cursor = 'pointer';
+
+                        clone.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            document.querySelectorAll('.tutorial-clone').forEach(el => el.remove());
+                            originalEl.click();
+                            nextTutorialStep();
+                        });
+
                         document.body.appendChild(clone);
                     });
 
-                    // Posiciona o balão abaixo do conjunto de elementos destacados
-                    const boundingBox = getCombinedBoundingBox(targetElements);
+                    // Recalcula bounding box após o scroll para posicionar o balão corretamente
+                    const updatedBox = getCombinedBoundingBox(targetElements);
                     balloon.style.display = 'block';
                     const balloonWidth = balloon.offsetWidth;
-                    balloon.style.top = (boundingBox.bottom + 25) + 'px';
-                    balloon.style.left = (boundingBox.left + (boundingBox.width / 2) - (balloonWidth / 2)) + 'px';
+                    const balloonHeight = balloon.offsetHeight;
+                    let balloonLeft = updatedBox.left + (updatedBox.width / 2) - (balloonWidth / 2);
+                    let balloonTop;
+
+                    const margin = 10;
+
+                    // Se não há espaço embaixo, posiciona o balão ACIMA dos elementos
+                    if (updatedBox.bottom + balloonHeight + 25 > window.innerHeight - margin) {
+                        balloonTop = updatedBox.top - balloonHeight - 25;
+                        // Inverte a seta do balão para apontar para baixo
+                        balloon.classList.add('balloon-above');
+                    } else {
+                        balloonTop = updatedBox.bottom + 25;
+                        balloon.classList.remove('balloon-above');
+                    }
+
+                    if (balloonLeft < margin) balloonLeft = margin;
+                    if (balloonLeft + balloonWidth > window.innerWidth - margin) {
+                        balloonLeft = window.innerWidth - balloonWidth - margin;
+                    }
+
+                    balloon.style.top = balloonTop + 'px';
+                    balloon.style.left = balloonLeft + 'px';
                     balloon.style.transform = 'none';
-                }, 400);
+                }, 500);
             }, 150);
         }
 
