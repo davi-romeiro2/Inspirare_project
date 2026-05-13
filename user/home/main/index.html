@@ -436,6 +436,14 @@
                         openFlow('schedule');
                         resetScheduleFlow();
                     }
+                },
+                {
+                    targets: [
+                        '#sched-step-2 .option-card:nth-child(1)',
+                        '#sched-step-2 .option-card:nth-child(2)'
+                    ],
+                    text: 'Agora escolha como prefere pagar: Pix ou Cartão.',
+                    beforeShow: () => {}
                 }
             ];
 
