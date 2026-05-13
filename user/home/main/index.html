@@ -62,6 +62,17 @@
         </ul>
     </nav>
 
+    <!-- Tutorial Overlay (no body, cobre tudo) -->
+    <div id="tutorial-overlay" class="tutorial-overlay">
+        <div id="tutorial-balloon" class="tutorial-balloon">
+            <p id="tutorial-text"></p>
+            <div class="balloon-arrow"></div>
+            <div class="tutorial-buttons">
+                <button class="btn-tutorial-stop" onclick="closeTutorial()">Parar tutorial</button>
+            </div>
+        </div>
+    </div>
+
     <div class="main-content" id="main-content">
         <header class="main-header">
             <h1>Inspirare</h1>
@@ -77,18 +88,6 @@
                 <h3 id="modal-title">Aviso</h3>
                 <p id="modal-text">Mensagem aqui</p>
                 <button class="btn-modal" id="modal-btn">Ok</button>
-            </div>
-        </div>
-
-        <!-- Tutorial Overlay -->
-        <div id="tutorial-overlay" class="tutorial-overlay">
-            <div id="tutorial-balloon" class="tutorial-balloon">
-                <p id="tutorial-text"></p>
-                <div class="balloon-arrow"></div>
-                <div class="tutorial-buttons">
-                    <button class="btn-tutorial-stop" onclick="closeTutorial()">Parar tutorial</button>
-                    <button class="btn-tutorial-next" id="btn-tutorial-next" onclick="nextTutorialStep()">Próximo</button>
-                </div>
             </div>
         </div>
 
@@ -111,7 +110,7 @@
         <!-- Flow: Scheduling -->
         <div id="flow-schedule" class="flow-container">
             <div class="flow-header">
-                <button class="btn-back-small" onclick="closeFlow()">
+                <button type="button" class="btn-back-small" onclick="handleBackButton()">
                     <i data-lucide="arrow-left"></i> Voltar
                 </button>
                 <h2 id="sched-title">Agendamento</h2>
@@ -157,18 +156,31 @@
                 </div>
                 <div id="card-detail" style="display:none;" class="card-container">
                     <div class="input-group">
+                        <label>Nome no Cartão</label>
+                        <input id="card-name" type="text" placeholder="Como está no cartão">
+                    </div>
+                    <div class="input-group">
                         <label>Número do Cartão</label>
-                        <input type="text" placeholder="0000 0000 0000 0000" maxlength="19">
+                        <input id="card-number" type="text" placeholder="0000 0000 0000 0000" maxlength="19">
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div class="input-group">
                             <label>Validade</label>
-                            <input type="text" placeholder="MM/AA" maxlength="5">
+                            <input id="card-expiry" type="text" placeholder="MM/AA" maxlength="5">
                         </div>
                         <div class="input-group">
                             <label>CVV</label>
-                            <input type="text" placeholder="123" maxlength="3">
+                            <input id="card-cvv" type="text" placeholder="123" maxlength="3">
                         </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Parcelas</label>
+                        <select id="card-parcelas" class="input-select">
+                            <option value="1">1x sem juros</option>
+                            <option value="2">2x sem juros</option>
+                            <option value="3">3x sem juros</option>
+                            <option value="4">4x sem juros</option>
+                        </select>
                     </div>
                     <button class="btn-confirm" onclick="simulatePayment()">Pagar Agora</button>
                 </div>
@@ -246,6 +258,25 @@
     <script>
         lucide.createIcons();
 
+        let currentScheduleStep = 1;
+
+        function handleBackButton() {
+            const overlayActive = document
+                .getElementById('tutorial-overlay')
+                .classList.contains('active');
+
+            if (overlayActive) {
+                tutorialBack();
+                return;
+            }
+
+            if (currentScheduleStep > 1) {
+                goToScheduleStep(currentScheduleStep - 1);
+            } else {
+                closeFlow();
+            }
+        }
+
         function toggleMenu() {
             const sidebar = document.getElementById('main-sidebar');
             const content = document.getElementById('main-content');
@@ -296,25 +327,42 @@
 
         function resetScheduleFlow() {
             document.querySelectorAll('.sched-step').forEach(s => s.style.display = 'none');
+
+            currentScheduleStep = 1;
             document.getElementById('sched-step-1').style.display = 'block';
         }
 
+        function goToScheduleStep(step) {
+            document.querySelectorAll('.sched-step').forEach(s => {
+                s.style.display = 'none';
+            });
+
+            document.getElementById(`sched-step-${step}`).style.display = 'block';
+
+            currentScheduleStep = step;
+
+            const backBtn = document.querySelector('.btn-back-small');
+
+            if (step === 4) {
+                backBtn.style.display = 'none';
+            } else {
+                backBtn.style.display = 'flex';
+            }
+        }
+
         function selectPaymentType(type, price) {
-            document.getElementById('sched-step-1').style.display = 'none';
-            document.getElementById('sched-step-2').style.display = 'block';
+            goToScheduleStep(2);
         }
 
         function selectPaymentMethod(method) {
-            document.getElementById('sched-step-2').style.display = 'none';
-            document.getElementById('sched-step-3').style.display = 'block';
+            goToScheduleStep(3);
             document.getElementById('pix-detail').style.display = method === 'pix' ? 'flex' : 'none';
             document.getElementById('card-detail').style.display = method === 'card' ? 'block' : 'none';
         }
 
         function simulatePayment() {
             showModal('Pagamento Confirmado', 'Seu pagamento foi processado com sucesso!', () => {
-                document.getElementById('sched-step-3').style.display = 'none';
-                document.getElementById('sched-step-4').style.display = 'block';
+                goToScheduleStep(4);
             });
         }
 
@@ -326,8 +374,7 @@
         }
 
         function goToDateSelection() {
-            document.getElementById('sched-step-4').style.display = 'none';
-            document.getElementById('sched-step-5').style.display = 'block';
+            goToScheduleStep(5);
             generateDates();
         }
 
@@ -416,16 +463,62 @@
         // =========================
         let tutorialCurrentStep = 0;
         let tutorialSteps = [];
+        let tutorialBranches = {};
+        let tutorialHistory = [];
+        let tutorialActiveBranch = null;
+
+        // Intercepta o botão Voltar do flow durante o tutorial
+        function tutorialBack() {
+            const overlayActive = document.getElementById('tutorial-overlay').classList.contains('active');
+            if (!overlayActive) { closeFlow(); return; }
+
+            closeTutorialVisuals(); // limpa clones e classes, mas mantém overlay
+
+            if (tutorialActiveBranch !== null) {
+                tutorialActiveBranch = null;
+                showTutorialStep(tutorialCurrentStep);
+            } else if (tutorialHistory.length > 0) {
+                tutorialCurrentStep = tutorialHistory.pop();
+                showTutorialStep(tutorialCurrentStep);
+            } else {
+                closeTutorial();
+                closeFlow();
+            }
+        }
+
+        // Limpa apenas os visuais (clones, classes) sem fechar o overlay
+        function closeTutorialVisuals() {
+            const overlay = document.getElementById('tutorial-overlay');
+
+            document.querySelectorAll('.tutorial-clone').forEach(el => el.remove());
+
+            document.querySelectorAll('.tutorial-highlight-live')
+                .forEach(el => {
+                    el.classList.remove('tutorial-highlight-live');
+                    el.style.zIndex = '';
+                    el.style.position = '';
+                });
+
+            document.querySelectorAll('.tutorial-highlight-label')
+                .forEach(el => el.classList.remove('tutorial-highlight-label'));
+
+            document.querySelectorAll('[data-tutorial-hidden="true"]').forEach(el => {
+                el.style.opacity = '';
+                delete el.dataset.tutorialHidden;
+            });
+
+            overlay.style.pointerEvents = '';
+            overlay.style.background = '';
+
+            document.getElementById('tutorial-balloon').style.display = 'none';
+        }
 
         function startScheduleTutorial() {
-            // Define todos os passos do tutorial
             tutorialSteps = [
                 {
                     targets: ['.menu-card[onclick="openFlow(\'schedule\')"]'],
                     text: 'Comece clicando aqui para agendar sua consulta!',
-                    beforeShow: () => {
-                        closeFlow();
-                    }
+                    beforeShow: () => { closeFlow(); }
                 },
                 {
                     targets: [
@@ -433,118 +526,364 @@
                         '#sched-step-1 .option-card:nth-child(2)'
                     ],
                     text: 'Agora escolha entre Consulta Avulsa ou Plano Mensal de acordo com sua preferência.',
-                    beforeShow: () => {
-                        openFlow('schedule');
-                        resetScheduleFlow();
-                    }
+                    beforeShow: () => { openFlow('schedule'); resetScheduleFlow(); }
+                },
+                {
+                    targets: [
+                        '#sched-step-2 .option-card:nth-child(1)',
+                        '#sched-step-2 .option-card:nth-child(2)'
+                    ],
+                    text: 'Agora escolha como prefere pagar: Pix ou Cartão.',
+                    beforeShow: () => { },
+                    branchedTargets: [
+                        { selector: '#sched-step-2 .option-card:nth-child(1)', branch: 'pix' },
+                        { selector: '#sched-step-2 .option-card:nth-child(2)', branch: 'card' }
+                    ]
                 }
             ];
 
+            tutorialBranches = {
+                pix: {
+                    targets: ['#pix-detail .qr-placeholder', '#pix-detail .btn-copy'],
+                    extraClickable: ['#pix-detail .btn-confirm'],
+                    text: 'Escaneie o QR Code com o app do seu banco ou copie a chave Pix para realizar o pagamento.',
+                    beforeShow: () => { }
+                },
+                card: {
+                    // labels e inputs listados juntos em targets; a função distingue pelo tagName
+                    targets: [
+                        '#card-detail .input-group:nth-child(1) label',
+                        '#card-name',
+                        '#card-detail .input-group:nth-child(2) label',
+                        '#card-number',
+                        '#card-detail > div .input-group:nth-child(1) label',
+                        '#card-expiry',
+                        '#card-detail > div .input-group:nth-child(2) label',
+                        '#card-cvv',
+                        '#card-detail .input-group:nth-child(4) label',
+                        '#card-parcelas',
+
+                        '#card-detail .btn-confirm'
+                    ],
+                    interactive: true,
+                    text: 'Preencha os dados do cartão para concluir o pagamento.',
+                    beforeShow: () => { }
+                }
+            };
+
+            tutorialHistory = [];
+            tutorialActiveBranch = null;
             tutorialCurrentStep = 0;
             showTutorialStep(0);
         }
 
-        function showTutorialStep(stepIndex) {
-            // Limpa destaques anteriores
-            document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
-            document.querySelectorAll('.tutorial-clone').forEach(el => el.remove());
+        function positionBalloon(balloon, targetElements, fixedTop = false) {
+            balloon.style.display = 'block';
 
-            const step = tutorialSteps[stepIndex];
-            if (!step) {
-                closeTutorial();
+            // ===== MOBILE CARD =====
+            if (fixedTop) {
+
+                const box = getCombinedBoundingBox(targetElements);
+
+                // largura normal
+                balloon.style.width = '220px';
+                balloon.style.maxWidth = '220px';
+
+                // reduz altura interna
+                balloon.style.padding = '8px 12px';
+
+                // reduz texto
+                const text = balloon.querySelector('p');
+
+                if (text) {
+                    text.style.fontSize = '0.72rem';
+                    text.style.lineHeight = '1.1';
+                    text.style.marginBottom = '6px';
+                }
+
+                // reduz área dos botões
+                const buttons = balloon.querySelector('.tutorial-buttons');
+
+                if (buttons) {
+                    buttons.style.marginTop = '0px';
+                    buttons.style.gap = '6px';
+                }
+
+                // reduz botão
+                const stopBtn = balloon.querySelector('.btn-tutorial-stop');
+
+                if (stopBtn) {
+                    stopBtn.style.padding = '5px 8px';
+                    stopBtn.style.fontSize = '0.68rem';
+                }
+
+                // centraliza horizontalmente nos inputs
+                let left = box.left + (box.width / 2) - 110;
+
+                // mantém acima dos inputs
+                let top = box.top - 120;
+
+                // impede sair da tela
+                left = Math.max(
+                    10,
+                    Math.min(left, window.innerWidth - 230)
+                );
+
+                balloon.style.left = `${left}px`;
+                balloon.style.top = `${top}px`;
+
+                // seta apontando pra baixo
+                balloon.classList.add('balloon-above');
+
+                balloon.style.transform = 'none';
+
                 return;
             }
 
-            // Executa ação preparatória (mudar de tela, abrir fluxo, etc.)
+            // ===== NORMAL =====
+            const box = getCombinedBoundingBox(targetElements);
+
+            const bw = balloon.offsetWidth;
+            const bh = balloon.offsetHeight;
+
+            const margin = 10;
+
+            let left = box.left + box.width / 2 - bw / 2;
+            let top;
+
+            if (box.bottom + bh + 25 > window.innerHeight - margin) {
+                top = box.top - bh - 25;
+                balloon.classList.add('balloon-above');
+            } else {
+                top = box.bottom + 25;
+                balloon.classList.remove('balloon-above');
+            }
+
+            left = Math.max(
+                margin,
+                Math.min(left, window.innerWidth - bw - margin)
+            );
+
+            balloon.style.top = top + 'px';
+            balloon.style.left = left + 'px';
+
+            balloon.style.transform = 'none';
+        }
+
+        // Cria um clone fixed no body de um elemento, com opção de ser clicável
+        function makeClone(originalEl, clickable, onClickFn) {
+            const rect = originalEl.getBoundingClientRect();
+            const clone = originalEl.cloneNode(true);
+            clone.classList.add('tutorial-clone', 'tutorial-highlight');
+            clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
+                `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:2002;` +
+                `pointer-events:${clickable ? 'auto' : 'none'};cursor:${clickable ? 'pointer' : 'default'};`;
+            if (clickable && onClickFn) {
+                clone.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onClickFn(); });
+            }
+            document.body.appendChild(clone);
+            return clone;
+        }
+
+        function showTutorialStep(stepIndex) {
+            closeTutorialVisuals();
+
+            document.body.classList.add('tutorial-lock');
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+
+            const step = tutorialSteps[stepIndex];
+            if (!step) { closeTutorial(); return; }
+
             if (step.beforeShow) step.beforeShow();
 
             const overlay = document.getElementById('tutorial-overlay');
             const balloon = document.getElementById('tutorial-balloon');
-            const text = document.getElementById('tutorial-text');
-            const nextBtn = document.getElementById('btn-tutorial-next');
+            document.getElementById('tutorial-text').innerText = step.text;
 
-            text.innerText = step.text;
-
-            // Texto do botão muda no último passo
-            if (stepIndex === tutorialSteps.length - 1) {
-                nextBtn.innerText = 'Finalizar';
-            } else {
-                nextBtn.innerText = 'Próximo';
-            }
-
-            // Aguarda renderização antes de buscar os elementos
             setTimeout(() => {
-                const targetElements = step.targets
-                    .map(selector => document.querySelector(selector))
-                    .filter(el => el !== null);
+                const targets = step.targets.map(s => document.querySelector(s)).filter(Boolean);
+                if (!targets.length) return;
 
-                if (targetElements.length === 0) {
-                    console.warn('Nenhum elemento alvo encontrado para o passo', stepIndex);
-                    return;
-                }
+                const box = getCombinedBoundingBox(targets);
 
-                // Scroll para o primeiro elemento
-                targetElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Centraliza o alvo na tela
+                const targetCenter = box.top + (box.height / 2);
 
-                // Aguarda o scroll terminar para criar os clones e posicionar o balão
+                const viewportCenter = window.innerHeight / 2;
+
+                const scrollOffset = targetCenter - viewportCenter;
+
+                // Faz o scroll ANTES de abrir o overlay
+                window.scrollBy({
+                    top: scrollOffset,
+                    behavior: 'smooth'
+                });
+
                 setTimeout(() => {
-                    // Ativa o overlay
-                    overlay.classList.add('active');
-                    document.body.style.overflow = 'hidden';
 
-                    // Cria um clone visual de cada elemento destacado, posicionado em fixed
-                    // acima do overlay. Os originais ficam escurecidos junto com o resto do modal.
-                    targetElements.forEach(el => {
-                        const rect = el.getBoundingClientRect();
-                        const clone = el.cloneNode(true);
-                        clone.classList.add('tutorial-clone', 'tutorial-highlight');
-                        clone.style.position = 'fixed';
-                        clone.style.top = rect.top + 'px';
-                        clone.style.left = rect.left + 'px';
-                        clone.style.width = rect.width + 'px';
-                        clone.style.height = rect.height + 'px';
-                        clone.style.margin = '0';
-                        clone.style.pointerEvents = 'none';
-                        document.body.appendChild(clone);
+                    overlay.classList.add('active');
+
+                    setTimeout(() => {
+                        document.body.style.overflow = 'hidden';
+                    }, 350);
+
+                    targets.forEach(originalEl => {
+                        makeClone(originalEl, true, () => {
+                            closeTutorialVisuals();
+                            originalEl.click();
+
+                            if (step.branchedTargets) {
+                                const matched = step.branchedTargets.find(b => originalEl.matches(b.selector));
+                                if (matched) {
+                                    tutorialHistory.push(stepIndex);
+                                    setTimeout(() => showTutorialBranch(matched.branch), 300);
+                                    return;
+                                }
+                            }
+                            tutorialHistory.push(stepIndex);
+                            tutorialCurrentStep = stepIndex + 1;
+                            setTimeout(() => nextTutorialStep(), 300);
+                        });
                     });
 
-                    // Posiciona o balão abaixo do conjunto de elementos destacados
-                    const boundingBox = getCombinedBoundingBox(targetElements);
-                    balloon.style.display = 'block';
-                    const balloonWidth = balloon.offsetWidth;
-                    balloon.style.top = (boundingBox.bottom + 25) + 'px';
-                    balloon.style.left = (boundingBox.left + (boundingBox.width / 2) - (balloonWidth / 2)) + 'px';
-                    balloon.style.transform = 'none';
-                }, 400);
+                    positionBalloon(balloon, targets);
+                }, 500);
+            }, 150);
+        }
+
+        function showTutorialBranch(branchKey) {
+            tutorialActiveBranch = branchKey;
+            const branch = tutorialBranches[branchKey];
+            if (!branch) { closeTutorial(); return; }
+
+            closeTutorialVisuals();
+            if (branch.beforeShow) branch.beforeShow();
+
+            const overlay = document.getElementById('tutorial-overlay');
+            const balloon = document.getElementById('tutorial-balloon');
+            document.getElementById('tutorial-text').innerText = branch.text;
+
+            setTimeout(() => {
+                const targets = branch.targets.map(s => document.querySelector(s)).filter(Boolean);
+                if (!targets.length) return;
+
+                const box = getCombinedBoundingBox(targets);
+                if (box.bottom + 180 > window.innerHeight) {
+                    window.scrollBy({ top: box.bottom + 180 - window.innerHeight, behavior: 'smooth' });
+                }
+
+                setTimeout(() => {
+                    overlay.classList.add('active');
+
+                    setTimeout(() => {
+                        document.body.classList.add('tutorial-lock');
+                    }, 350);
+
+                    overlay.style.background = 'rgba(0, 0, 0, 0.7)';
+
+                    if (branch.interactive) {
+
+                        overlay.style.pointerEvents = 'none';
+                        // Cartão: overlay não bloqueia nada (pointer-events: none)
+                        // labels e inputs ficam no DOM original, acima do overlay via z-index
+
+                        targets.forEach(el => {
+                            const tag = el.tagName.toLowerCase();
+                            if (tag === 'label') {
+
+                                el.dataset.tutorialHidden = 'true';
+                                el.style.opacity = '0';
+                                // Label: clone fixed no body, sem glow, só aceso
+                                const rect = el.getBoundingClientRect();
+                                const clone = el.cloneNode(true);
+                                clone.classList.add('tutorial-clone', 'tutorial-highlight-label');
+                                clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
+                                    `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:2002;pointer-events:none;`;
+                                document.body.appendChild(clone);
+                            } else {
+                                // Input/select reais ficam acima do overlay
+                                const rect = el.getBoundingClientRect();
+
+                                const clone = el.cloneNode(true);
+
+                                clone.classList.add('tutorial-clone');
+
+                                const computed = window.getComputedStyle(el);
+
+                                clone.style.cssText = `
+    position: fixed;
+    top: ${rect.top}px;
+    left: ${rect.left}px;
+    width: ${rect.width}px;
+    height: ${rect.height}px;
+
+    margin: 0;
+    padding: ${computed.padding};
+
+    border: ${computed.border};
+    border-radius: ${computed.borderRadius};
+
+    background: ${computed.background};
+    color: ${computed.color};
+
+    font: ${computed.font};
+
+    box-shadow: ${computed.boxShadow};
+    outline: ${computed.outline};
+
+    z-index: 99999;
+    pointer-events: auto;
+
+    appearance: auto;
+    -webkit-appearance: auto;
+`;
+
+                                document.body.appendChild(clone);
+                            }
+                        });
+
+                        // Usa os inputs reais para posicionar o balão (não os labels)
+                        const inputEls = targets.filter(el => el.tagName.toLowerCase() !== 'label');
+                        positionBalloon(
+                            balloon,
+                            inputEls.length ? inputEls : targets,
+                            branchKey === 'card' && window.innerWidth <= 768
+                        );
+
+                    } else {
+                        // Pix: clones visuais sem pointer-events
+                        overlay.style.pointerEvents = '';
+                        targets.forEach(el => makeClone(el, false));
+
+                        // Botões extra clicáveis (ex: Confirmar Pagamento)
+                        if (branch.extraClickable) {
+                            branch.extraClickable.forEach(sel => {
+                                const el = document.querySelector(sel);
+                                if (el) makeClone(el, true, () => {
+                                    document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                                    el.click();
+                                });
+                            });
+                        }
+
+                        positionBalloon(balloon, targets);
+                    }
+                }, 500);
             }, 150);
         }
 
         function getCombinedBoundingBox(elements) {
-            let minLeft = Infinity;
-            let minTop = Infinity;
-            let maxRight = -Infinity;
-            let maxBottom = -Infinity;
-
+            let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
             elements.forEach(el => {
                 const rect = el.getBoundingClientRect();
-                minLeft = Math.min(minLeft, rect.left);
-                minTop = Math.min(minTop, rect.top);
-                maxRight = Math.max(maxRight, rect.right);
-                maxBottom = Math.max(maxBottom, rect.bottom);
+                l = Math.min(l, rect.left); t = Math.min(t, rect.top);
+                r = Math.max(r, rect.right); b = Math.max(b, rect.bottom);
             });
-
-            return {
-                left: minLeft,
-                top: minTop,
-                right: maxRight,
-                bottom: maxBottom,
-                width: maxRight - minLeft,
-                height: maxBottom - minTop
-            };
+            return { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t };
         }
 
         function nextTutorialStep() {
-            tutorialCurrentStep++;
             if (tutorialCurrentStep >= tutorialSteps.length) {
                 closeTutorial();
             } else {
@@ -553,12 +892,22 @@
         }
 
         function closeTutorial() {
-            document.getElementById('tutorial-overlay').classList.remove('active');
-            document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
-            document.querySelectorAll('.tutorial-clone').forEach(el => el.remove());
+            closeTutorialVisuals();
+
+            document.getElementById('tutorial-overlay')
+                .classList.remove('active');
+
+            document.body.classList.remove('tutorial-lock');
+
+            // desbloqueia scroll
             document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+
             tutorialCurrentStep = 0;
+            tutorialHistory = [];
+            tutorialActiveBranch = null;
         }
+
     </script>
 </body>
 
