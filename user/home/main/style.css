@@ -499,6 +499,23 @@ body {
     outline: none;
 }
 
+.input-select {
+    padding: 12px 16px;
+    border: 1.5px solid var(--neutral-color);
+    border-radius: 12px;
+    outline: none;
+    background: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    cursor: pointer;
+    width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2391A697' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+}
+
 /* Pix Section */
 .pix-container {
     display: flex;
@@ -800,11 +817,36 @@ body {
     isolation: isolate;
 }
 
+/* Destaque "ao vivo" para elementos interativos (inputs do cartão):
+   só aplica o glow no elemento original, sem clone, sem bloquear interação */
+.tutorial-highlight-live {
+    position: relative;
+    z-index: 2002 !important;
+    animation: pulse-highlight-live 1.5s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+/* Labels acima dos inputs: apenas elevados acima do overlay, sem glow nem borda */
+.tutorial-highlight-label {
+    position: relative;
+    z-index: 2002 !important;
+    color: var(--secondary-color) !important;
+}
+
 @keyframes pulse-highlight {
     0%, 100% {
-        box-shadow: 0 0 0 4px var(--primary-color), 0 10px 30px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 0 0 3px var(--primary-color), 0 6px 20px rgba(0, 0, 0, 0.4);
     }
     50% {
-        box-shadow: 0 0 0 6px rgba(187, 137, 145, 0.6), 0 15px 35px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 0 0 5px rgba(187, 137, 145, 0.5), 0 8px 25px rgba(0, 0, 0, 0.5);
+    }
+}
+
+@keyframes pulse-highlight-live {
+    0%, 100% {
+        box-shadow: 0 0 0 2px var(--primary-color), 0 4px 12px rgba(187, 137, 145, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 0 3px rgba(187, 137, 145, 0.6), 0 6px 16px rgba(187, 137, 145, 0.4);
     }
 }
