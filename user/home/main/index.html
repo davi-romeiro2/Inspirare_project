@@ -28,7 +28,6 @@
     </div>
 
     <!-- Botão Hambúrguer Global -->
-
     <button class="menu-toggle" onclick="toggleMenu()" aria-label="Abrir Menu">
         <i data-lucide="menu"></i>
     </button>
@@ -150,9 +149,14 @@
             <!-- Step 3: Payment Details -->
             <div id="sched-step-3" class="sched-step" style="display:none;">
                 <div id="pix-detail" style="display:none;" class="pix-container">
-                    <div class="qr-placeholder">QR CODE PIX</div>
-                    <button class="btn-copy" onclick="alert('Chave PIX copiada!')">Copiar chave pix</button>
-                    <button class="btn-confirm" onclick="simulatePayment()">Confirmar Pagamento</button>
+                    <div class="qr-placeholder">
+                        <i data-lucide="qr-code" style="width:64px;height:64px;"></i>
+                        <span>QR CODE PIX</span>
+                    </div>
+                    <button class="btn-copy" id="btn-copy-pix" onclick="copyPix(this)">
+                        <i data-lucide="copy" style="width:16px;height:16px;"></i>
+                        Copiar chave pix
+                    </button>
                 </div>
                 <div id="card-detail" style="display:none;" class="card-container">
                     <div class="input-group">
@@ -175,12 +179,23 @@
                     </div>
                     <div class="input-group">
                         <label>Parcelas</label>
-                        <select id="card-parcelas" class="input-select">
-                            <option value="1">1x sem juros</option>
-                            <option value="2">2x sem juros</option>
-                            <option value="3">3x sem juros</option>
-                            <option value="4">4x sem juros</option>
-                        </select>
+                        <div class="custom-select-wrapper" id="parcelas-wrapper">
+                            <div class="custom-select-trigger" id="parcelas-trigger" onclick="toggleParcelas()">
+                                <span id="parcelas-label">1x sem juros</span>
+                                <i data-lucide="chevron-down" id="parcelas-chevron"></i>
+                            </div>
+                            <div class="custom-select-dropdown" id="parcelas-dropdown">
+                                <div class="custom-select-option selected"
+                                    onclick="selectParcela(this, '1', '1x sem juros')">1x sem juros</div>
+                                <div class="custom-select-option" onclick="selectParcela(this, '2', '2x sem juros')">2x
+                                    sem juros</div>
+                                <div class="custom-select-option" onclick="selectParcela(this, '3', '3x sem juros')">3x
+                                    sem juros</div>
+                                <div class="custom-select-option" onclick="selectParcela(this, '4', '4x sem juros')">4x
+                                    sem juros</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="card-parcelas" value="1">
                     </div>
                     <button class="btn-confirm" onclick="simulatePayment()">Pagar Agora</button>
                 </div>
@@ -189,22 +204,12 @@
             <!-- Step 4: Psychologist Selection -->
             <div id="sched-step-4" class="sched-step" style="display:none;">
                 <p style="margin-bottom: 20px; text-align: center;">Escolha seu profissional:</p>
-                <div class="psych-grid">
-                    <div class="psych-card" onclick="selectPsych(this)">
-                        <div class="psych-photo-placeholder">FOTO</div>
-                        <h4>Dra. Ana Beatriz</h4>
-                        <p>Especialista em Ansiedade e Terapia Cognitivo-Comportamental.</p>
-                    </div>
-                    <div class="psych-card" onclick="selectPsych(this)">
-                        <div class="psych-photo-placeholder">FOTO</div>
-                        <h4>Dr. Marcos Vinícius</h4>
-                        <p>Foco em Depressão, Luto e Desenvolvimento Pessoal.</p>
-                    </div>
-                    <div class="psych-card" onclick="selectPsych(this)">
-                        <div class="psych-photo-placeholder">FOTO</div>
-                        <h4>Dra. Cláudia Luna</h4>
-                        <p>Experiente em Relacionamentos e Terapia Sistêmica.</p>
-                    </div>
+                <div id="psych-grid" class="psych-grid"></div>
+                <div class="pagination-controls" id="psych-pagination">
+                    <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)"
+                        disabled="disabled">Anterior</button>
+                    <span class="page-indicator" id="page-indicator">1 / 1</span>
+                    <button class="btn-page" id="btn-next-page" onclick="changePage(1)">Próxima</button>
                 </div>
                 <button id="next-to-date-btn" class="btn-confirm" style="display:none;"
                     onclick="goToDateSelection()">Continuar</button>
@@ -214,10 +219,10 @@
             <div id="sched-step-5" class="sched-step" style="display:none;">
                 <p style="margin-bottom: 15px; text-align: center;">Tipo de Consulta:</p>
                 <div class="option-grid" style="margin-bottom: 30px;">
-                    <div class="option-card consultation-type-card" onclick="selectConsultationType(this,
-  'online')">Online</div>
-                    <div class="option-card consultation-type-card" onclick="selectConsultationType(this,
-  'presencial')">Presencial</div>
+                    <div class="option-card consultation-type-card" onclick="selectConsultationType(this, 'online')">
+                        Online</div>
+                    <div class="option-card consultation-type-card"
+                        onclick="selectConsultationType(this, 'presencial')">Presencial</div>
                 </div>
                 <p style="margin-bottom: 15px; text-align: center;">Selecione o dia:</p>
                 <div id="date-picker" class="date-grid"></div>
@@ -258,25 +263,185 @@
     <script>
         lucide.createIcons();
 
+        /* =========================
+           ESTADO GLOBAL
+           ========================= */
         let currentScheduleStep = 1;
+        let parcelasOpen = false;
 
-        function handleBackButton() {
-            const overlayActive = document
-                .getElementById('tutorial-overlay')
-                .classList.contains('active');
+        let tutorialCurrentStep = 0;
+        let tutorialSteps = [];
+        let tutorialBranches = {};
+        let tutorialHistory = [];
+        let tutorialActiveBranch = null;
 
-            if (overlayActive) {
-                tutorialBack();
-                return;
-            }
+        /* =========================
+           PROFISSIONAIS - PAGINAÇÃO
+           ========================= */
+        const professionals = [
+            { name: 'Dra. Ana Beatriz', specialty: 'Especialista em Ansiedade e Terapia Cognitivo-Comportamental.' },
+            { name: 'Dr. Marcos Vinícius', specialty: 'Foco em Depressão, Luto e Desenvolvimento Pessoal.' },
+            { name: 'Dra. Cláudia Luna', specialty: 'Experiente em Relacionamentos e Terapia Sistêmica.' },
+            { name: 'Dr. Ricardo Souza', specialty: 'Especialista em TDAH e Terapia Infantil.' },
+            { name: 'Dra. Juliana Costa', specialty: 'Foco em Trauma, PTSD e Terapia EMDR.' },
+            { name: 'Dr. Fernando Lima', specialty: 'Especialista em Terapia de Casal e Familiar.' },
+            { name: 'Dra. Bianca Mendes', specialty: 'Experiente em Burnout e Qualidade de Vida.' }
+        ];
+        let psychCurrentPage = 0;
 
-            if (currentScheduleStep > 1) {
-                goToScheduleStep(currentScheduleStep - 1);
-            } else {
-                closeFlow();
+        function getItemsPerPage() {
+            return window.innerWidth >= 1024 ? 6 : 2;
+        }
+
+        function renderProfessionalsPage() {
+            const grid = document.getElementById('psych-grid');
+            const itemsPerPage = getItemsPerPage();
+            const start = psychCurrentPage * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageItems = professionals.slice(start, end);
+            const totalPages = Math.ceil(professionals.length / itemsPerPage);
+
+            grid.innerHTML = '';
+            pageItems.forEach(prof => {
+                const card = document.createElement('div');
+                card.className = 'psych-card';
+                card.onclick = function () { selectPsych(this); };
+                card.innerHTML = `
+                    <div class="psych-photo-placeholder">FOTO</div>
+                    <h4>${prof.name}</h4>
+                    <p>${prof.specialty}</p>
+                `;
+                grid.appendChild(card);
+            });
+
+            document.getElementById('page-indicator').textContent = `${psychCurrentPage + 1} / ${totalPages}`;
+            document.getElementById('btn-prev-page').disabled = psychCurrentPage === 0;
+            document.getElementById('btn-next-page').disabled = psychCurrentPage >= totalPages - 1;
+
+            document.querySelectorAll('.psych-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById('next-to-date-btn').style.display = 'none';
+        }
+
+        function changePage(direction) {
+            const itemsPerPage = getItemsPerPage();
+            const totalPages = Math.ceil(professionals.length / itemsPerPage);
+            const newPage = psychCurrentPage + direction;
+            if (newPage >= 0 && newPage < totalPages) {
+                psychCurrentPage = newPage;
+                renderProfessionalsPage();
             }
         }
 
+        window.addEventListener('resize', () => {
+            if (document.getElementById('sched-step-4').style.display !== 'none') {
+                const itemsPerPage = getItemsPerPage();
+                const totalPages = Math.ceil(professionals.length / itemsPerPage);
+                if (psychCurrentPage >= totalPages) psychCurrentPage = totalPages - 1;
+                if (psychCurrentPage < 0) psychCurrentPage = 0;
+                renderProfessionalsPage();
+            }
+        });
+
+        /* =========================
+           SELECT CUSTOMIZADO (PARCELAS)
+           ========================= */
+        function toggleParcelas() {
+            const wrapper = document.getElementById('parcelas-wrapper');
+            parcelasOpen = !parcelasOpen;
+            wrapper.classList.toggle('open', parcelasOpen);
+
+            // Se fechou, garante que o dropdown volte ao posicionamento normal
+            if (!parcelasOpen) resetParcelasDropdownPosition();
+        }
+
+        function selectParcela(el, value, label) {
+            document.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+
+            document.getElementById('parcelas-label').textContent = label;
+            document.getElementById('card-parcelas').value = value;
+
+            // Atualiza o clone visível do trigger durante o tutorial
+            const cloneTrigger = document.querySelector('[data-parcelas-clone="true"]');
+            if (cloneTrigger) {
+                const cloneLabel = cloneTrigger.querySelector('span');
+                if (cloneLabel) cloneLabel.textContent = label;
+            }
+
+            parcelasOpen = false;
+            document.getElementById('parcelas-wrapper').classList.remove('open');
+            resetParcelasDropdownPosition();
+        }
+
+        // Reseta o posicionamento "fixed" aplicado durante o tutorial
+        function resetParcelasDropdownPosition() {
+            const dropdown = document.getElementById('parcelas-dropdown');
+            const wrapper = document.getElementById('parcelas-wrapper');
+
+            // Devolve o dropdown ao wrapper original caso tenha sido movido pro body
+            if (dropdown.parentElement === document.body) {
+                wrapper.appendChild(dropdown);
+            }
+
+            dropdown.style.display = '';
+            dropdown.style.position = '';
+            dropdown.style.top = '';
+            dropdown.style.left = '';
+            dropdown.style.width = '';
+            dropdown.style.zIndex = '';
+            dropdown.style.background = '';
+            dropdown.style.boxShadow = '';
+            dropdown.style.border = '';
+            dropdown.style.borderRadius = '';
+            dropdown.style.overflow = '';
+        }
+
+        // Fecha o select ao clicar fora dele
+        document.addEventListener('click', function (e) {
+            const wrapper = document.getElementById('parcelas-wrapper');
+            const dropdown = document.getElementById('parcelas-dropdown');
+            const insideWrapper = wrapper && wrapper.contains(e.target);
+            const insideDropdown = dropdown && dropdown.contains(e.target);
+            if (!insideWrapper && !insideDropdown) {
+                parcelasOpen = false;
+                if (wrapper) wrapper.classList.remove('open');
+                resetParcelasDropdownPosition();
+            }
+        });
+
+        /* =========================
+           PIX - COPIAR CHAVE
+           ========================= */
+        function copyPix(btn) {
+            const chavePix = '11942271174'; // coloque sua chave real aqui
+            navigator.clipboard.writeText(chavePix).catch(() => { });
+
+            btn.innerHTML = '<i data-lucide="check-circle" style="width:16px;height:16px;"></i> Chave pix copiada!';
+            btn.style.background = 'var(--success-color)';
+            btn.disabled = true;
+            lucide.createIcons();
+
+            setTimeout(() => {
+                btn.innerHTML = '<i data-lucide="copy" style="width:16px;height:16px;"></i> Copiar chave pix';
+                btn.style.background = '';
+                btn.disabled = false;
+                lucide.createIcons();
+
+                goToScheduleStep(4);
+
+                if (document.getElementById('tutorial-overlay').classList.contains('active') && tutorialActiveBranch === 'pix') {
+                    document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                    tutorialActiveBranch = null;
+                    tutorialHistory.push(2);
+                    tutorialCurrentStep = 3;
+                    nextTutorialStep();
+                }
+            }, 3000);
+        }
+
+        /* =========================
+           MENU LATERAL / NAVEGAÇÃO
+           ========================= */
         function toggleMenu() {
             const sidebar = document.getElementById('main-sidebar');
             const content = document.getElementById('main-content');
@@ -298,6 +463,27 @@
             lucide.createIcons();
         }
 
+        function toggleHelpMenu() {
+            const menu = document.getElementById('help-menu');
+            menu.classList.toggle('active');
+        }
+
+        function selectHelpOption(option) {
+            if (option === 'marcar') {
+                startScheduleTutorial();
+            } else if (option === 'cancelar') {
+                // Tutorial de cancelamento será implementado aqui
+            }
+            document.getElementById('help-menu').classList.remove('active');
+        }
+
+        function contactWhatsapp() {
+            window.open('https://wa.me/5511942271174', '_blank');
+        }
+
+        /* =========================
+           MODAL CUSTOMIZADO
+           ========================= */
         function showModal(title, text, callback = null) {
             const modal = document.getElementById('custom-modal');
             document.getElementById('modal-title').innerText = title;
@@ -309,6 +495,9 @@
             };
         }
 
+        /* =========================
+           FLUXOS (HOME / SCHEDULE / APPOINTMENTS)
+           ========================= */
         function openFlow(flow) {
             document.getElementById('view-home').style.display = 'none';
             const container = document.getElementById('flow-' + flow);
@@ -321,13 +510,28 @@
             document.getElementById('view-home').style.display = 'grid';
         }
 
-        function contactWhatsapp() {
-            window.open('https://wa.me/5511942271174', '_blank');
+        function handleBackButton() {
+            const overlayActive = document
+                .getElementById('tutorial-overlay')
+                .classList.contains('active');
+
+            if (overlayActive) {
+                tutorialBack();
+                return;
+            }
+
+            if (currentScheduleStep > 1) {
+                goToScheduleStep(currentScheduleStep - 1);
+            } else {
+                closeFlow();
+            }
         }
 
+        /* =========================
+           AGENDAMENTO - PASSOS
+           ========================= */
         function resetScheduleFlow() {
             document.querySelectorAll('.sched-step').forEach(s => s.style.display = 'none');
-
             currentScheduleStep = 1;
             document.getElementById('sched-step-1').style.display = 'block';
         }
@@ -338,11 +542,14 @@
             });
 
             document.getElementById(`sched-step-${step}`).style.display = 'block';
-
             currentScheduleStep = step;
 
-            const backBtn = document.querySelector('.btn-back-small');
+            if (step === 4) {
+                psychCurrentPage = 0;
+                renderProfessionalsPage();
+            }
 
+            const backBtn = document.querySelector('.btn-back-small');
             if (step === 4) {
                 backBtn.style.display = 'none';
             } else {
@@ -425,7 +632,9 @@
             });
         }
 
-
+        /* =========================
+           MINHAS CONSULTAS
+           ========================= */
         function filterAppts(status) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
@@ -444,28 +653,9 @@
             });
         }
 
-        function toggleHelpMenu() {
-            const menu = document.getElementById('help-menu');
-            menu.classList.toggle('active');
-        }
-
-        function selectHelpOption(option) {
-            if (option === 'marcar') {
-                startScheduleTutorial();
-            } else if (option === 'cancelar') {
-                // Tutorial de cancelamento será implementado aqui
-            }
-            document.getElementById('help-menu').classList.remove('active');
-        }
-
-        // =========================
-        // TUTORIAL INTERATIVO
-        // =========================
-        let tutorialCurrentStep = 0;
-        let tutorialSteps = [];
-        let tutorialBranches = {};
-        let tutorialHistory = [];
-        let tutorialActiveBranch = null;
+        /* =========================
+           TUTORIAL INTERATIVO
+           ========================= */
 
         // Intercepta o botão Voltar do flow durante o tutorial
         function tutorialBack() {
@@ -507,6 +697,12 @@
                 delete el.dataset.tutorialHidden;
             });
 
+            // Fecha e reseta o select de parcelas caso tenha ficado aberto no tutorial
+            parcelasOpen = false;
+            const parcelasWrapper = document.getElementById('parcelas-wrapper');
+            if (parcelasWrapper) parcelasWrapper.classList.remove('open');
+            resetParcelasDropdownPosition();
+
             overlay.style.pointerEvents = '';
             overlay.style.background = '';
 
@@ -539,13 +735,31 @@
                         { selector: '#sched-step-2 .option-card:nth-child(1)', branch: 'pix' },
                         { selector: '#sched-step-2 .option-card:nth-child(2)', branch: 'card' }
                     ]
+                },
+                {
+                    targets: ['#psych-grid .psych-card', '#psych-pagination'],
+                    text: '',
+                    beforeShow: function () {
+                        goToScheduleStep(4);
+                        const itemsPerPage = getItemsPerPage();
+                        const totalPages = Math.ceil(professionals.length / itemsPerPage);
+                        let text = 'Escolha seu profissional clicando no card desejado.';
+                        if (totalPages > 1) {
+                            text += ' Use os botões Anterior e Próxima para ver mais profissionais.';
+                        }
+                        this.text = text;
+                    }
+                },
+                {
+                    targets: ['#next-to-date-btn'],
+                    text: 'Agora aperte em Continuar para prosseguir com o agendamento.',
+                    beforeShow: () => { }
                 }
             ];
 
             tutorialBranches = {
                 pix: {
                     targets: ['#pix-detail .qr-placeholder', '#pix-detail .btn-copy'],
-                    extraClickable: ['#pix-detail .btn-confirm'],
                     text: 'Escaneie o QR Code com o app do seu banco ou copie a chave Pix para realizar o pagamento.',
                     beforeShow: () => { }
                 },
@@ -561,8 +775,7 @@
                         '#card-detail > div .input-group:nth-child(2) label',
                         '#card-cvv',
                         '#card-detail .input-group:nth-child(4) label',
-                        '#card-parcelas',
-
+                        '#parcelas-trigger',
                         '#card-detail .btn-confirm'
                     ],
                     interactive: true,
@@ -577,75 +790,62 @@
             showTutorialStep(0);
         }
 
+        function getCombinedBoundingBox(elements) {
+            let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                l = Math.min(l, rect.left); t = Math.min(t, rect.top);
+                r = Math.max(r, rect.right); b = Math.max(b, rect.bottom);
+            });
+            return { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t };
+        }
+
         function positionBalloon(balloon, targetElements, fixedTop = false) {
             balloon.style.display = 'block';
 
             // ===== MOBILE CARD =====
             if (fixedTop) {
-
                 const box = getCombinedBoundingBox(targetElements);
 
-                // largura normal
                 balloon.style.width = '220px';
                 balloon.style.maxWidth = '220px';
-
-                // reduz altura interna
                 balloon.style.padding = '8px 12px';
 
-                // reduz texto
                 const text = balloon.querySelector('p');
-
                 if (text) {
                     text.style.fontSize = '0.72rem';
                     text.style.lineHeight = '1.1';
-                    text.style.marginBottom = '6px';
+                    text.style.marginBottom = '10px';
                 }
 
-                // reduz área dos botões
                 const buttons = balloon.querySelector('.tutorial-buttons');
-
                 if (buttons) {
                     buttons.style.marginTop = '0px';
                     buttons.style.gap = '6px';
                 }
 
-                // reduz botão
                 const stopBtn = balloon.querySelector('.btn-tutorial-stop');
-
                 if (stopBtn) {
                     stopBtn.style.padding = '5px 8px';
                     stopBtn.style.fontSize = '0.68rem';
                 }
 
-                // centraliza horizontalmente nos inputs
                 let left = box.left + (box.width / 2) - 110;
-
-                // mantém acima dos inputs
                 let top = box.top - 120;
 
-                // impede sair da tela
-                left = Math.max(
-                    10,
-                    Math.min(left, window.innerWidth - 230)
-                );
+                left = Math.max(10, Math.min(left, window.innerWidth - 230));
 
                 balloon.style.left = `${left}px`;
                 balloon.style.top = `${top}px`;
-
-                // seta apontando pra baixo
                 balloon.classList.add('balloon-above');
-
                 balloon.style.transform = 'none';
-
                 return;
             }
 
             // ===== NORMAL =====
             const box = getCombinedBoundingBox(targetElements);
-
             const bw = balloon.offsetWidth;
             const bh = balloon.offsetHeight;
-
             const margin = 10;
 
             let left = box.left + box.width / 2 - bw / 2;
@@ -659,14 +859,11 @@
                 balloon.classList.remove('balloon-above');
             }
 
-            left = Math.max(
-                margin,
-                Math.min(left, window.innerWidth - bw - margin)
-            );
+            left = Math.max(margin, Math.min(left, window.innerWidth - bw - margin));
+            top = Math.max(margin, Math.min(top, window.innerHeight - bh - margin));
 
             balloon.style.top = top + 'px';
             balloon.style.left = left + 'px';
-
             balloon.style.transform = 'none';
         }
 
@@ -675,6 +872,7 @@
             const rect = originalEl.getBoundingClientRect();
             const clone = originalEl.cloneNode(true);
             clone.classList.add('tutorial-clone', 'tutorial-highlight');
+            clone.removeAttribute('onclick');
             clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
                 `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:2002;` +
                 `pointer-events:${clickable ? 'auto' : 'none'};cursor:${clickable ? 'pointer' : 'default'};`;
@@ -699,55 +897,99 @@
 
             const overlay = document.getElementById('tutorial-overlay');
             const balloon = document.getElementById('tutorial-balloon');
-            document.getElementById('tutorial-text').innerText = step.text;
+            document.getElementById('tutorial-text').innerText = step.text || '';
 
             setTimeout(() => {
-                const targets = step.targets.map(s => document.querySelector(s)).filter(Boolean);
+                // Resolve targets: querySelectorAll para seletores que podem retornar múltiplos
+                const targets = [];
+                step.targets.forEach(s => {
+                    const nodeList = document.querySelectorAll(s);
+                    nodeList.forEach(el => targets.push(el));
+                });
                 if (!targets.length) return;
 
                 const box = getCombinedBoundingBox(targets);
-
-                // Centraliza o alvo na tela
                 const targetCenter = box.top + (box.height / 2);
-
                 const viewportCenter = window.innerHeight / 2;
-
                 const scrollOffset = targetCenter - viewportCenter;
 
-                // Faz o scroll ANTES de abrir o overlay
-                window.scrollBy({
-                    top: scrollOffset,
-                    behavior: 'smooth'
-                });
+                window.scrollBy({ top: scrollOffset, behavior: 'smooth' });
 
                 setTimeout(() => {
-
                     overlay.classList.add('active');
 
                     setTimeout(() => {
                         document.body.style.overflow = 'hidden';
                     }, 350);
 
-                    targets.forEach(originalEl => {
-                        makeClone(originalEl, true, () => {
-                            closeTutorialVisuals();
-                            originalEl.click();
+                    // Flag para evitar duplicação de clones no step de profissionais
+                    const hasPsychCards = targets.some(t => t.classList && t.classList.contains('psych-card'));
 
-                            if (step.branchedTargets) {
-                                const matched = step.branchedTargets.find(b => originalEl.matches(b.selector));
-                                if (matched) {
-                                    tutorialHistory.push(stepIndex);
-                                    setTimeout(() => showTutorialBranch(matched.branch), 300);
-                                    return;
+                    if (hasPsychCards) {
+                        // Função dedicada para recriar todos os clones do step de profissionais
+                        function setupPsychTutorialClones() {
+                            document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                            const cards = document.querySelectorAll('#psych-grid .psych-card');
+                            const pagination = document.getElementById('psych-pagination');
+
+                            cards.forEach(card => makeClone(card, true, () => {
+                                closeTutorialVisuals();
+                                card.click();
+                                tutorialHistory.push(stepIndex);
+                                tutorialCurrentStep = stepIndex + 1;
+                                setTimeout(() => nextTutorialStep(), 300);
+                            }));
+
+                            if (pagination) {
+                                makeClone(pagination, false);
+                                pagination.querySelectorAll('.btn-page').forEach(btn => {
+                                    const dir = btn.id === 'btn-next-page' ? 1 : -1;
+                                    makeClone(btn, true, () => {
+                                        changePage(dir);
+                                        setTimeout(() => setupPsychTutorialClones(), 150);
+                                    });
+                                });
+                            }
+
+                            const balloon = document.getElementById('tutorial-balloon');
+                            const allTargets = [...cards, pagination].filter(Boolean);
+                            if (allTargets.length) positionBalloon(balloon, allTargets);
+
+                            // Garante que a paginação esteja visível na viewport
+                            if (pagination) {
+                                const paginationRect = pagination.getBoundingClientRect();
+                                const balloonRect = balloon.getBoundingClientRect();
+                                const bottommost = Math.max(paginationRect.bottom, balloonRect.bottom);
+                                if (bottommost > window.innerHeight - 10) {
+                                    const scrollNeeded = bottommost - window.innerHeight + 30;
+                                    window.scrollBy({ top: scrollNeeded, behavior: 'smooth' });
                                 }
                             }
-                            tutorialHistory.push(stepIndex);
-                            tutorialCurrentStep = stepIndex + 1;
-                            setTimeout(() => nextTutorialStep(), 300);
-                        });
-                    });
+                        }
 
-                    positionBalloon(balloon, targets);
+                        setupPsychTutorialClones();
+                    } else {
+                        targets.forEach(originalEl => {
+                            makeClone(originalEl, true, () => {
+                                closeTutorialVisuals();
+                                originalEl.click();
+
+                                if (step.branchedTargets) {
+                                    const matched = step.branchedTargets.find(b => originalEl.matches(b.selector));
+                                    if (matched) {
+                                        tutorialHistory.push(stepIndex);
+                                        setTimeout(() => showTutorialBranch(matched.branch), 300);
+                                        return;
+                                    }
+                                }
+                                tutorialHistory.push(stepIndex);
+                                tutorialCurrentStep = stepIndex + 1;
+                                setTimeout(() => nextTutorialStep(), 300);
+                            });
+                        });
+
+                        positionBalloon(balloon, targets);
+                    }
                 }, 500);
             }, 150);
         }
@@ -783,18 +1025,17 @@
                     overlay.style.background = 'rgba(0, 0, 0, 0.7)';
 
                     if (branch.interactive) {
-
-                        overlay.style.pointerEvents = 'none';
                         // Cartão: overlay não bloqueia nada (pointer-events: none)
-                        // labels e inputs ficam no DOM original, acima do overlay via z-index
+                        overlay.style.pointerEvents = 'none';
 
                         targets.forEach(el => {
                             const tag = el.tagName.toLowerCase();
-                            if (tag === 'label') {
 
+                            if (tag === 'label') {
+                                // Label: clone fixed no body, sem glow, só "aceso"
                                 el.dataset.tutorialHidden = 'true';
                                 el.style.opacity = '0';
-                                // Label: clone fixed no body, sem glow, só aceso
+
                                 const rect = el.getBoundingClientRect();
                                 const clone = el.cloneNode(true);
                                 clone.classList.add('tutorial-clone', 'tutorial-highlight-label');
@@ -802,44 +1043,108 @@
                                     `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:2002;pointer-events:none;`;
                                 document.body.appendChild(clone);
                             } else {
-                                // Input/select reais ficam acima do overlay
+                                // Input / trigger reais ficam acima do overlay via clone
                                 const rect = el.getBoundingClientRect();
-
                                 const clone = el.cloneNode(true);
-
                                 clone.classList.add('tutorial-clone');
 
                                 const computed = window.getComputedStyle(el);
 
                                 clone.style.cssText = `
-    position: fixed;
-    top: ${rect.top}px;
-    left: ${rect.left}px;
-    width: ${rect.width}px;
-    height: ${rect.height}px;
+                                    position: fixed;
+                                    top: ${rect.top}px;
+                                    left: ${rect.left}px;
+                                    width: ${rect.width}px;
+                                    height: ${rect.height}px;
+                                    margin: 0;
+                                    padding: ${computed.padding};
+                                    border-radius: ${computed.borderRadius};
+                                    background: ${computed.background};
+                                    color: ${computed.color};
+                                    font: ${computed.font};
+                                    z-index: 99999;
+                                    pointer-events: auto;
+                                    box-sizing: border-box;
+                                    display: ${computed.display};
+                                    align-items: ${computed.alignItems};
+                                    justify-content: ${computed.justifyContent};
+                                    border: 2px solid var(--primary-color);
+                                    box-shadow: 0 0 0 3px rgba(187, 137, 145, 0.3), 0 0 14px rgba(187, 137, 145, 0.25);
+                                `;
+                                clone.style.accentColor = 'var(--primary-color)';
 
-    margin: 0;
-    padding: ${computed.padding};
-
-    border: ${computed.border};
-    border-radius: ${computed.borderRadius};
-
-    background: ${computed.background};
-    color: ${computed.color};
-
-    font: ${computed.font};
-
-    box-shadow: ${computed.boxShadow};
-    outline: ${computed.outline};
-
-    z-index: 99999;
-    pointer-events: auto;
-
-    appearance: auto;
-    -webkit-appearance: auto;
-`;
+                                // IMPORTANTE: remove o onclick inline herdado pelo cloneNode,
+                                // senão o toggle roda 2x (onclick + listener) e o dropdown
+                                // abre e fecha no mesmo clique.
+                                clone.removeAttribute('onclick');
 
                                 document.body.appendChild(clone);
+
+                                // Trigger do select de parcelas: reconecta o comportamento
+                                if (el.id === 'parcelas-trigger') {
+                                    clone.setAttribute('data-parcelas-clone', 'true');
+                                    clone.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+
+                                        const wrapper = document.getElementById('parcelas-wrapper');
+                                        const dropdown = document.getElementById('parcelas-dropdown');
+
+                                        parcelasOpen = !parcelasOpen;
+                                        wrapper.classList.toggle('open', parcelasOpen);
+
+                                        if (parcelasOpen) {
+                                            const cloneRect = clone.getBoundingClientRect();
+
+                                            // Move o dropdown para o body, escapando de qualquer stacking context
+                                            document.body.appendChild(dropdown);
+
+                                            dropdown.style.display = 'block';
+                                            dropdown.style.position = 'fixed';
+                                            dropdown.style.top = (cloneRect.bottom + 6) + 'px';
+                                            dropdown.style.left = cloneRect.left + 'px';
+                                            dropdown.style.width = cloneRect.width + 'px';
+                                            dropdown.style.zIndex = '999999';
+                                            dropdown.style.background = 'white';
+                                            dropdown.style.boxShadow = '0 8px 20px rgba(187, 137, 145, 0.3)';
+                                            dropdown.style.border = '1.5px solid var(--primary-color)';
+                                            dropdown.style.borderRadius = '12px';
+                                            dropdown.style.overflow = 'hidden';
+                                        } else {
+                                            resetParcelasDropdownPosition();
+                                        }
+                                    });
+                                }
+
+                                // Botão "Pagar Agora" do cartão: reconecta o comportamento e avança o tutorial
+                                if (el.classList.contains('btn-confirm')) {
+                                    clone.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+
+                                        // Fecha visuais do tutorial para o modal ficar acessível
+                                        closeTutorialVisuals();
+
+                                        // Eleva o z-index do modal para ficar acima do overlay
+                                        const modal = document.getElementById('custom-modal');
+                                        modal.style.zIndex = '3000';
+
+                                        simulatePayment();
+
+                                        // Intercepta o fechamento do modal para continuar o tutorial
+                                        setTimeout(() => {
+                                            const modalBtn = document.getElementById('modal-btn');
+                                            modalBtn.onclick = () => {
+                                                modal.style.display = 'none';
+                                                modal.style.zIndex = '';
+
+                                                tutorialActiveBranch = null;
+                                                tutorialHistory.push(2);
+                                                tutorialCurrentStep = 3;
+                                                nextTutorialStep();
+                                            };
+                                        }, 50);
+                                    });
+                                }
                             }
                         });
 
@@ -852,35 +1157,23 @@
                         );
 
                     } else {
-                        // Pix: clones visuais sem pointer-events
-                        overlay.style.pointerEvents = '';
-                        targets.forEach(el => makeClone(el, false));
-
-                        // Botões extra clicáveis (ex: Confirmar Pagamento)
-                        if (branch.extraClickable) {
-                            branch.extraClickable.forEach(sel => {
-                                const el = document.querySelector(sel);
-                                if (el) makeClone(el, true, () => {
-                                    document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                        // Pix: QR placeholder é visual; botão copiar é clicável
+                        targets.forEach(el => {
+                            const tag = el.tagName.toLowerCase();
+                            if (tag === 'button') {
+                                const clone = makeClone(el, true, () => {
+                                    clone.remove();
                                     el.click();
                                 });
-                            });
-                        }
+                            } else {
+                                makeClone(el, false);
+                            }
+                        });
 
                         positionBalloon(balloon, targets);
                     }
                 }, 500);
             }, 150);
-        }
-
-        function getCombinedBoundingBox(elements) {
-            let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
-            elements.forEach(el => {
-                const rect = el.getBoundingClientRect();
-                l = Math.min(l, rect.left); t = Math.min(t, rect.top);
-                r = Math.max(r, rect.right); b = Math.max(b, rect.bottom);
-            });
-            return { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t };
         }
 
         function nextTutorialStep() {
@@ -894,12 +1187,9 @@
         function closeTutorial() {
             closeTutorialVisuals();
 
-            document.getElementById('tutorial-overlay')
-                .classList.remove('active');
-
+            document.getElementById('tutorial-overlay').classList.remove('active');
             document.body.classList.remove('tutorial-lock');
 
-            // desbloqueia scroll
             document.body.style.overflow = '';
             document.body.style.touchAction = '';
 
@@ -907,7 +1197,6 @@
             tutorialHistory = [];
             tutorialActiveBranch = null;
         }
-
     </script>
 </body>
 
