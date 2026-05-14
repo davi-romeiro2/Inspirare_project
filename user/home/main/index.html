@@ -204,22 +204,12 @@
             <!-- Step 4: Psychologist Selection -->
             <div id="sched-step-4" class="sched-step" style="display:none;">
                 <p style="margin-bottom: 20px; text-align: center;">Escolha seu profissional:</p>
-                <div class="psych-grid">
-                    <div class="psych-card" onclick="selectPsych(this)">
-                        <div class="psych-photo-placeholder">FOTO</div>
-                        <h4>Dra. Ana Beatriz</h4>
-                        <p>Especialista em Ansiedade e Terapia Cognitivo-Comportamental.</p>
-                    </div>
-                    <div class="psych-card" onclick="selectPsych(this)">
-                        <div class="psych-photo-placeholder">FOTO</div>
-                        <h4>Dr. Marcos Vinícius</h4>
-                        <p>Foco em Depressão, Luto e Desenvolvimento Pessoal.</p>
-                    </div>
-                    <div class="psych-card" onclick="selectPsych(this)">
-                        <div class="psych-photo-placeholder">FOTO</div>
-                        <h4>Dra. Cláudia Luna</h4>
-                        <p>Experiente em Relacionamentos e Terapia Sistêmica.</p>
-                    </div>
+                <div id="psych-grid" class="psych-grid"></div>
+                <div class="pagination-controls" id="psych-pagination">
+                    <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)"
+                        disabled="disabled">Anterior</button>
+                    <span class="page-indicator" id="page-indicator">1 / 1</span>
+                    <button class="btn-page" id="btn-next-page" onclick="changePage(1)">Próxima</button>
                 </div>
                 <button id="next-to-date-btn" class="btn-confirm" style="display:none;"
                     onclick="goToDateSelection()">Continuar</button>
@@ -284,6 +274,73 @@
         let tutorialBranches = {};
         let tutorialHistory = [];
         let tutorialActiveBranch = null;
+
+        /* =========================
+           PROFISSIONAIS - PAGINAÇÃO
+           ========================= */
+        const professionals = [
+            { name: 'Dra. Ana Beatriz', specialty: 'Especialista em Ansiedade e Terapia Cognitivo-Comportamental.' },
+            { name: 'Dr. Marcos Vinícius', specialty: 'Foco em Depressão, Luto e Desenvolvimento Pessoal.' },
+            { name: 'Dra. Cláudia Luna', specialty: 'Experiente em Relacionamentos e Terapia Sistêmica.' },
+            { name: 'Dr. Ricardo Souza', specialty: 'Especialista em TDAH e Terapia Infantil.' },
+            { name: 'Dra. Juliana Costa', specialty: 'Foco em Trauma, PTSD e Terapia EMDR.' },
+            { name: 'Dr. Fernando Lima', specialty: 'Especialista em Terapia de Casal e Familiar.' },
+            { name: 'Dra. Bianca Mendes', specialty: 'Experiente em Burnout e Qualidade de Vida.' }
+        ];
+        let psychCurrentPage = 0;
+
+        function getItemsPerPage() {
+            return window.innerWidth >= 1024 ? 6 : 2;
+        }
+
+        function renderProfessionalsPage() {
+            const grid = document.getElementById('psych-grid');
+            const itemsPerPage = getItemsPerPage();
+            const start = psychCurrentPage * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageItems = professionals.slice(start, end);
+            const totalPages = Math.ceil(professionals.length / itemsPerPage);
+
+            grid.innerHTML = '';
+            pageItems.forEach(prof => {
+                const card = document.createElement('div');
+                card.className = 'psych-card';
+                card.onclick = function () { selectPsych(this); };
+                card.innerHTML = `
+                    <div class="psych-photo-placeholder">FOTO</div>
+                    <h4>${prof.name}</h4>
+                    <p>${prof.specialty}</p>
+                `;
+                grid.appendChild(card);
+            });
+
+            document.getElementById('page-indicator').textContent = `${psychCurrentPage + 1} / ${totalPages}`;
+            document.getElementById('btn-prev-page').disabled = psychCurrentPage === 0;
+            document.getElementById('btn-next-page').disabled = psychCurrentPage >= totalPages - 1;
+
+            document.querySelectorAll('.psych-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById('next-to-date-btn').style.display = 'none';
+        }
+
+        function changePage(direction) {
+            const itemsPerPage = getItemsPerPage();
+            const totalPages = Math.ceil(professionals.length / itemsPerPage);
+            const newPage = psychCurrentPage + direction;
+            if (newPage >= 0 && newPage < totalPages) {
+                psychCurrentPage = newPage;
+                renderProfessionalsPage();
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            if (document.getElementById('sched-step-4').style.display !== 'none') {
+                const itemsPerPage = getItemsPerPage();
+                const totalPages = Math.ceil(professionals.length / itemsPerPage);
+                if (psychCurrentPage >= totalPages) psychCurrentPage = totalPages - 1;
+                if (psychCurrentPage < 0) psychCurrentPage = 0;
+                renderProfessionalsPage();
+            }
+        });
 
         /* =========================
            SELECT CUSTOMIZADO (PARCELAS)
@@ -487,6 +544,11 @@
             document.getElementById(`sched-step-${step}`).style.display = 'block';
             currentScheduleStep = step;
 
+            if (step === 4) {
+                psychCurrentPage = 0;
+                renderProfessionalsPage();
+            }
+
             const backBtn = document.querySelector('.btn-back-small');
             if (step === 4) {
                 backBtn.style.display = 'none';
@@ -675,9 +737,23 @@
                     ]
                 },
                 {
-                    targets: ['#sched-step-4 .psych-card'],
-                    text: 'Escolha seu profissional clicando no card desejado.',
-                    beforeShow: () => { goToScheduleStep(4); }
+                    targets: ['#psych-grid .psych-card', '#psych-pagination'],
+                    text: '',
+                    beforeShow: function () {
+                        goToScheduleStep(4);
+                        const itemsPerPage = getItemsPerPage();
+                        const totalPages = Math.ceil(professionals.length / itemsPerPage);
+                        let text = 'Escolha seu profissional clicando no card desejado.';
+                        if (totalPages > 1) {
+                            text += ' Use os botões Anterior e Próxima para ver mais profissionais.';
+                        }
+                        this.text = text;
+                    }
+                },
+                {
+                    targets: ['#next-to-date-btn'],
+                    text: 'Agora aperte em Continuar para prosseguir com o agendamento.',
+                    beforeShow: () => { }
                 }
             ];
 
@@ -784,6 +860,7 @@
             }
 
             left = Math.max(margin, Math.min(left, window.innerWidth - bw - margin));
+            top = Math.max(margin, Math.min(top, window.innerHeight - bh - margin));
 
             balloon.style.top = top + 'px';
             balloon.style.left = left + 'px';
@@ -795,6 +872,7 @@
             const rect = originalEl.getBoundingClientRect();
             const clone = originalEl.cloneNode(true);
             clone.classList.add('tutorial-clone', 'tutorial-highlight');
+            clone.removeAttribute('onclick');
             clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
                 `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:2002;` +
                 `pointer-events:${clickable ? 'auto' : 'none'};cursor:${clickable ? 'pointer' : 'default'};`;
@@ -819,10 +897,15 @@
 
             const overlay = document.getElementById('tutorial-overlay');
             const balloon = document.getElementById('tutorial-balloon');
-            document.getElementById('tutorial-text').innerText = step.text;
+            document.getElementById('tutorial-text').innerText = step.text || '';
 
             setTimeout(() => {
-                const targets = step.targets.map(s => document.querySelector(s)).filter(Boolean);
+                // Resolve targets: querySelectorAll para seletores que podem retornar múltiplos
+                const targets = [];
+                step.targets.forEach(s => {
+                    const nodeList = document.querySelectorAll(s);
+                    nodeList.forEach(el => targets.push(el));
+                });
                 if (!targets.length) return;
 
                 const box = getCombinedBoundingBox(targets);
@@ -839,26 +922,74 @@
                         document.body.style.overflow = 'hidden';
                     }, 350);
 
-                    targets.forEach(originalEl => {
-                        makeClone(originalEl, true, () => {
-                            closeTutorialVisuals();
-                            originalEl.click();
+                    // Flag para evitar duplicação de clones no step de profissionais
+                    const hasPsychCards = targets.some(t => t.classList && t.classList.contains('psych-card'));
 
-                            if (step.branchedTargets) {
-                                const matched = step.branchedTargets.find(b => originalEl.matches(b.selector));
-                                if (matched) {
-                                    tutorialHistory.push(stepIndex);
-                                    setTimeout(() => showTutorialBranch(matched.branch), 300);
-                                    return;
+                    if (hasPsychCards) {
+                        // Função dedicada para recriar todos os clones do step de profissionais
+                        function setupPsychTutorialClones() {
+                            document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                            const cards = document.querySelectorAll('#psych-grid .psych-card');
+                            const pagination = document.getElementById('psych-pagination');
+
+                            cards.forEach(card => makeClone(card, true, () => {
+                                closeTutorialVisuals();
+                                card.click();
+                                tutorialHistory.push(stepIndex);
+                                tutorialCurrentStep = stepIndex + 1;
+                                setTimeout(() => nextTutorialStep(), 300);
+                            }));
+
+                            if (pagination) {
+                                makeClone(pagination, false);
+                                pagination.querySelectorAll('.btn-page').forEach(btn => {
+                                    const dir = btn.id === 'btn-next-page' ? 1 : -1;
+                                    makeClone(btn, true, () => {
+                                        changePage(dir);
+                                        setTimeout(() => setupPsychTutorialClones(), 150);
+                                    });
+                                });
+                            }
+
+                            const balloon = document.getElementById('tutorial-balloon');
+                            const allTargets = [...cards, pagination].filter(Boolean);
+                            if (allTargets.length) positionBalloon(balloon, allTargets);
+
+                            // Garante que a paginação esteja visível na viewport
+                            if (pagination) {
+                                const paginationRect = pagination.getBoundingClientRect();
+                                const balloonRect = balloon.getBoundingClientRect();
+                                const bottommost = Math.max(paginationRect.bottom, balloonRect.bottom);
+                                if (bottommost > window.innerHeight - 10) {
+                                    const scrollNeeded = bottommost - window.innerHeight + 30;
+                                    window.scrollBy({ top: scrollNeeded, behavior: 'smooth' });
                                 }
                             }
-                            tutorialHistory.push(stepIndex);
-                            tutorialCurrentStep = stepIndex + 1;
-                            setTimeout(() => nextTutorialStep(), 300);
-                        });
-                    });
+                        }
 
-                    positionBalloon(balloon, targets);
+                        setupPsychTutorialClones();
+                    } else {
+                        targets.forEach(originalEl => {
+                            makeClone(originalEl, true, () => {
+                                closeTutorialVisuals();
+                                originalEl.click();
+
+                                if (step.branchedTargets) {
+                                    const matched = step.branchedTargets.find(b => originalEl.matches(b.selector));
+                                    if (matched) {
+                                        tutorialHistory.push(stepIndex);
+                                        setTimeout(() => showTutorialBranch(matched.branch), 300);
+                                        return;
+                                    }
+                                }
+                                tutorialHistory.push(stepIndex);
+                                tutorialCurrentStep = stepIndex + 1;
+                                setTimeout(() => nextTutorialStep(), 300);
+                            });
+                        });
+
+                        positionBalloon(balloon, targets);
+                    }
                 }, 500);
             }, 150);
         }
@@ -981,6 +1112,37 @@
                                         } else {
                                             resetParcelasDropdownPosition();
                                         }
+                                    });
+                                }
+
+                                // Botão "Pagar Agora" do cartão: reconecta o comportamento e avança o tutorial
+                                if (el.classList.contains('btn-confirm')) {
+                                    clone.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+
+                                        // Fecha visuais do tutorial para o modal ficar acessível
+                                        closeTutorialVisuals();
+
+                                        // Eleva o z-index do modal para ficar acima do overlay
+                                        const modal = document.getElementById('custom-modal');
+                                        modal.style.zIndex = '3000';
+
+                                        simulatePayment();
+
+                                        // Intercepta o fechamento do modal para continuar o tutorial
+                                        setTimeout(() => {
+                                            const modalBtn = document.getElementById('modal-btn');
+                                            modalBtn.onclick = () => {
+                                                modal.style.display = 'none';
+                                                modal.style.zIndex = '';
+
+                                                tutorialActiveBranch = null;
+                                                tutorialHistory.push(2);
+                                                tutorialCurrentStep = 3;
+                                                nextTutorialStep();
+                                            };
+                                        }, 50);
                                     });
                                 }
                             }
