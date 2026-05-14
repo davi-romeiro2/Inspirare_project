@@ -254,3 +254,16 @@ body {
     align-items: center;
     justify-content: center;
 }
+
+@media (max-width: 480px) {
+    .code-grid {
+        gap: 6px;
+        justify-items: stretch;
+    }
+
+    .code-input {
+        width: 100%;
+        min-width: 0;
+        height: 50px;
+    }
+}
