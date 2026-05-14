@@ -149,12 +149,14 @@
             <!-- Step 3: Payment Details -->
             <div id="sched-step-3" class="sched-step" style="display:none;">
                 <div id="pix-detail" style="display:none;" class="pix-container">
-                    <div class="qr-placeholder">QR CODE PIX</div>
+                    <div class="qr-placeholder">
+                        <i data-lucide="qr-code" style="width:64px;height:64px;"></i>
+                        <span>QR CODE PIX</span>
+                    </div>
                     <button class="btn-copy" id="btn-copy-pix" onclick="copyPix(this)">
                         <i data-lucide="copy" style="width:16px;height:16px;"></i>
                         Copiar chave pix
                     </button>
-                    <button class="btn-confirm" onclick="simulatePayment()">Confirmar Pagamento</button>
                 </div>
                 <div id="card-detail" style="display:none;" class="card-container">
                     <div class="input-group">
@@ -367,6 +369,16 @@
                 btn.style.background = '';
                 btn.disabled = false;
                 lucide.createIcons();
+
+                goToScheduleStep(4);
+
+                if (document.getElementById('tutorial-overlay').classList.contains('active') && tutorialActiveBranch === 'pix') {
+                    document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                    tutorialActiveBranch = null;
+                    tutorialHistory.push(2);
+                    tutorialCurrentStep = 3;
+                    nextTutorialStep();
+                }
             }, 3000);
         }
 
@@ -661,13 +673,17 @@
                         { selector: '#sched-step-2 .option-card:nth-child(1)', branch: 'pix' },
                         { selector: '#sched-step-2 .option-card:nth-child(2)', branch: 'card' }
                     ]
+                },
+                {
+                    targets: ['#sched-step-4 .psych-card'],
+                    text: 'Escolha seu profissional clicando no card desejado.',
+                    beforeShow: () => { goToScheduleStep(4); }
                 }
             ];
 
             tutorialBranches = {
                 pix: {
                     targets: ['#pix-detail .qr-placeholder', '#pix-detail .btn-copy'],
-                    extraClickable: ['#pix-detail .btn-confirm'],
                     text: 'Escaneie o QR Code com o app do seu banco ou copie a chave Pix para realizar o pagamento.',
                     beforeShow: () => { }
                 },
@@ -979,20 +995,18 @@
                         );
 
                     } else {
-                        // Pix: clones visuais sem pointer-events
-                        overlay.style.pointerEvents = '';
-                        targets.forEach(el => makeClone(el, false));
-
-                        // Botões extra clicáveis (ex: Confirmar Pagamento)
-                        if (branch.extraClickable) {
-                            branch.extraClickable.forEach(sel => {
-                                const el = document.querySelector(sel);
-                                if (el) makeClone(el, true, () => {
-                                    document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                        // Pix: QR placeholder é visual; botão copiar é clicável
+                        targets.forEach(el => {
+                            const tag = el.tagName.toLowerCase();
+                            if (tag === 'button') {
+                                const clone = makeClone(el, true, () => {
+                                    clone.remove();
                                     el.click();
                                 });
-                            });
-                        }
+                            } else {
+                                makeClone(el, false);
+                            }
+                        });
 
                         positionBalloon(balloon, targets);
                     }

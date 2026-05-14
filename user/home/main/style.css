@@ -569,9 +569,31 @@ body.tutorial-lock {
     background: #eee;
     border: 2px solid #ddd;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     color: #999;
+    gap: 10px;
+}
+
+.qr-placeholder i,
+.qr-placeholder svg {
+    color: var(--secondary-color);
+    opacity: 0.4;
+}
+
+/* Garante que o clone do botão copiar no tutorial mantenha aparência legível e limpa */
+.tutorial-clone.btn-copy,
+.tutorial-clone.btn-copy:hover,
+.tutorial-clone.btn-copy:active,
+.tutorial-clone.btn-copy:focus {
+    background: var(--secondary-color) !important;
+    color: white !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    animation: none !important;
+    border-radius: 8px !important;
 }
 
 .btn-copy {
