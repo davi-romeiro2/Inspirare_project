@@ -301,10 +301,12 @@ body.tutorial-lock {
    ========================================================= */
 .psych-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 12px;
     margin-bottom: 20px;
     justify-items: center;
+    justify-content: center;
+    max-width: 100%;
 }
 
 .psych-card {
@@ -388,6 +390,10 @@ body.tutorial-lock {
     align-items: center;
     gap: 15px;
     margin-bottom: 25px;
+    width: fit-content;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .btn-page {

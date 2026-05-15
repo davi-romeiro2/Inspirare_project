@@ -892,6 +892,26 @@
             balloon.style.transform = 'none';
         }
 
+        // Posiciona o balão centralizado horizontalmente na tela, acima dos targets
+        function positionBalloonCenterTop(balloon, targetElements) {
+            balloon.style.display = 'block';
+            const box = getCombinedBoundingBox(targetElements);
+            const bw = balloon.offsetWidth || 280;
+            const bh = balloon.offsetHeight || 100;
+            const margin = 10;
+
+            let left = (window.innerWidth / 2) - (bw / 2);
+            let top = box.top - bh - 25;
+
+            left = Math.max(margin, Math.min(left, window.innerWidth - bw - margin));
+            top = Math.max(margin, top);
+
+            balloon.style.left = left + 'px';
+            balloon.style.top = top + 'px';
+            balloon.classList.add('balloon-above');
+            balloon.style.transform = 'none';
+        }
+
         // Cria um clone fixed no body de um elemento, com opção de ser clicável
         function makeClone(originalEl, clickable, onClickFn) {
             const rect = originalEl.getBoundingClientRect();
@@ -1000,7 +1020,13 @@
 
                             const allTargets = [...cards, pagination].filter(Boolean);
                             const isMobilePsych = window.innerWidth <= 768;
-                            if (allTargets.length) positionBalloon(balloon, allTargets, isMobilePsych);
+                            if (allTargets.length) {
+                                if (isMobilePsych) {
+                                    positionBalloon(balloon, allTargets, true);
+                                } else {
+                                    positionBalloonCenterTop(balloon, allTargets);
+                                }
+                            }
 
                             // Garante que a paginação esteja visível na viewport (apenas na primeira exibição, nunca durante navegação)
                             if (!skipScroll && pagination) {
