@@ -322,6 +322,7 @@ body.tutorial-lock {
     position: relative;
     max-width: 180px;
     width: 100%;
+    min-height: 190px;
 }
 
 .psych-card:hover {
@@ -900,22 +901,22 @@ body.tutorial-lock {
 .tutorial-balloon {
     position: fixed;
     background: white;
-    padding: 20px;
+    padding: 10px 12px;
     border-radius: 15px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     width: 280px;
     text-align: center;
-    z-index: 2001;
+    z-index: 2003;
     pointer-events: auto;
     animation: modalPop 0.3s ease forwards;
 }
 
 .tutorial-balloon p {
     color: var(--secondary-color);
-    font-size: 0.9rem;
-    margin-bottom: 15px;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
     font-family: 'Poppins', sans-serif;
-    line-height: 1.4;
+    line-height: 1.35;
 }
 
 .tutorial-buttons {
@@ -977,6 +978,11 @@ body.tutorial-lock {
     bottom: -12px;
     border-bottom: none;
     border-top: 12px solid white;
+}
+
+/* Esconde a seta no step de profissionais (em qualquer resolução) */
+.tutorial-balloon.no-arrow .balloon-arrow {
+    display: none;
 }
 
 /* Destaque do tutorial - eleva elemento acima do overlay e adiciona borda pulsante */
@@ -1126,19 +1132,20 @@ body.tutorial-lock {
     }
 
     .tutorial-balloon {
-        padding: 14px;
+        padding: 8px 10px;
         border-radius: 12px;
+        width: 240px;
     }
 
     .tutorial-balloon p {
-        font-size: 0.78rem;
-        line-height: 1.3;
-        margin-bottom: 10px;
+        font-size: 0.68rem;
+        line-height: 1.2;
+        margin-bottom: 6px;
     }
 
     .btn-tutorial-stop {
-        padding: 6px 10px;
-        font-size: 0.7rem;
+        padding: 4px 6px;
+        font-size: 0.6rem;
     }
 }
 
@@ -1177,6 +1184,45 @@ body.tutorial-lock {
 
     .appointment-info {
         margin-bottom: 10px;
+    }
+
+    .tutorial-balloon {
+        padding: 6px 8px;
+        width: 210px;
+        border-radius: 10px;
+    }
+
+    .tutorial-balloon p {
+        font-size: 0.65rem;
+        line-height: 1.15;
+        margin-bottom: 4px;
+    }
+
+    .btn-tutorial-stop {
+        padding: 3px 5px;
+        font-size: 0.58rem;
+    }
+
+    .btn-tutorial-next {
+        padding: 4px 8px;
+        font-size: 0.6rem;
+    }
+
+    .tutorial-balloon .balloon-arrow {
+        display: none;
+    }
+
+    .psych-card {
+        min-height: 170px;
+        padding: 10px 8px;
+    }
+
+    .psych-card h4 {
+        font-size: 0.85rem;
+    }
+
+    .psych-card p {
+        font-size: 0.65rem;
     }
 
     .filter-bar {
