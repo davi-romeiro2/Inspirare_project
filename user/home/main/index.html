@@ -755,6 +755,11 @@
                     targets: ['#next-to-date-btn'],
                     text: 'Agora aperte em Continuar para prosseguir com o agendamento.',
                     beforeShow: () => { }
+                },
+                {
+                    targets: ['#sched-step-5 .consultation-type-card:nth-child(1)', '#sched-step-5 .consultation-type-card:nth-child(2)'],
+                    text: 'Escolha o formato da consulta: Online ou Presencial.',
+                    beforeShow: () => { goToDateSelection(); }
                 }
             ];
 
