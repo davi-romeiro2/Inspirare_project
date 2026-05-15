@@ -275,6 +275,7 @@
         let tutorialHistory = [];
         let tutorialActiveBranch = null;
         let tutorialPsychTimeout = null; // Controla o rebuild dos clones no step de profissionais
+        let showTutorialReactivation = false; // Controla o balão de reativação ao final do tutorial
 
         /* =========================
            PROFISSIONAIS - PAGINAÇÃO
@@ -630,7 +631,31 @@
         function confirmAppointment() {
             showModal('Agendamento Concluído', 'Sua consulta foi marcada com sucesso!', () => {
                 closeFlow();
+                if (showTutorialReactivation) {
+                    showTutorialReactivation = false;
+                    setTimeout(() => showReactivationHint(), 400);
+                }
             });
+        }
+
+        // Mostra um balão ao lado do botão de ajuda indicando que o tutorial pode ser reativado
+        function showReactivationHint() {
+            const helpBtn = document.querySelector('.help-btn');
+            if (!helpBtn) return;
+
+            const hint = document.createElement('div');
+            hint.className = 'tutorial-reactivation-hint';
+            hint.innerHTML = `
+                <span>Precisa de ajuda? Toque aqui para refazer o tutorial.</span>
+                <button class="hint-close">&times;</button>
+            `;
+            document.body.appendChild(hint);
+
+            const closeHint = () => { if (hint.parentNode) hint.remove(); };
+            hint.querySelector('.hint-close').addEventListener('click', closeHint);
+
+            // Fecha automaticamente após 8 segundos
+            setTimeout(closeHint, 8000);
         }
 
         /* =========================
@@ -769,6 +794,11 @@
                 {
                     targets: ['#time-picker .time-btn'],
                     text: 'Escolha o horário que melhor se encaixa na sua agenda.',
+                    beforeShow: () => { }
+                },
+                {
+                    targets: ['#final-confirm-btn'],
+                    text: 'Agora confirme seu agendamento clicando aqui.',
                     beforeShow: () => { }
                 }
             ];
@@ -1060,6 +1090,11 @@
                         targets.forEach(originalEl => {
                             makeClone(originalEl, true, () => {
                                 closeTutorialVisuals();
+
+                                if (stepIndex === tutorialSteps.length - 1) {
+                                    showTutorialReactivation = true;
+                                }
+
                                 originalEl.click();
 
                                 if (step.branchedTargets) {

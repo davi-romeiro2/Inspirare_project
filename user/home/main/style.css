@@ -659,6 +659,20 @@ body.tutorial-lock {
     border-radius: 16px !important;
 }
 
+/* Garante que o clone do botão "Confirmar Agendamento" mantenha o estilo rosa com texto branco */
+.tutorial-clone#final-confirm-btn,
+.tutorial-clone#final-confirm-btn:hover,
+.tutorial-clone#final-confirm-btn:active,
+.tutorial-clone#final-confirm-btn:focus {
+    background: var(--primary-color) !important;
+    color: white !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    animation: none !important;
+    border-radius: 16px !important;
+}
+
 .btn-copy {
     background: var(--secondary-color);
     color: white;
@@ -850,6 +864,59 @@ body.tutorial-lock {
 .help-btn:hover {
     transform: scale(1.1);
     background-color: #a6757d;
+}
+
+/* Balão de reativação do tutorial ao lado do botão de ajuda */
+.tutorial-reactivation-hint {
+    position: fixed;
+    bottom: 100px;
+    right: 30px;
+    background: var(--white);
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 6px 20px rgba(187, 137, 145, 0.25);
+    z-index: 2004;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 220px;
+    animation: modalPop 0.4s ease forwards;
+}
+
+.tutorial-reactivation-hint span {
+    font-size: 0.78rem;
+    color: var(--secondary-color);
+    line-height: 1.3;
+    font-family: 'Poppins', sans-serif;
+}
+
+.tutorial-reactivation-hint .hint-close {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.tutorial-reactivation-hint .hint-close:hover {
+    color: var(--secondary-color);
+}
+
+/* Seta do balão apontando para o botão de ajuda */
+.tutorial-reactivation-hint::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid var(--primary-color);
 }
 
 .help-menu {
