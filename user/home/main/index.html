@@ -595,8 +595,8 @@
             const picker = document.getElementById('date-picker');
             picker.innerHTML = '';
             const today = new Date();
-            const daysUntilFriday = 5 - today.getDay();
-            for (let i = 0; i <= daysUntilFriday; i++) {
+            const totalDays = 14;
+            for (let i = 0; i < totalDays; i++) {
                 const d = new Date();
                 d.setDate(today.getDate() + i);
                 const btn = document.createElement('button');
@@ -760,6 +760,11 @@
                     targets: ['#sched-step-5 .consultation-type-card:nth-child(1)', '#sched-step-5 .consultation-type-card:nth-child(2)'],
                     text: 'Escolha o formato da consulta: Online ou Presencial.',
                     beforeShow: () => { goToDateSelection(); }
+                },
+                {
+                    targets: ['#date-picker .date-btn'],
+                    text: 'Escolha o dia da sua consulta entre as datas disponíveis.',
+                    beforeShow: () => { }
                 }
             ];
 
