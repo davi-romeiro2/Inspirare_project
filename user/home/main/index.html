@@ -274,6 +274,8 @@
         let tutorialBranches = {};
         let tutorialHistory = [];
         let tutorialActiveBranch = null;
+        let tutorialPsychTimeout = null; // Controla o rebuild dos clones no step de profissionais
+        let showTutorialReactivation = false; // Controla o balão de reativação ao final do tutorial
 
         /* =========================
            PROFISSIONAIS - PAGINAÇÃO
@@ -594,8 +596,8 @@
             const picker = document.getElementById('date-picker');
             picker.innerHTML = '';
             const today = new Date();
-            const daysUntilFriday = 5 - today.getDay();
-            for (let i = 0; i <= daysUntilFriday; i++) {
+            const totalDays = 14;
+            for (let i = 0; i < totalDays; i++) {
                 const d = new Date();
                 d.setDate(today.getDate() + i);
                 const btn = document.createElement('button');
@@ -629,7 +631,31 @@
         function confirmAppointment() {
             showModal('Agendamento Concluído', 'Sua consulta foi marcada com sucesso!', () => {
                 closeFlow();
+                if (showTutorialReactivation) {
+                    showTutorialReactivation = false;
+                    setTimeout(() => showReactivationHint(), 400);
+                }
             });
+        }
+
+        // Mostra um balão ao lado do botão de ajuda indicando que o tutorial pode ser reativado
+        function showReactivationHint() {
+            const helpBtn = document.querySelector('.help-btn');
+            if (!helpBtn) return;
+
+            const hint = document.createElement('div');
+            hint.className = 'tutorial-reactivation-hint';
+            hint.innerHTML = `
+                <span>Precisa de ajuda? Toque aqui para refazer o tutorial.</span>
+                <button class="hint-close">&times;</button>
+            `;
+            document.body.appendChild(hint);
+
+            const closeHint = () => { if (hint.parentNode) hint.remove(); };
+            hint.querySelector('.hint-close').addEventListener('click', closeHint);
+
+            // Fecha automaticamente após 8 segundos
+            setTimeout(closeHint, 8000);
         }
 
         /* =========================
@@ -743,9 +769,9 @@
                         goToScheduleStep(4);
                         const itemsPerPage = getItemsPerPage();
                         const totalPages = Math.ceil(professionals.length / itemsPerPage);
-                        let text = 'Escolha seu profissional clicando no card desejado.';
+                        let text = 'Escolha o profissional desejado.';
                         if (totalPages > 1) {
-                            text += ' Use os botões Anterior e Próxima para ver mais profissionais.';
+                            text += ' Use Anterior / Próxima para navegar.';
                         }
                         this.text = text;
                     }
@@ -753,6 +779,26 @@
                 {
                     targets: ['#next-to-date-btn'],
                     text: 'Agora aperte em Continuar para prosseguir com o agendamento.',
+                    beforeShow: () => { }
+                },
+                {
+                    targets: ['#sched-step-5 .consultation-type-card:nth-child(1)', '#sched-step-5 .consultation-type-card:nth-child(2)'],
+                    text: 'Escolha o formato da consulta: Online ou Presencial.',
+                    beforeShow: () => { goToDateSelection(); }
+                },
+                {
+                    targets: ['#date-picker .date-btn'],
+                    text: 'Escolha o dia da sua consulta entre as datas disponíveis.',
+                    beforeShow: () => { }
+                },
+                {
+                    targets: ['#time-picker .time-btn'],
+                    text: 'Escolha o horário que melhor se encaixa na sua agenda.',
+                    beforeShow: () => { }
+                },
+                {
+                    targets: ['#final-confirm-btn'],
+                    text: 'Agora confirme seu agendamento clicando aqui.',
                     beforeShow: () => { }
                 }
             ];
@@ -800,6 +846,17 @@
             return { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t };
         }
 
+        // Centraliza um conjunto de elementos na viewport de forma instantanea (sem smooth)
+        function scrollTargetsIntoView(elements) {
+            const box = getCombinedBoundingBox(elements);
+            const targetCenter = box.top + (box.height / 2);
+            const viewportCenter = window.innerHeight / 2;
+            const scrollOffset = targetCenter - viewportCenter;
+            if (Math.abs(scrollOffset) > 2) {
+                window.scrollBy({ top: scrollOffset, behavior: 'instant' });
+            }
+        }
+
         function positionBalloon(balloon, targetElements, fixedTop = false) {
             balloon.style.display = 'block';
 
@@ -807,38 +864,51 @@
             if (fixedTop) {
                 const box = getCombinedBoundingBox(targetElements);
 
-                balloon.style.width = '220px';
-                balloon.style.maxWidth = '220px';
-                balloon.style.padding = '8px 12px';
+                balloon.style.width = '210px';
+                balloon.style.maxWidth = '210px';
+                balloon.style.padding = '6px 10px';
+                balloon.style.borderRadius = '10px';
 
                 const text = balloon.querySelector('p');
                 if (text) {
-                    text.style.fontSize = '0.72rem';
-                    text.style.lineHeight = '1.1';
-                    text.style.marginBottom = '10px';
+                    text.style.fontSize = '0.65rem';
+                    text.style.lineHeight = '1.15';
+                    text.style.marginBottom = '6px';
                 }
+
+                const arrow = balloon.querySelector('.balloon-arrow');
+                if (arrow) arrow.style.display = 'none';
 
                 const buttons = balloon.querySelector('.tutorial-buttons');
                 if (buttons) {
                     buttons.style.marginTop = '0px';
-                    buttons.style.gap = '6px';
+                    buttons.style.gap = '4px';
                 }
 
                 const stopBtn = balloon.querySelector('.btn-tutorial-stop');
                 if (stopBtn) {
-                    stopBtn.style.padding = '5px 8px';
-                    stopBtn.style.fontSize = '0.68rem';
+                    stopBtn.style.padding = '4px 6px';
+                    stopBtn.style.fontSize = '0.6rem';
                 }
 
-                let left = box.left + (box.width / 2) - 110;
-                let top = box.top - 120;
+                const bh = balloon.offsetHeight || 60;
+                let left = (window.innerWidth / 2) - 105;
+                let top = 10;
 
-                left = Math.max(10, Math.min(left, window.innerWidth - 230));
+                left = Math.max(2, Math.min(left, window.innerWidth - 214));
 
                 balloon.style.left = `${left}px`;
                 balloon.style.top = `${top}px`;
                 balloon.classList.add('balloon-above');
                 balloon.style.transform = 'none';
+
+                // Garante que os targets fiquem visíveis abaixo do balão
+                const boxBottom = box.bottom;
+                const safeBottom = top + bh + 10;
+                if (boxBottom < safeBottom || box.top < safeBottom) {
+                    const scrollNeeded = safeBottom - box.top;
+                    window.scrollBy({ top: scrollNeeded, behavior: 'instant' });
+                }
                 return;
             }
 
@@ -867,6 +937,26 @@
             balloon.style.transform = 'none';
         }
 
+        // Posiciona o balão centralizado horizontalmente na tela, acima dos targets
+        function positionBalloonCenterTop(balloon, targetElements) {
+            balloon.style.display = 'block';
+            const box = getCombinedBoundingBox(targetElements);
+            const bw = balloon.offsetWidth || 280;
+            const bh = balloon.offsetHeight || 100;
+            const margin = 10;
+
+            let left = (window.innerWidth / 2) - (bw / 2);
+            let top = box.top - bh - 25;
+
+            left = Math.max(margin, Math.min(left, window.innerWidth - bw - margin));
+            top = Math.max(margin, top);
+
+            balloon.style.left = left + 'px';
+            balloon.style.top = top + 'px';
+            balloon.classList.add('balloon-above');
+            balloon.style.transform = 'none';
+        }
+
         // Cria um clone fixed no body de um elemento, com opção de ser clicável
         function makeClone(originalEl, clickable, onClickFn) {
             const rect = originalEl.getBoundingClientRect();
@@ -885,6 +975,8 @@
 
         function showTutorialStep(stepIndex) {
             closeTutorialVisuals();
+            const balloon = document.getElementById('tutorial-balloon');
+            if (balloon) balloon.classList.remove('no-arrow');
 
             document.body.classList.add('tutorial-lock');
             document.body.style.overflow = 'hidden';
@@ -896,7 +988,6 @@
             if (step.beforeShow) step.beforeShow();
 
             const overlay = document.getElementById('tutorial-overlay');
-            const balloon = document.getElementById('tutorial-balloon');
             document.getElementById('tutorial-text').innerText = step.text || '';
 
             setTimeout(() => {
@@ -927,7 +1018,12 @@
 
                     if (hasPsychCards) {
                         // Função dedicada para recriar todos os clones do step de profissionais
-                        function setupPsychTutorialClones() {
+                        function setupPsychTutorialClones(skipScroll) {
+                            if (balloon) balloon.classList.add('no-arrow');
+                            if (tutorialPsychTimeout) {
+                                clearTimeout(tutorialPsychTimeout);
+                                tutorialPsychTimeout = null;
+                            }
                             document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
                             const cards = document.querySelectorAll('#psych-grid .psych-card');
                             const pagination = document.getElementById('psych-pagination');
@@ -945,18 +1041,40 @@
                                 pagination.querySelectorAll('.btn-page').forEach(btn => {
                                     const dir = btn.id === 'btn-next-page' ? 1 : -1;
                                     makeClone(btn, true, () => {
+                                        document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                                        const grid = document.getElementById('psych-grid');
+                                        if (grid) grid.style.opacity = '0';
                                         changePage(dir);
-                                        setTimeout(() => setupPsychTutorialClones(), 150);
+                                        if (tutorialPsychTimeout) clearTimeout(tutorialPsychTimeout);
+                                        tutorialPsychTimeout = setTimeout(() => {
+                                            tutorialPsychTimeout = null;
+                                            requestAnimationFrame(() => requestAnimationFrame(() => {
+                                                const newCards = document.querySelectorAll('#psych-grid .psych-card');
+                                                const newPagination = document.getElementById('psych-pagination');
+                                                const newTargets = [...newCards, newPagination].filter(Boolean);
+                                                if (newTargets.length) scrollTargetsIntoView(newTargets);
+                                                requestAnimationFrame(() => {
+                                                    setupPsychTutorialClones(true);
+                                                    if (grid) grid.style.opacity = '';
+                                                });
+                                            }));
+                                        }, 300);
                                     });
                                 });
                             }
 
-                            const balloon = document.getElementById('tutorial-balloon');
                             const allTargets = [...cards, pagination].filter(Boolean);
-                            if (allTargets.length) positionBalloon(balloon, allTargets);
+                            const isMobilePsych = window.innerWidth <= 768;
+                            if (allTargets.length) {
+                                if (isMobilePsych) {
+                                    positionBalloon(balloon, allTargets, true);
+                                } else {
+                                    positionBalloonCenterTop(balloon, allTargets);
+                                }
+                            }
 
-                            // Garante que a paginação esteja visível na viewport
-                            if (pagination) {
+                            // Garante que a paginação esteja visível na viewport (apenas na primeira exibição, nunca durante navegação)
+                            if (!skipScroll && pagination) {
                                 const paginationRect = pagination.getBoundingClientRect();
                                 const balloonRect = balloon.getBoundingClientRect();
                                 const bottommost = Math.max(paginationRect.bottom, balloonRect.bottom);
@@ -972,6 +1090,11 @@
                         targets.forEach(originalEl => {
                             makeClone(originalEl, true, () => {
                                 closeTutorialVisuals();
+
+                                if (stepIndex === tutorialSteps.length - 1) {
+                                    showTutorialReactivation = true;
+                                }
+
                                 originalEl.click();
 
                                 if (step.branchedTargets) {
