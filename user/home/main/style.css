@@ -632,17 +632,30 @@ body.tutorial-lock {
 }
 
 /* Garante que o clone do botão copiar no tutorial mantenha aparência legível e limpa */
-.tutorial-clone.btn-copy,
-.tutorial-clone.btn-copy:hover,
-.tutorial-clone.btn-copy:active,
-.tutorial-clone.btn-copy:focus {
-    background: var(--secondary-color) !important;
+.tutorial-clone.btn-copy {
+    background: var(--secondary-color);
     color: white !important;
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
     animation: none !important;
     border-radius: 8px !important;
+}
+
+.tutorial-clone.btn-copy:hover,
+.tutorial-clone.btn-copy:active,
+.tutorial-clone.btn-copy:focus {
+    background: var(--secondary-color);
+}
+
+/* Estado copiado do botão Pix durante o tutorial: força o verde e tira o branco do highlight */
+.tutorial-clone.btn-copy.is-copied {
+    background: var(--success-color) !important;
+    color: white !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    animation: none !important;
 }
 
 /* Garante que o clone do botão "Continuar" mantenha o estilo rosa com texto branco */

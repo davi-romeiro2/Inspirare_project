@@ -1284,10 +1284,25 @@
                         targets.forEach(el => {
                             const tag = el.tagName.toLowerCase();
                             if (tag === 'button') {
-                                const clone = makeClone(el, true, () => {
-                                    clone.remove();
+                                const rect = el.getBoundingClientRect();
+                                const clone = el.cloneNode(true);
+                                clone.classList.add('tutorial-clone');
+                                clone.removeAttribute('onclick');
+                                clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
+                                    `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:2002;` +
+                                    `pointer-events:auto;cursor:pointer;`;
+                                clone.addEventListener('click', (e) => {
+                                    e.preventDefault(); e.stopPropagation();
                                     el.click();
+                                    requestAnimationFrame(() => {
+                                        clone.innerHTML = el.innerHTML;
+                                        clone.style.background = el.style.background;
+                                        clone.disabled = true;
+                                        clone.style.cursor = 'default';
+                                        lucide.createIcons();
+                                    });
                                 });
+                                document.body.appendChild(clone);
                             } else {
                                 makeClone(el, false);
                             }
