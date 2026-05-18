@@ -414,7 +414,9 @@ body.tutorial-lock {
 }
 
 .btn-page:disabled {
-    opacity: 0.4;
+    background: #f5f5f5;
+    color: var(--neutral-color);
+    border-color: var(--neutral-color);
     cursor: not-allowed;
 }
 
@@ -1001,7 +1003,7 @@ body.tutorial-lock {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     width: 280px;
     text-align: center;
-    z-index: 2003;
+    z-index: 9999;
     pointer-events: auto;
     animation: modalPop 0.3s ease forwards;
 }
@@ -1328,5 +1330,25 @@ body.tutorial-lock {
     .filter-btn {
         flex: 1 1 auto;
         text-align: center;
+    }
+
+    .date-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 6px;
+    }
+
+    .date-btn {
+        padding: 6px 4px;
+        font-size: 0.7rem;
+    }
+
+    .time-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 6px;
+    }
+
+    .time-btn {
+        padding: 6px 4px;
+        font-size: 0.7rem;
     }
 }

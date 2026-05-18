@@ -938,6 +938,7 @@
         }
 
         // Posiciona o balão centralizado horizontalmente na tela, acima dos targets
+        // Se não couber acima, posiciona abaixo automaticamente
         function positionBalloonCenterTop(balloon, targetElements) {
             balloon.style.display = 'block';
             const box = getCombinedBoundingBox(targetElements);
@@ -948,12 +949,19 @@
             let left = (window.innerWidth / 2) - (bw / 2);
             let top = box.top - bh - 25;
 
+            // Se não couber acima, posiciona abaixo dos targets
+            if (top < margin) {
+                top = box.bottom + 25;
+                balloon.classList.remove('balloon-above');
+            } else {
+                balloon.classList.add('balloon-above');
+            }
+
             left = Math.max(margin, Math.min(left, window.innerWidth - bw - margin));
-            top = Math.max(margin, top);
+            top = Math.max(margin, Math.min(top, window.innerHeight - bh - margin));
 
             balloon.style.left = left + 'px';
             balloon.style.top = top + 'px';
-            balloon.classList.add('balloon-above');
             balloon.style.transform = 'none';
         }
 
@@ -1064,13 +1072,8 @@
                             }
 
                             const allTargets = [...cards, pagination].filter(Boolean);
-                            const isMobilePsych = window.innerWidth <= 768;
                             if (allTargets.length) {
-                                if (isMobilePsych) {
-                                    positionBalloon(balloon, allTargets, true);
-                                } else {
-                                    positionBalloonCenterTop(balloon, allTargets);
-                                }
+                                positionBalloonCenterTop(balloon, allTargets);
                             }
 
                             // Garante que a paginação esteja visível na viewport (apenas na primeira exibição, nunca durante navegação)
@@ -1111,7 +1114,14 @@
                             });
                         });
 
-                        positionBalloon(balloon, targets);
+                        // Usa apenas os targets visíveis na viewport para posicionar o balão
+                        // evitando que grids grandes (datas/horas) criem um bounding box gigante
+                        const visibleTargets = targets.filter(t => {
+                            const rect = t.getBoundingClientRect();
+                            return rect.top < window.innerHeight && rect.bottom > 0;
+                        });
+                        const positioningTargets = visibleTargets.length > 0 ? visibleTargets : targets;
+                        positionBalloon(balloon, positioningTargets);
                     }
                 }, 500);
             }, 150);
