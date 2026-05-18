@@ -243,9 +243,9 @@
             </div>
 
             <div class="filter-bar">
-                <button class="filter-btn active" onclick="filterAppts('scheduled')">Agendadas</button>
-                <button class="filter-btn" onclick="filterAppts('completed')">Concluídas</button>
-                <button class="filter-btn" onclick="filterAppts('cancelled')">Canceladas</button>
+                <button class="filter-btn active" onclick="filterAppts('scheduled', this)">Agendadas</button>
+                <button class="filter-btn" onclick="filterAppts('completed', this)">Concluídas</button>
+                <button class="filter-btn" onclick="filterAppts('cancelled', this)">Canceladas</button>
             </div>
 
             <div id="appts-list">
@@ -474,7 +474,7 @@
             if (option === 'marcar') {
                 startScheduleTutorial();
             } else if (option === 'cancelar') {
-                // Tutorial de cancelamento será implementado aqui
+                startCancelTutorial();
             }
             document.getElementById('help-menu').classList.remove('active');
         }
@@ -661,9 +661,10 @@
         /* =========================
            MINHAS CONSULTAS
            ========================= */
-        function filterAppts(status) {
+        function filterAppts(status, clickedBtn = null) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            const btn = clickedBtn || (typeof event !== 'undefined' ? event.target : null);
+            if (btn) btn.classList.add('active');
             const items = document.querySelectorAll('.appointment-item');
             items.forEach(item => {
                 item.style.display = item.dataset.status === status ? 'flex' : 'none';
@@ -675,7 +676,8 @@
                 const item = btn.closest('.appointment-item');
                 item.dataset.status = 'cancelled';
                 item.querySelector('.btn-cancel').style.display = 'none';
-                filterAppts('scheduled');
+                const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
+                filterAppts('scheduled', activeBtn);
             });
         }
 
@@ -830,6 +832,62 @@
                 }
             };
 
+            tutorialHistory = [];
+            tutorialActiveBranch = null;
+            tutorialCurrentStep = 0;
+            showTutorialStep(0);
+        }
+
+        function ensureScheduledAppointment() {
+            const list = document.getElementById('appts-list');
+            const hasScheduled = list.querySelector('.appointment-item[data-status="scheduled"]');
+            if (!hasScheduled) {
+                const item = document.createElement('div');
+                item.className = 'appointment-item';
+                item.dataset.status = 'scheduled';
+                item.innerHTML = `
+                    <div class="appointment-info">
+                        <h4>Consulta Exemplo - Dr. Exemplo</h4>
+                        <p>15 de Maio, 2026 - 14:00</p>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
+                `;
+                list.appendChild(item);
+            }
+        }
+
+        function startCancelTutorial() {
+            tutorialSteps = [
+                {
+                    targets: ['.menu-card[onclick="openFlow(\'appointments\')"]'],
+                    text: 'Clique aqui para visualizar suas consultas.',
+                    beforeShow: () => { closeFlow(); }
+                },
+                {
+                    targets: ['#flow-appointments .filter-btn.active'],
+                    text: 'Mantenha o filtro em "Agendadas" para ver só as consultas pendentes.',
+                    beforeShow: () => {
+                        openFlow('appointments');
+                        const btn = document.querySelector('#flow-appointments .filter-bar button:nth-child(1)');
+                        if (btn) btn.classList.add('active');
+                        filterAppts('scheduled', btn);
+                    }
+                },
+                {
+                    targets: ['.appointment-item[data-status="scheduled"] .btn-cancel'],
+                    text: 'Para cancelar uma consulta, clique no botão Cancelar ao lado da consulta desejada.',
+                    endOnClick: true,
+                    beforeShow: () => {
+                        openFlow('appointments');
+                        const btn = document.querySelector('#flow-appointments .filter-bar button:nth-child(1)');
+                        if (btn) btn.classList.add('active');
+                        filterAppts('scheduled', btn);
+                        ensureScheduledAppointment();
+                    }
+                }
+            ];
+
+            tutorialBranches = {};
             tutorialHistory = [];
             tutorialActiveBranch = null;
             tutorialCurrentStep = 0;
@@ -1092,6 +1150,12 @@
                     } else {
                         targets.forEach(originalEl => {
                             makeClone(originalEl, true, () => {
+                                if (step.endOnClick) {
+                                    closeTutorial();
+                                    originalEl.click();
+                                    return;
+                                }
+
                                 closeTutorialVisuals();
 
                                 if (stepIndex === tutorialSteps.length - 1) {
