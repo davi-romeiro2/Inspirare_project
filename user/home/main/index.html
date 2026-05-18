@@ -24,6 +24,7 @@
         <div class="help-menu" id="help-menu">
             <div class="help-option" onclick="selectHelpOption('marcar')">Como marcar consulta</div>
             <div class="help-option" onclick="selectHelpOption('cancelar')">Como cancelar consulta</div>
+            <div class="help-option" onclick="selectHelpOption('visualizar')">Como visualizar consultas</div>
         </div>
     </div>
 
@@ -67,7 +68,9 @@
             <p id="tutorial-text"></p>
             <div class="balloon-arrow"></div>
             <div class="tutorial-buttons">
-                <button class="btn-tutorial-stop" onclick="closeTutorial()">Parar tutorial</button>
+                <button class="btn-tutorial-stop" id="btn-tutorial-stop" onclick="closeTutorial()">Parar tutorial</button>
+                <button class="btn-tutorial-next" id="btn-tutorial-next" onclick="advanceTutorialStep()" style="display:none;">Avançar</button>
+                <button class="btn-tutorial-next" id="btn-tutorial-finish" onclick="finishTutorial()" style="display:none;">Finalizar tutorial</button>
             </div>
         </div>
     </div>
@@ -475,6 +478,8 @@
                 startScheduleTutorial();
             } else if (option === 'cancelar') {
                 startCancelTutorial();
+            } else if (option === 'visualizar') {
+                startViewTutorial();
             }
             document.getElementById('help-menu').classList.remove('active');
         }
@@ -894,6 +899,119 @@
             showTutorialStep(0);
         }
 
+        function ensureViewAppointments() {
+            const list = document.getElementById('appts-list');
+
+            if (!list.querySelector('.appointment-item[data-status="scheduled"]')) {
+                const item = document.createElement('div');
+                item.className = 'appointment-item';
+                item.dataset.status = 'scheduled';
+                item.innerHTML = `
+                    <div class="appointment-info">
+                        <h4>Consulta Exemplo - Dr. Exemplo</h4>
+                        <p>15 de Maio, 2026 - 14:00</p>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
+                `;
+                list.appendChild(item);
+            }
+
+            if (!list.querySelector('.appointment-item[data-status="completed"]')) {
+                const item = document.createElement('div');
+                item.className = 'appointment-item';
+                item.dataset.status = 'completed';
+                item.innerHTML = `
+                    <div class="appointment-info">
+                        <h4>Consulta Exemplo Concluída - Dra. Exemplo</h4>
+                        <p>10 de Maio, 2026 - 10:00</p>
+                    </div>
+                `;
+                list.appendChild(item);
+            }
+
+            if (!list.querySelector('.appointment-item[data-status="cancelled"]')) {
+                const item = document.createElement('div');
+                item.className = 'appointment-item';
+                item.dataset.status = 'cancelled';
+                item.innerHTML = `
+                    <div class="appointment-info">
+                        <h4>Consulta Exemplo Cancelada - Dr. Exemplo</h4>
+                        <p>5 de Maio, 2026 - 16:00</p>
+                    </div>
+                `;
+                list.appendChild(item);
+            }
+        }
+
+        function startViewTutorial() {
+            tutorialSteps = [
+                {
+                    targets: ['.menu-card[onclick="openFlow(\'appointments\')"]'],
+                    text: 'Clique aqui para visualizar suas consultas.',
+                    beforeShow: () => { closeFlow(); }
+                },
+                {
+                    targets: ['#flow-appointments .filter-btn:nth-child(1)'],
+                    visualTargets: ['.appointment-item[data-status="scheduled"]'],
+                    text: 'Aqui você vê todas as consultas agendadas. Elas aparecem nesta lista.',
+                    forceAbove: true,
+                    advanceButton: true,
+                    beforeShow: () => {
+                        openFlow('appointments');
+                        const btn = document.querySelector('#flow-appointments .filter-btn:nth-child(1)');
+                        if (btn) btn.classList.add('active');
+                        filterAppts('scheduled', btn);
+                        ensureViewAppointments();
+                    }
+                },
+                {
+                    targets: ['#flow-appointments .filter-btn:nth-child(2)'],
+                    visualTargets: ['.appointment-item[data-status="completed"]'],
+                    text: 'Aqui você vê suas consultas já concluídas.',
+                    forceAbove: true,
+                    advanceButton: true,
+                    beforeShow: () => {
+                        openFlow('appointments');
+                        const btn = document.querySelector('#flow-appointments .filter-btn:nth-child(2)');
+                        if (btn) btn.classList.add('active');
+                        filterAppts('completed', btn);
+                        ensureViewAppointments();
+                    }
+                },
+                {
+                    targets: ['#flow-appointments .filter-btn:nth-child(3)'],
+                    visualTargets: ['.appointment-item[data-status="cancelled"]'],
+                    text: 'Aqui você vê as consultas que foram canceladas.',
+                    forceAbove: true,
+                    finishButton: true,
+                    beforeShow: () => {
+                        openFlow('appointments');
+                        const btn = document.querySelector('#flow-appointments .filter-btn:nth-child(3)');
+                        if (btn) btn.classList.add('active');
+                        filterAppts('cancelled', btn);
+                        ensureViewAppointments();
+                    }
+                }
+            ];
+
+            tutorialBranches = {};
+            tutorialHistory = [];
+            tutorialActiveBranch = null;
+            tutorialCurrentStep = 0;
+            showTutorialStep(0);
+        }
+
+        function advanceTutorialStep() {
+            tutorialHistory.push(tutorialCurrentStep);
+            tutorialCurrentStep++;
+            nextTutorialStep();
+        }
+
+        function finishTutorial() {
+            closeTutorial();
+            closeFlow();
+        }
+
         function getCombinedBoundingBox(elements) {
             let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
             elements.forEach(el => {
@@ -915,7 +1033,7 @@
             }
         }
 
-        function positionBalloon(balloon, targetElements, fixedTop = false) {
+        function positionBalloon(balloon, targetElements, fixedTop = false, forceAbove = false) {
             balloon.style.display = 'block';
 
             // ===== MOBILE CARD =====
@@ -979,7 +1097,7 @@
             let left = box.left + box.width / 2 - bw / 2;
             let top;
 
-            if (box.bottom + bh + 25 > window.innerHeight - margin) {
+            if (forceAbove || box.bottom + bh + 25 > window.innerHeight - margin) {
                 top = box.top - bh - 25;
                 balloon.classList.add('balloon-above');
             } else {
@@ -1043,6 +1161,14 @@
             closeTutorialVisuals();
             const balloon = document.getElementById('tutorial-balloon');
             if (balloon) balloon.classList.remove('no-arrow');
+
+            // Reseta botões do balão para o estado padrão
+            const btnStop = document.getElementById('btn-tutorial-stop');
+            const btnNext = document.getElementById('btn-tutorial-next');
+            const btnFinish = document.getElementById('btn-tutorial-finish');
+            if (btnStop) btnStop.style.display = 'inline-block';
+            if (btnNext) btnNext.style.display = 'none';
+            if (btnFinish) btnFinish.style.display = 'none';
 
             document.body.classList.add('tutorial-lock');
             document.body.style.overflow = 'hidden';
@@ -1148,35 +1274,55 @@
 
                         setupPsychTutorialClones();
                     } else {
+                        // Configura botões do balão com base no tipo de step
+                        const btnStop = document.getElementById('btn-tutorial-stop');
+                        const btnNext = document.getElementById('btn-tutorial-next');
+                        const btnFinish = document.getElementById('btn-tutorial-finish');
+                        if (btnStop) btnStop.style.display = step.finishButton ? 'none' : 'inline-block';
+                        if (btnNext) btnNext.style.display = step.advanceButton ? 'inline-block' : 'none';
+                        if (btnFinish) btnFinish.style.display = step.finishButton ? 'inline-block' : 'none';
+
+                        const isVisualOnly = step.advanceButton || step.finishButton;
                         targets.forEach(originalEl => {
-                            makeClone(originalEl, true, () => {
-                                if (step.endOnClick) {
-                                    closeTutorial();
-                                    originalEl.click();
-                                    return;
-                                }
-
-                                closeTutorialVisuals();
-
-                                if (stepIndex === tutorialSteps.length - 1) {
-                                    showTutorialReactivation = true;
-                                }
-
-                                originalEl.click();
-
-                                if (step.branchedTargets) {
-                                    const matched = step.branchedTargets.find(b => originalEl.matches(b.selector));
-                                    if (matched) {
-                                        tutorialHistory.push(stepIndex);
-                                        setTimeout(() => showTutorialBranch(matched.branch), 300);
+                            if (isVisualOnly) {
+                                makeClone(originalEl, false);
+                            } else {
+                                makeClone(originalEl, true, () => {
+                                    if (step.endOnClick) {
+                                        closeTutorial();
+                                        originalEl.click();
                                         return;
                                     }
-                                }
-                                tutorialHistory.push(stepIndex);
-                                tutorialCurrentStep = stepIndex + 1;
-                                setTimeout(() => nextTutorialStep(), 300);
-                            });
+
+                                    closeTutorialVisuals();
+
+                                    if (stepIndex === tutorialSteps.length - 1) {
+                                        showTutorialReactivation = true;
+                                    }
+
+                                    originalEl.click();
+
+                                    if (step.branchedTargets) {
+                                        const matched = step.branchedTargets.find(b => originalEl.matches(b.selector));
+                                        if (matched) {
+                                            tutorialHistory.push(stepIndex);
+                                            setTimeout(() => showTutorialBranch(matched.branch), 300);
+                                            return;
+                                        }
+                                    }
+                                    tutorialHistory.push(stepIndex);
+                                    tutorialCurrentStep = stepIndex + 1;
+                                    setTimeout(() => nextTutorialStep(), 300);
+                                });
+                            }
                         });
+
+                        // Cria clones não-clicáveis para elementos visuais adicionais
+                        if (step.visualTargets) {
+                            step.visualTargets.forEach(s => {
+                                document.querySelectorAll(s).forEach(el => makeClone(el, false));
+                            });
+                        }
 
                         // Usa apenas os targets visíveis na viewport para posicionar o balão
                         // evitando que grids grandes (datas/horas) criem um bounding box gigante
@@ -1185,7 +1331,7 @@
                             return rect.top < window.innerHeight && rect.bottom > 0;
                         });
                         const positioningTargets = visibleTargets.length > 0 ? visibleTargets : targets;
-                        positionBalloon(balloon, positioningTargets);
+                        positionBalloon(balloon, positioningTargets, false, !!step.forceAbove);
                     }
                 }, 500);
             }, 150);
