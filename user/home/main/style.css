@@ -414,7 +414,9 @@ body.tutorial-lock {
 }
 
 .btn-page:disabled {
-    opacity: 0.4;
+    background: #f5f5f5;
+    color: var(--neutral-color);
+    border-color: var(--neutral-color);
     cursor: not-allowed;
 }
 
@@ -632,17 +634,30 @@ body.tutorial-lock {
 }
 
 /* Garante que o clone do botão copiar no tutorial mantenha aparência legível e limpa */
-.tutorial-clone.btn-copy,
-.tutorial-clone.btn-copy:hover,
-.tutorial-clone.btn-copy:active,
-.tutorial-clone.btn-copy:focus {
-    background: var(--secondary-color) !important;
+.tutorial-clone.btn-copy {
+    background: var(--secondary-color);
     color: white !important;
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
     animation: none !important;
     border-radius: 8px !important;
+}
+
+.tutorial-clone.btn-copy:hover,
+.tutorial-clone.btn-copy:active,
+.tutorial-clone.btn-copy:focus {
+    background: var(--secondary-color);
+}
+
+/* Estado copiado do botão Pix durante o tutorial: força o verde e tira o branco do highlight */
+.tutorial-clone.btn-copy.is-copied {
+    background: var(--success-color) !important;
+    color: white !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    animation: none !important;
 }
 
 /* Garante que o clone do botão "Continuar" mantenha o estilo rosa com texto branco */
@@ -988,7 +1003,7 @@ body.tutorial-lock {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     width: 280px;
     text-align: center;
-    z-index: 2003;
+    z-index: 9999;
     pointer-events: auto;
     animation: modalPop 0.3s ease forwards;
 }
@@ -1315,5 +1330,25 @@ body.tutorial-lock {
     .filter-btn {
         flex: 1 1 auto;
         text-align: center;
+    }
+
+    .date-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 6px;
+    }
+
+    .date-btn {
+        padding: 6px 4px;
+        font-size: 0.7rem;
+    }
+
+    .time-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 6px;
+    }
+
+    .time-btn {
+        padding: 6px 4px;
+        font-size: 0.7rem;
     }
 }
