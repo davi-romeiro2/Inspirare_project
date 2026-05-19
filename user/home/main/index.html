@@ -1700,22 +1700,26 @@
                 // Focus automático para facilitar digitação no tutorial
                 if (clickable && isTextInput) {
                     requestAnimationFrame(() => {
-                        if (document.body.contains(clone)) clone.focus();
+                        if (document.body.contains(clone)) clone.focus({ preventScroll: true });
                     });
                 }
 
                 // Reposiciona o clone se a viewport mudar (teclado virtual no mobile)
                 if (isTextInput) {
+                    let resizeTimeout;
                     const reposition = () => {
                         if (!document.body.contains(clone)) {
                             window.removeEventListener('resize', reposition);
                             return;
                         }
-                        const newRect = originalEl.getBoundingClientRect();
-                        clone.style.top = newRect.top + 'px';
-                        clone.style.left = newRect.left + 'px';
-                        clone.style.width = newRect.width + 'px';
-                        clone.style.height = newRect.height + 'px';
+                        clearTimeout(resizeTimeout);
+                        resizeTimeout = setTimeout(() => {
+                            const newRect = originalEl.getBoundingClientRect();
+                            clone.style.top = newRect.top + 'px';
+                            clone.style.left = newRect.left + 'px';
+                            clone.style.width = newRect.width + 'px';
+                            clone.style.height = newRect.height + 'px';
+                        }, 150);
                     };
                     window.addEventListener('resize', reposition);
                 }
