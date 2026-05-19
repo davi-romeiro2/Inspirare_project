@@ -1706,22 +1706,25 @@
 
                 // Reposiciona o clone se a viewport mudar (teclado virtual no mobile)
                 if (isTextInput) {
-                    let resizeTimeout;
-                    const reposition = () => {
+                    let repositionTimeout;
+                    const doReposition = () => {
                         if (!document.body.contains(clone)) {
-                            window.removeEventListener('resize', reposition);
+                            window.removeEventListener('resize', doReposition);
+                            window.removeEventListener('scroll', doReposition);
                             return;
                         }
-                        clearTimeout(resizeTimeout);
-                        resizeTimeout = setTimeout(() => {
+                        clearTimeout(repositionTimeout);
+                        repositionTimeout = setTimeout(() => {
                             const newRect = originalEl.getBoundingClientRect();
                             clone.style.top = newRect.top + 'px';
                             clone.style.left = newRect.left + 'px';
                             clone.style.width = newRect.width + 'px';
                             clone.style.height = newRect.height + 'px';
-                        }, 150);
+                        }, 50);
                     };
-                    window.addEventListener('resize', reposition);
+                    window.addEventListener('resize', doReposition);
+                    window.addEventListener('scroll', doReposition);
+                    clone.addEventListener('focus', doReposition);
                 }
             } else {
                 clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
