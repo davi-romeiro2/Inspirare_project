@@ -64,7 +64,7 @@
 
     <!-- Tutorial Overlay (no body, cobre tudo) -->
     <div id="tutorial-overlay" class="tutorial-overlay">
-        <div id="tutorial-balloon" class="tutorial-balloon">
+        <div id="tutorial-balloon" class="tutorial-balloon" style="display:none">
             <p id="tutorial-text"></p>
             <div class="balloon-arrow"></div>
             <div class="tutorial-buttons">
@@ -89,7 +89,10 @@
             <div class="custom-modal">
                 <h3 id="modal-title">Aviso</h3>
                 <p id="modal-text">Mensagem aqui</p>
-                <button class="btn-modal" id="modal-btn">Ok</button>
+                <div class="modal-actions">
+                    <button class="btn-modal btn-modal-secondary" id="modal-btn-no">Não</button>
+                    <button class="btn-modal btn-modal-primary" id="modal-btn-yes">Sim</button>
+                </div>
             </div>
         </div>
 
@@ -246,12 +249,17 @@
             </div>
 
             <div class="filter-bar">
-                <button class="filter-btn active" onclick="filterAppts('scheduled', this)">Agendadas</button>
-                <button class="filter-btn" onclick="filterAppts('completed', this)">Concluídas</button>
-                <button class="filter-btn" onclick="filterAppts('cancelled', this)">Canceladas</button>
+                <button class="filter-btn active" onclick="filterAppts('scheduled', this)" data-filter="scheduled">Agendadas</button>
+                <button class="filter-btn" onclick="filterAppts('completed', this)" data-filter="completed">Concluídas</button>
+                <button class="filter-btn" onclick="filterAppts('cancelled', this)" data-filter="cancelled">Canceladas</button>
+            </div>
+
+            <div class="appts-search-bar">
+                <input type="text" id="appts-search" placeholder="Buscar por nome, data ou tipo..." oninput="searchAppts()">
             </div>
 
             <div id="appts-list">
+                <!-- Agendadas -->
                 <div class="appointment-item" data-status="scheduled">
                     <div class="appointment-info">
                         <h4>Consulta Online - Dra. Ana Beatriz</h4>
@@ -259,6 +267,109 @@
                     </div>
                     <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
                 </div>
+                <div class="appointment-item" data-status="scheduled">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dr. Marcos Vinícius</h4>
+                        <p>15 de Maio, 2026 - 10:00</p>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
+                </div>
+                <div class="appointment-item" data-status="scheduled">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dra. Cláudia Luna</h4>
+                        <p>18 de Maio, 2026 - 16:00</p>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
+                </div>
+                <div class="appointment-item" data-status="scheduled">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dr. Ricardo Souza</h4>
+                        <p>20 de Maio, 2026 - 09:00</p>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
+                </div>
+
+                <!-- Concluídas -->
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dra. Juliana Costa</h4>
+                        <p>1 de Maio, 2026 - 11:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dr. Fernando Lima</h4>
+                        <p>3 de Maio, 2026 - 14:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dra. Bianca Mendes</h4>
+                        <p>5 de Maio, 2026 - 15:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dra. Ana Beatriz</h4>
+                        <p>7 de Maio, 2026 - 10:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dr. Marcos Vinícius</h4>
+                        <p>8 de Maio, 2026 - 17:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dra. Cláudia Luna</h4>
+                        <p>9 de Maio, 2026 - 13:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dr. Ricardo Souza</h4>
+                        <p>10 de Maio, 2026 - 09:00</p>
+                    </div>
+                </div>
+
+                <!-- Canceladas -->
+                <div class="appointment-item" data-status="cancelled">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dra. Juliana Costa</h4>
+                        <p>22 de Abril, 2026 - 11:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="cancelled">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dr. Fernando Lima</h4>
+                        <p>24 de Abril, 2026 - 14:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="cancelled">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dra. Bianca Mendes</h4>
+                        <p>26 de Abril, 2026 - 16:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="cancelled">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dra. Ana Beatriz</h4>
+                        <p>28 de Abril, 2026 - 10:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="cancelled">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dr. Marcos Vinícius</h4>
+                        <p>29 de Abril, 2026 - 15:00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="appts-pagination" class="appts-pagination" style="display:none;">
+                <button class="appts-page-btn" id="appts-prev" onclick="prevApptsPage()">Anterior</button>
+                <span id="appts-page-info">1 / 1</span>
+                <button class="appts-page-btn" id="appts-next" onclick="nextApptsPage()">Próximo</button>
             </div>
         </div>
     </div>
@@ -344,6 +455,9 @@
                 if (psychCurrentPage >= totalPages) psychCurrentPage = totalPages - 1;
                 if (psychCurrentPage < 0) psychCurrentPage = 0;
                 renderProfessionalsPage();
+            }
+            if (document.getElementById('flow-appointments').classList.contains('active')) {
+                applyApptsPagination(apptsCurrentFilter);
             }
         });
 
@@ -491,14 +605,37 @@
         /* =========================
            MODAL CUSTOMIZADO
            ========================= */
-        function showModal(title, text, callback = null) {
+        function showModal(title, text, onConfirm = null, onCancel = null) {
             const modal = document.getElementById('custom-modal');
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-text').innerText = text;
             modal.style.display = 'flex';
-            document.getElementById('modal-btn').onclick = () => {
+
+            const btnYes = document.getElementById('modal-btn-yes');
+            const btnNo = document.getElementById('modal-btn-no');
+
+            if (onConfirm && onCancel) {
+                // Diálogo Sim/Não
+                btnYes.innerText = 'Sim';
+                btnYes.style.display = 'inline-block';
+                btnNo.style.display = 'inline-block';
+            } else if (onConfirm) {
+                // Apenas confirmação (Ok)
+                btnYes.innerText = 'Ok';
+                btnYes.style.display = 'inline-block';
+                btnNo.style.display = 'none';
+            } else {
+                btnYes.style.display = 'none';
+                btnNo.style.display = 'none';
+            }
+
+            btnYes.onclick = () => {
                 modal.style.display = 'none';
-                if (callback) callback();
+                if (onConfirm) onConfirm();
+            };
+            btnNo.onclick = () => {
+                modal.style.display = 'none';
+                if (onCancel) onCancel();
             };
         }
 
@@ -510,6 +647,12 @@
             const container = document.getElementById('flow-' + flow);
             container.classList.add('active');
             if (flow === 'schedule') resetScheduleFlow();
+            if (flow === 'appointments') {
+                document.getElementById('appts-search').value = '';
+                apptsSearchQuery = '';
+                const firstBtn = document.querySelector('#flow-appointments .filter-btn[data-filter="scheduled"]');
+                filterAppts('scheduled', firstBtn);
+            }
         }
 
         function closeFlow() {
@@ -666,24 +809,284 @@
         /* =========================
            MINHAS CONSULTAS
            ========================= */
+        function getApptsPerPage() {
+            return window.innerWidth <= 768 ? 2 : 3;
+        }
+        let apptsPageState = { scheduled: 0, completed: 0, cancelled: 0 };
+        let apptsCurrentFilter = 'scheduled';
+        let apptsSearchQuery = '';
+
+        function getFilteredAppts(status) {
+            const allItems = Array.from(document.querySelectorAll('.appointment-item'));
+            const byStatus = allItems.filter(item => item.dataset.status === status);
+            if (!apptsSearchQuery.trim()) return byStatus;
+            const q = apptsSearchQuery.toLowerCase();
+            return byStatus.filter(item => item.innerText.toLowerCase().includes(q));
+        }
+
+        function applyApptsPagination(status) {
+            const items = getFilteredAppts(status);
+            const page = apptsPageState[status] || 0;
+            const totalPages = Math.max(1, Math.ceil(items.length / getApptsPerPage()));
+
+            if (page >= totalPages) apptsPageState[status] = totalPages - 1;
+            if (apptsPageState[status] < 0) apptsPageState[status] = 0;
+            const safePage = apptsPageState[status];
+
+            items.forEach((item, index) => {
+                const perPage = getApptsPerPage();
+                const start = safePage * perPage;
+                const end = start + perPage;
+                item.style.display = (index >= start && index < end) ? 'flex' : 'none';
+            });
+
+            // Esconde os itens do mesmo status que não passaram no filtro de busca
+            const allByStatus = Array.from(document.querySelectorAll('.appointment-item')).filter(i => i.dataset.status === status);
+            allByStatus.forEach(item => {
+                if (!items.includes(item)) item.style.display = 'none';
+            });
+
+            const paginationEl = document.getElementById('appts-pagination');
+            if (items.length > getApptsPerPage()) {
+                paginationEl.style.display = 'flex';
+                document.getElementById('appts-page-info').innerText = `${safePage + 1} / ${totalPages}`;
+                document.getElementById('appts-prev').disabled = safePage === 0;
+                document.getElementById('appts-next').disabled = safePage >= totalPages - 1;
+            } else {
+                paginationEl.style.display = 'none';
+            }
+        }
+
         function filterAppts(status, clickedBtn = null) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            const btn = clickedBtn || (typeof event !== 'undefined' ? event.target : null);
+            let btn = clickedBtn;
+            if (!btn) {
+                btn = document.querySelector(`#flow-appointments .filter-btn[data-filter="${status}"]`);
+            }
             if (btn) btn.classList.add('active');
-            const items = document.querySelectorAll('.appointment-item');
-            items.forEach(item => {
-                item.style.display = item.dataset.status === status ? 'flex' : 'none';
+
+            apptsCurrentFilter = status;
+            apptsPageState[status] = 0;
+
+            document.querySelectorAll('.appointment-item').forEach(item => {
+                if (item.dataset.status !== status) item.style.display = 'none';
             });
+
+            applyApptsPagination(status);
+        }
+
+        function searchAppts() {
+            apptsSearchQuery = document.getElementById('appts-search').value;
+            apptsPageState[apptsCurrentFilter] = 0;
+            applyApptsPagination(apptsCurrentFilter);
+        }
+
+        function prevApptsPage() {
+            if (apptsPageState[apptsCurrentFilter] > 0) {
+                const list = document.getElementById('appts-list');
+                const savedScrollY = window.scrollY;
+                const savedHeight = list ? list.offsetHeight : 0;
+                if (list) list.style.minHeight = savedHeight + 'px';
+                apptsPageState[apptsCurrentFilter]--;
+                applyApptsPagination(apptsCurrentFilter);
+                requestAnimationFrame(() => {
+                    if (list) list.style.minHeight = '';
+                    if (window.scrollY < savedScrollY) {
+                        window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+                    }
+                });
+            }
+        }
+
+        function nextApptsPage() {
+            const items = getFilteredAppts(apptsCurrentFilter);
+            const totalPages = Math.ceil(items.length / getApptsPerPage());
+            if (apptsPageState[apptsCurrentFilter] < totalPages - 1) {
+                const list = document.getElementById('appts-list');
+                const savedScrollY = window.scrollY;
+                const savedHeight = list ? list.offsetHeight : 0;
+                if (list) list.style.minHeight = savedHeight + 'px';
+                apptsPageState[apptsCurrentFilter]++;
+                applyApptsPagination(apptsCurrentFilter);
+                requestAnimationFrame(() => {
+                    if (list) list.style.minHeight = '';
+                    if (window.scrollY < savedScrollY) {
+                        window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+                    }
+                });
+            }
+        }
+
+        function setApptsSearchVisible(visible) {
+            const searchBar = document.querySelector('.appts-search-bar');
+            if (searchBar) searchBar.style.display = visible ? '' : 'none';
+        }
+
+        function clonePageInfo() {
+            const originalEl = document.getElementById('appts-page-info');
+            if (!originalEl) return;
+
+            // Conta apenas os itens ORIGINAIS dentro de #appts-list (ignora clones do tutorial)
+            const list = document.getElementById('appts-list');
+            const originalItems = list
+                ? Array.from(list.querySelectorAll('.appointment-item')).filter(i => i.dataset.status === 'scheduled')
+                : [];
+            const page = apptsPageState['scheduled'] || 0;
+            const totalPages = Math.max(1, Math.ceil(originalItems.length / getApptsPerPage()));
+            const safePage = Math.min(page, totalPages - 1);
+            const text = `${safePage + 1} / ${totalPages}`;
+
+            // Atualiza o original também para manter consistência visual
+            originalEl.innerText = text;
+
+            const rect = originalEl.getBoundingClientRect();
+            const clone = document.createElement('span');
+            clone.classList.add('tutorial-clone');
+            clone.setAttribute('data-tutorial-type', 'page-info');
+            clone.textContent = text;
+
+            const computed = window.getComputedStyle(originalEl);
+            clone.style.cssText = `
+                position: fixed;
+                top: ${rect.top}px;
+                left: ${rect.left}px;
+                width: ${rect.width}px;
+                height: ${rect.height}px;
+                margin: 0;
+                z-index: 2002;
+                pointer-events: none;
+                cursor: default;
+                padding: ${computed.padding};
+                border: ${computed.border};
+                border-radius: ${computed.borderRadius};
+                background: ${computed.background};
+                color: ${computed.color};
+                font: ${computed.font};
+                box-sizing: ${computed.boxSizing};
+                display: ${computed.display};
+                align-items: ${computed.alignItems};
+                justify-content: ${computed.justifyContent};
+                min-width: ${computed.minWidth};
+                text-align: ${computed.textAlign};
+            `;
+            document.body.appendChild(clone);
+            return clone;
+        }
+
+        function refreshCancelTutorialClones() {
+            // Remove clones dos elementos do step de cancelar
+            document.querySelectorAll('.tutorial-clone').forEach(c => {
+                const isPageInfo = c.classList.contains('tutorial-page-info') ||
+                                   c.getAttribute('data-tutorial-type') === 'page-info';
+                if (c.classList.contains('appointment-item') ||
+                    c.classList.contains('btn-cancel') ||
+                    c.classList.contains('appts-page-btn') ||
+                    isPageInfo) {
+                    c.remove();
+                }
+            });
+
+            // Reclona cards visíveis
+            document.querySelectorAll('.appointment-item').forEach(el => {
+                if (el.style.display !== 'none') makeClone(el, false);
+            });
+
+            // Reclona botões cancelar dos cards visíveis
+            document.querySelectorAll('.appointment-item[data-status="scheduled"] .btn-cancel').forEach(btn => {
+                const parentItem = btn.closest('.appointment-item');
+                if (parentItem && parentItem.style.display !== 'none') {
+                    makeClone(btn, true, () => {
+                        closeTutorial();
+                        btn.click();
+                    });
+                }
+            });
+
+            // Reclona paginação (apenas botões individuais, sem container)
+            const apptsPagination = document.getElementById('appts-pagination');
+            if (apptsPagination && apptsPagination.style.display !== 'none') {
+                apptsPagination.querySelectorAll('.appts-page-btn').forEach(btn => {
+                    if (btn.disabled) {
+                        makeClone(btn, false);
+                    } else {
+                        makeClone(btn, true, () => {
+                            if (btn.id === 'appts-prev') {
+                                prevApptsPage();
+                            } else if (btn.id === 'appts-next') {
+                                nextApptsPage();
+                            }
+                            requestAnimationFrame(() => requestAnimationFrame(() => refreshCancelTutorialClones()));
+                        });
+                    }
+                });
+                clonePageInfo();
+            }
+
+            // Mobile: reposiciona clones e balão para garantir que paginação fique visível
+            if (window.innerWidth <= 768) {
+                const pagClones = document.querySelectorAll('.tutorial-clone.appts-page-btn');
+                if (pagClones.length) {
+                    const lastClone = pagClones[pagClones.length - 1];
+                    const rect = lastClone.getBoundingClientRect();
+                    if (rect.bottom > window.innerHeight - 10) {
+                        const shift = rect.bottom - window.innerHeight + 20;
+                        document.querySelectorAll('.tutorial-clone.appointment-item, .tutorial-clone.appts-page-btn, .tutorial-clone[data-tutorial-type="page-info"]').forEach(c => {
+                            c.style.top = (parseFloat(c.style.top) - shift) + 'px';
+                        });
+                        const balloon = document.getElementById('tutorial-balloon');
+                        if (balloon) {
+                            balloon.style.top = Math.max(10, parseFloat(balloon.style.top) - shift) + 'px';
+                        }
+                    }
+                }
+            }
+        }
+
+        function scrollApptsTutorialIntoView(extraSelectors = []) {
+            // Prioriza centralizar os elementos visíveis (cards + paginação)
+            // em vez do modal inteiro, garantindo que o que está aceso fique perfeitamente na tela
+            const visibleCards = Array.from(document.querySelectorAll('.appointment-item')).filter(i => i.style.display !== 'none');
+            const pagination = document.getElementById('appts-pagination');
+            const targets = [...visibleCards];
+            if (pagination && pagination.style.display !== 'none') targets.push(pagination);
+            extraSelectors.forEach(s => {
+                document.querySelectorAll(s).forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.width > 0 || rect.height > 0) targets.push(el);
+                });
+            });
+            if (targets.length) {
+                scrollTargetsIntoViewTop(targets);
+                return;
+            }
+
+            // Fallback: centraliza o modal só se não houver targets específicos visíveis
+            const modal = document.getElementById('flow-appointments');
+            if (modal) {
+                const rect = modal.getBoundingClientRect();
+                const modalCenter = rect.top + (rect.height / 2);
+                const viewportCenter = window.innerHeight / 2;
+                const scrollOffset = modalCenter - viewportCenter;
+                if (Math.abs(scrollOffset) > 2) {
+                    window.scrollBy({ top: scrollOffset, behavior: 'instant' });
+                }
+            }
         }
 
         function cancelAppt(btn) {
-            showModal('Confirmar Cancelamento', 'Deseja realmente cancelar esta consulta?', () => {
-                const item = btn.closest('.appointment-item');
-                item.dataset.status = 'cancelled';
-                item.querySelector('.btn-cancel').style.display = 'none';
-                const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
-                filterAppts('scheduled', activeBtn);
-            });
+            showModal(
+                'Confirmar Cancelamento',
+                'Deseja realmente cancelar esta consulta?',
+                () => { // Sim
+                    const item = btn.closest('.appointment-item');
+                    item.dataset.status = 'cancelled';
+                    item.querySelector('.btn-cancel').style.display = 'none';
+                    const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
+                    apptsPageState.scheduled = 0;
+                    filterAppts('scheduled', activeBtn);
+                },
+                () => { } // Não: apenas fecha o modal
+            );
         }
 
         /* =========================
@@ -735,6 +1138,16 @@
             const parcelasWrapper = document.getElementById('parcelas-wrapper');
             if (parcelasWrapper) parcelasWrapper.classList.remove('open');
             resetParcelasDropdownPosition();
+
+            // Limpa o valor do input de pesquisa para o próximo step
+            const apptsSearch = document.getElementById('appts-search');
+            if (apptsSearch) {
+                apptsSearch.value = '';
+                apptsSearch.classList.remove('tutorial-highlight-live');
+                apptsSearch.style.zIndex = '';
+                apptsSearch.style.position = '';
+            }
+            apptsSearchQuery = '';
 
             overlay.style.pointerEvents = '';
             overlay.style.background = '';
@@ -858,6 +1271,7 @@
                     <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
                 `;
                 list.appendChild(item);
+                applyApptsPagination('scheduled');
             }
         }
 
@@ -869,25 +1283,69 @@
                     beforeShow: () => { closeFlow(); }
                 },
                 {
-                    targets: ['#flow-appointments .filter-btn.active'],
-                    text: 'Mantenha o filtro em "Agendadas" para ver só as consultas pendentes.',
+                    targets: ['#flow-appointments .filter-btn[data-filter="scheduled"]'],
+                    text: 'Clique em "Agendadas" para ver suas consultas pendentes.',
+                    forceAbove: true,
+                    advanceButton: true,
                     beforeShow: () => {
                         openFlow('appointments');
-                        const btn = document.querySelector('#flow-appointments .filter-bar button:nth-child(1)');
+                        const btn = document.querySelector('#flow-appointments .filter-btn[data-filter="scheduled"]');
                         if (btn) btn.classList.add('active');
                         filterAppts('scheduled', btn);
+                        ensureScheduledAppointment();
+                        scrollApptsTutorialIntoView();
+                    }
+                },
+                {
+                    targets: ['#appts-search'],
+                    text: 'Use a barra de pesquisa para encontrar a consulta que deseja cancelar por nome, data ou tipo.',
+                    forceAbove: true,
+                    advanceButton: true,
+                    beforeShow: () => {
+                        openFlow('appointments');
+                        setApptsSearchVisible(true);
+                        const input = document.getElementById('appts-search');
+                        if (input) input.value = '';
+                        apptsSearchQuery = '';
+                        const btn = document.querySelector('#flow-appointments .filter-btn[data-filter="scheduled"]');
+                        if (btn) btn.classList.add('active');
+                        filterAppts('scheduled', btn);
+                        ensureScheduledAppointment();
+                        scrollApptsTutorialIntoView();
                     }
                 },
                 {
                     targets: ['.appointment-item[data-status="scheduled"] .btn-cancel'],
-                    text: 'Para cancelar uma consulta, clique no botão Cancelar ao lado da consulta desejada.',
+                    visualTargets: ['.appointment-item[data-status="scheduled"]'],
+                    text: 'Clique em "Cancelar" ao lado da consulta desejada. Você também pode usar "Anterior" e "Próximo" para navegar entre as páginas de consultas.',
                     endOnClick: true,
-                    beforeShow: () => {
+                    alignTop: true,
+                    centerAbove: true,
+                    enablePagination: true,
+                    beforeShow: function () {
                         openFlow('appointments');
-                        const btn = document.querySelector('#flow-appointments .filter-bar button:nth-child(1)');
+                        setApptsSearchVisible(true);
+                        const input = document.getElementById('appts-search');
+                        if (input) {
+                            input.value = '';
+                            input.classList.remove('tutorial-highlight-live');
+                        }
+                        apptsSearchQuery = '';
+                        const btn = document.querySelector('#flow-appointments .filter-btn[data-filter="scheduled"]');
                         if (btn) btn.classList.add('active');
                         filterAppts('scheduled', btn);
                         ensureScheduledAppointment();
+
+                        // Verifica se há paginação visível
+                        const paginationEl = document.getElementById('appts-pagination');
+                        const hasPagination = paginationEl && paginationEl.style.display !== 'none';
+                        if (!hasPagination) {
+                            this.text = 'Clique em "Cancelar" ao lado da consulta desejada.';
+                            this.scrollToBottom = true;
+                        } else {
+                            this.text = 'Clique em "Cancelar" ao lado da consulta desejada. Você também pode usar "Anterior" e "Próximo" para navegar entre as páginas de consultas.';
+                            this.scrollToBottom = false;
+                        }
                     }
                 }
             ];
@@ -941,6 +1399,8 @@
                 `;
                 list.appendChild(item);
             }
+
+            applyApptsPagination(apptsCurrentFilter);
         }
 
         function startViewTutorial() {
@@ -952,44 +1412,50 @@
                 },
                 {
                     targets: ['#flow-appointments .filter-btn:nth-child(1)'],
-                    visualTargets: ['.appointment-item[data-status="scheduled"]'],
+                    visualTargets: ['.appointment-item[data-status="scheduled"]', '#appts-pagination'],
                     text: 'Aqui você vê todas as consultas agendadas. Elas aparecem nesta lista.',
                     forceAbove: true,
                     advanceButton: true,
                     beforeShow: () => {
                         openFlow('appointments');
+                        setApptsSearchVisible(false);
                         const btn = document.querySelector('#flow-appointments .filter-btn:nth-child(1)');
                         if (btn) btn.classList.add('active');
                         filterAppts('scheduled', btn);
                         ensureViewAppointments();
+                        scrollApptsTutorialIntoView(['#flow-appointments .filter-btn:nth-child(1)']);
                     }
                 },
                 {
                     targets: ['#flow-appointments .filter-btn:nth-child(2)'],
-                    visualTargets: ['.appointment-item[data-status="completed"]'],
+                    visualTargets: ['.appointment-item[data-status="completed"]', '#appts-pagination'],
                     text: 'Aqui você vê suas consultas já concluídas.',
                     forceAbove: true,
                     advanceButton: true,
                     beforeShow: () => {
                         openFlow('appointments');
+                        setApptsSearchVisible(false);
                         const btn = document.querySelector('#flow-appointments .filter-btn:nth-child(2)');
                         if (btn) btn.classList.add('active');
                         filterAppts('completed', btn);
                         ensureViewAppointments();
+                        scrollApptsTutorialIntoView(['#flow-appointments .filter-btn:nth-child(2)']);
                     }
                 },
                 {
                     targets: ['#flow-appointments .filter-btn:nth-child(3)'],
-                    visualTargets: ['.appointment-item[data-status="cancelled"]'],
+                    visualTargets: ['.appointment-item[data-status="cancelled"]', '#appts-pagination'],
                     text: 'Aqui você vê as consultas que foram canceladas.',
                     forceAbove: true,
                     finishButton: true,
                     beforeShow: () => {
                         openFlow('appointments');
+                        setApptsSearchVisible(false);
                         const btn = document.querySelector('#flow-appointments .filter-btn:nth-child(3)');
                         if (btn) btn.classList.add('active');
                         filterAppts('cancelled', btn);
                         ensureViewAppointments();
+                        scrollApptsTutorialIntoView(['#flow-appointments .filter-btn:nth-child(3)']);
                     }
                 }
             ];
@@ -1029,6 +1495,32 @@
             const viewportCenter = window.innerHeight / 2;
             const scrollOffset = targetCenter - viewportCenter;
             if (Math.abs(scrollOffset) > 2) {
+                window.scrollBy({ top: scrollOffset, behavior: 'instant' });
+            }
+        }
+
+        // Posiciona os elementos na parte superior da viewport, com margem de 80px do topo
+        function scrollTargetsIntoViewTop(elements) {
+            const box = getCombinedBoundingBox(elements);
+            const margin = 80;
+            const scrollOffset = box.top - margin;
+            if (Math.abs(scrollOffset) > 2) {
+                window.scrollBy({ top: scrollOffset, behavior: 'instant' });
+            }
+        }
+
+        // Garante que o bottom dos elementos (e paginação, se houver) fique visível na viewport
+        function scrollTargetsIntoViewWithPagination(elements) {
+            const pagination = document.getElementById('appts-pagination');
+            const targets = [...elements];
+            if (pagination && pagination.style.display !== 'none') {
+                targets.push(pagination);
+            }
+            const box = getCombinedBoundingBox(targets);
+            const margin = 20;
+            const targetBottom = box.bottom + margin;
+            if (targetBottom > window.innerHeight) {
+                const scrollOffset = targetBottom - window.innerHeight;
                 window.scrollBy({ top: scrollOffset, behavior: 'instant' });
             }
         }
@@ -1123,7 +1615,7 @@
             const margin = 10;
 
             let left = (window.innerWidth / 2) - (bw / 2);
-            let top = box.top - bh - 25;
+            let top = box.top - bh - (window.innerWidth <= 768 ? 130 : 55);
 
             // Se não couber acima, posiciona abaixo dos targets
             if (top < margin) {
@@ -1147,9 +1639,76 @@
             const clone = originalEl.cloneNode(true);
             clone.classList.add('tutorial-clone', 'tutorial-highlight');
             clone.removeAttribute('onclick');
-            clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
-                `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:2002;` +
-                `pointer-events:${clickable ? 'auto' : 'none'};cursor:${clickable ? 'pointer' : 'default'};`;
+            clone.removeAttribute('id'); // evita IDs duplicados no DOM
+
+            // Preserva classe especial para botões específicos do tutorial
+            if (originalEl.id === 'next-to-date-btn') {
+                clone.classList.add('tutorial-next-btn');
+            } else if (originalEl.id === 'final-confirm-btn') {
+                clone.classList.add('tutorial-confirm-btn');
+            }
+
+            const tag = originalEl.tagName.toLowerCase();
+            const isFormControl = tag === 'input' || tag === 'select' || tag === 'textarea';
+
+            // Elementos clicáveis ficam acima dos visuais para evitar sobreposição
+            const baseZIndex = clickable ? '2003' : '2001';
+
+            if (isFormControl) {
+                // Remove ID duplicado para evitar conflitos com getElementById
+                clone.removeAttribute('id');
+
+                const computed = window.getComputedStyle(originalEl);
+
+                // Inputs de texto precisam de z-index acima do balão (9999) para serem editáveis
+                const isTextInput = tag === 'input' && (originalEl.type === 'text' || originalEl.type === 'search' || !originalEl.type);
+                const zIndex = isTextInput ? '10000' : baseZIndex;
+
+                clone.style.cssText = `
+                    position: fixed;
+                    top: ${rect.top}px;
+                    left: ${rect.left}px;
+                    width: ${rect.width}px;
+                    height: ${rect.height}px;
+                    margin: 0;
+                    z-index: ${zIndex};
+                    pointer-events: ${clickable ? 'auto' : 'none'};
+                    cursor: ${isTextInput ? 'text' : (clickable ? 'pointer' : 'default')};
+                    padding: ${computed.padding};
+                    border: ${computed.border};
+                    border-radius: ${computed.borderRadius};
+                    background: ${computed.background};
+                    color: ${computed.color};
+                    font: ${computed.font};
+                    box-sizing: ${computed.boxSizing};
+                    display: ${computed.display};
+                    align-items: ${computed.alignItems};
+                    justify-content: ${computed.justifyContent};
+                    outline: ${computed.outline};
+                `;
+
+                // Sincroniza digitação do clone de volta para o original
+                clone.addEventListener('input', (e) => {
+                    originalEl.value = e.target.value;
+                    originalEl.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+                clone.addEventListener('change', (e) => {
+                    originalEl.value = e.target.value;
+                    originalEl.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+
+                // Focus automático para facilitar digitação no tutorial
+                if (clickable && isTextInput) {
+                    requestAnimationFrame(() => {
+                        if (document.body.contains(clone)) clone.focus();
+                    });
+                }
+            } else {
+                clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
+                    `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:${baseZIndex};` +
+                    `pointer-events:${clickable ? 'auto' : 'none'};cursor:${clickable ? 'pointer' : 'default'};`;
+            }
+
             if (clickable && onClickFn) {
                 clone.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onClickFn(); });
             }
@@ -1192,11 +1751,28 @@
                 if (!targets.length) return;
 
                 const box = getCombinedBoundingBox(targets);
-                const targetCenter = box.top + (box.height / 2);
-                const viewportCenter = window.innerHeight / 2;
-                const scrollOffset = targetCenter - viewportCenter;
+                let scrollOffset;
+
+                if (step.scrollToBottom) {
+                    const docHeight = document.documentElement.scrollHeight;
+                    scrollOffset = docHeight - window.innerHeight - window.scrollY;
+                } else if (step.alignTop) {
+                    const margin = 80;
+                    scrollOffset = margin - box.top;
+                } else {
+                    const targetCenter = box.top + (box.height / 2);
+                    const viewportCenter = window.innerHeight / 2;
+                    scrollOffset = targetCenter - viewportCenter;
+                }
 
                 window.scrollBy({ top: scrollOffset, behavior: 'smooth' });
+
+                // Garante que paginação fique visível no mobile quando há pouca altura
+                if (step.enablePagination) {
+                    setTimeout(() => {
+                        scrollTargetsIntoViewWithPagination(targets);
+                    }, 400);
+                }
 
                 setTimeout(() => {
                     overlay.classList.add('active');
@@ -1284,7 +1860,17 @@
 
                         const isVisualOnly = step.advanceButton || step.finishButton;
                         targets.forEach(originalEl => {
-                            if (isVisualOnly) {
+                            if (originalEl.classList.contains('tutorial-highlight-live')) return;
+                            const rect = originalEl.getBoundingClientRect();
+                            if (rect.width === 0 && rect.height === 0) return;
+
+                            const tag = originalEl.tagName.toLowerCase();
+                            const isTextInput = tag === 'input' && (originalEl.type === 'text' || originalEl.type === 'search' || !originalEl.type);
+
+                            if (isTextInput) {
+                                // Input de texto: sempre clicável para permitir digitação, mas não avança o tutorial
+                                makeClone(originalEl, true, null);
+                            } else if (isVisualOnly) {
                                 makeClone(originalEl, false);
                             } else {
                                 makeClone(originalEl, true, () => {
@@ -1320,8 +1906,34 @@
                         // Cria clones não-clicáveis para elementos visuais adicionais
                         if (step.visualTargets) {
                             step.visualTargets.forEach(s => {
-                                document.querySelectorAll(s).forEach(el => makeClone(el, false));
+                                document.querySelectorAll(s).forEach(el => {
+                                    const rect = el.getBoundingClientRect();
+                                    if (rect.width === 0 && rect.height === 0) return;
+                                    makeClone(el, false);
+                                });
                             });
+                        }
+
+                        // Botões de paginação das consultas: apenas no step de cancelar
+                        if (step.enablePagination) {
+                            const apptsPagination = document.getElementById('appts-pagination');
+                            if (apptsPagination && apptsPagination.style.display !== 'none') {
+                                apptsPagination.querySelectorAll('.appts-page-btn').forEach(btn => {
+                                    if (btn.disabled) {
+                                        makeClone(btn, false);
+                                    } else {
+                                        makeClone(btn, true, () => {
+                                            if (btn.id === 'appts-prev') {
+                                                prevApptsPage();
+                                            } else if (btn.id === 'appts-next') {
+                                                nextApptsPage();
+                                            }
+                                            requestAnimationFrame(() => requestAnimationFrame(() => refreshCancelTutorialClones()));
+                                        });
+                                    }
+                                });
+                                clonePageInfo();
+                            }
                         }
 
                         // Usa apenas os targets visíveis na viewport para posicionar o balão
@@ -1331,7 +1943,11 @@
                             return rect.top < window.innerHeight && rect.bottom > 0;
                         });
                         const positioningTargets = visibleTargets.length > 0 ? visibleTargets : targets;
-                        positionBalloon(balloon, positioningTargets, false, !!step.forceAbove);
+                        if (step.centerAbove) {
+                            positionBalloonCenterTop(balloon, positioningTargets);
+                        } else {
+                            positionBalloon(balloon, positioningTargets, false, !!step.forceAbove);
+                        }
                     }
                 }, 500);
             }, 150);
@@ -1475,16 +2091,18 @@
 
                                         // Intercepta o fechamento do modal para continuar o tutorial
                                         setTimeout(() => {
-                                            const modalBtn = document.getElementById('modal-btn');
-                                            modalBtn.onclick = () => {
-                                                modal.style.display = 'none';
-                                                modal.style.zIndex = '';
+                                            const modalBtnYes = document.getElementById('modal-btn-yes');
+                                            if (modalBtnYes) {
+                                                modalBtnYes.onclick = () => {
+                                                    modal.style.display = 'none';
+                                                    modal.style.zIndex = '';
 
-                                                tutorialActiveBranch = null;
-                                                tutorialHistory.push(2);
-                                                tutorialCurrentStep = 3;
-                                                nextTutorialStep();
-                                            };
+                                                    tutorialActiveBranch = null;
+                                                    tutorialHistory.push(2);
+                                                    tutorialCurrentStep = 3;
+                                                    nextTutorialStep();
+                                                };
+                                            }
                                         }, 50);
                                     });
                                 }
@@ -1493,11 +2111,15 @@
 
                         // Usa os inputs reais para posicionar o balão (não os labels)
                         const inputEls = targets.filter(el => el.tagName.toLowerCase() !== 'label');
-                        positionBalloon(
-                            balloon,
-                            inputEls.length ? inputEls : targets,
-                            branchKey === 'card' && window.innerWidth <= 768
-                        );
+                        if (branchKey === 'card') {
+                            positionBalloon(balloon, inputEls.length ? inputEls : targets, window.innerWidth <= 768);
+                            // Desce o balão um pouco no step do cartão
+                            const currentTop = parseFloat(balloon.style.top) || 0;
+                            const shift = window.innerWidth > 768 ? -20 : 145;
+                            balloon.style.top = (currentTop + shift) + 'px';
+                        } else {
+                            positionBalloon(balloon, inputEls.length ? inputEls : targets, false);
+                        }
 
                     } else {
                         // Pix: QR placeholder é visual; botão copiar é clicável
@@ -1544,6 +2166,13 @@
 
         function closeTutorial() {
             closeTutorialVisuals();
+            setApptsSearchVisible(true);
+            const input = document.getElementById('appts-search');
+            if (input) {
+                input.value = '';
+                input.classList.remove('tutorial-highlight-live');
+            }
+            apptsSearchQuery = '';
 
             document.getElementById('tutorial-overlay').classList.remove('active');
             document.body.classList.remove('tutorial-lock');

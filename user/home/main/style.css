@@ -27,6 +27,12 @@ body {
     padding: 20px;
 }
 
+@media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
+}
+
 body.tutorial-lock {
     overflow: hidden;
     touch-action: none;
@@ -99,6 +105,7 @@ body.tutorial-lock {
     flex-direction: column;
     align-items: center;
     gap: 15px;
+    max-width: 100%;
 }
 
 .menu-card:hover {
@@ -292,8 +299,35 @@ body.tutorial-lock {
     transition: background 0.3s;
 }
 
-.btn-modal:hover {
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-modal {
+    flex: 1;
+    max-width: 120px;
+}
+
+.btn-modal-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-modal-primary:hover {
     background: #a6757d;
+}
+
+.btn-modal-secondary {
+    background: transparent;
+    color: var(--secondary-color);
+    border: 1.5px solid var(--neutral-color);
+}
+
+.btn-modal-secondary:hover {
+    background: #f5f5f5;
+    border-color: var(--primary-color);
 }
 
 /* =========================================================
@@ -661,10 +695,10 @@ body.tutorial-lock {
 }
 
 /* Garante que o clone do botão "Continuar" mantenha o estilo rosa com texto branco */
-.tutorial-clone#next-to-date-btn,
-.tutorial-clone#next-to-date-btn:hover,
-.tutorial-clone#next-to-date-btn:active,
-.tutorial-clone#next-to-date-btn:focus {
+.tutorial-clone.tutorial-next-btn,
+.tutorial-clone.tutorial-next-btn:hover,
+.tutorial-clone.tutorial-next-btn:active,
+.tutorial-clone.tutorial-next-btn:focus {
     background: var(--primary-color) !important;
     color: white !important;
     border: none !important;
@@ -675,10 +709,10 @@ body.tutorial-lock {
 }
 
 /* Garante que o clone do botão "Confirmar Agendamento" mantenha o estilo rosa com texto branco */
-.tutorial-clone#final-confirm-btn,
-.tutorial-clone#final-confirm-btn:hover,
-.tutorial-clone#final-confirm-btn:active,
-.tutorial-clone#final-confirm-btn:focus {
+.tutorial-clone.tutorial-confirm-btn,
+.tutorial-clone.tutorial-confirm-btn:hover,
+.tutorial-clone.tutorial-confirm-btn:active,
+.tutorial-clone.tutorial-confirm-btn:focus {
     background: var(--primary-color) !important;
     color: white !important;
     border: none !important;
@@ -827,6 +861,92 @@ body.tutorial-lock {
 .filter-btn.active {
     background: var(--secondary-color);
     color: white;
+}
+
+/* =========================================================
+   BUSCA - MINHAS CONSULTAS
+   ========================================================= */
+.appts-search-bar {
+    margin-bottom: 15px;
+}
+
+#appts-search {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--neutral-color);
+    background: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+#appts-search:focus {
+    border-color: var(--primary-color);
+}
+
+#appts-search::placeholder {
+    color: var(--accent-color);
+    opacity: 0.7;
+}
+
+/* =========================================================
+   LISTA ESTÁVEL
+   ========================================================= */
+#appts-list {
+    min-height: auto;
+}
+
+@media (min-width: 768px) {
+    #appts-list {
+        min-height: 250px;
+    }
+}
+
+/* =========================================================
+   PAGINAÇÃO - MINHAS CONSULTAS
+   ========================================================= */
+.appts-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--neutral-color);
+}
+
+.appts-page-btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--neutral-color);
+    background: white;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    transition: all 0.2s ease;
+}
+
+.appts-page-btn:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.appts-page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#appts-page-info {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    color: var(--accent-color);
+    min-width: 40px;
+    text-align: center;
 }
 
 /* =========================================================
@@ -1128,6 +1248,28 @@ body.tutorial-lock {
     font-weight: 600;
 }
 
+/* Destaque dos cards de consulta durante o tutorial */
+.tutorial-clone.appointment-item {
+    background: #fdfdfd !important;
+    animation: pulse-highlight 1.5s ease-in-out infinite;
+}
+
+/* Destaque dos botões de paginação durante o tutorial */
+.tutorial-clone.appts-page-btn {
+    background: white !important;
+    animation: pulse-highlight 1.5s ease-in-out infinite;
+}
+
+/* Destaque mais forte do botão Cancelar durante o tutorial */
+.tutorial-clone.btn-cancel {
+    background: var(--error-color) !important;
+    color: white !important;
+    border-color: var(--error-color) !important;
+    animation: pulse-highlight-cancel 1s ease-in-out infinite;
+    transform: scale(1.05);
+    z-index: 9998 !important;
+}
+
 /* Empilhamento dos passos de pagamento durante o tutorial */
 #sched-step-3 {
     position: relative;
@@ -1216,6 +1358,26 @@ body.tutorial-lock {
     }
 }
 
+@keyframes pulse-highlight-cancel {
+
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 3px var(--error-color),
+            0 0 15px rgba(231, 76, 60, 0.6),
+            0 0 30px rgba(231, 76, 60, 0.35);
+        transform: scale(1.05);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 5px rgba(231, 76, 60, 0.8),
+            0 0 25px rgba(231, 76, 60, 0.9),
+            0 0 45px rgba(231, 76, 60, 0.55);
+        transform: scale(1.08);
+    }
+}
+
 /* =========================================================
    RESPONSIVIDADE
    ========================================================= */
@@ -1232,8 +1394,8 @@ body.tutorial-lock {
 
     .user-profile-nav {
         position: absolute !important;
-        right: -10px !important;
-        top: -50px !important;
+        right: 10px !important;
+        top: 10px !important;
     }
 
     /* Esconde no celular para não poluir a tela */
@@ -1276,8 +1438,13 @@ body.tutorial-lock {
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
+@media (max-width: 480px) {
      .option-grid {
         gap: 15px;
     }
@@ -1320,6 +1487,10 @@ body.tutorial-lock {
 
     .tutorial-balloon .balloon-arrow {
         display: none;
+    }
+
+    .psych-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .psych-card {
