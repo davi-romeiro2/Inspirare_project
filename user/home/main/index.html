@@ -873,7 +873,6 @@
             });
 
             applyApptsPagination(status);
-            scrollApptsToTop();
         }
 
         function searchAppts() {
@@ -884,9 +883,18 @@
 
         function prevApptsPage() {
             if (apptsPageState[apptsCurrentFilter] > 0) {
+                const list = document.getElementById('appts-list');
+                const savedScrollY = window.scrollY;
+                const savedHeight = list ? list.offsetHeight : 0;
+                if (list) list.style.minHeight = savedHeight + 'px';
                 apptsPageState[apptsCurrentFilter]--;
                 applyApptsPagination(apptsCurrentFilter);
-                scrollApptsToTop();
+                requestAnimationFrame(() => {
+                    if (list) list.style.minHeight = '';
+                    if (window.scrollY < savedScrollY) {
+                        window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+                    }
+                });
             }
         }
 
@@ -894,15 +902,19 @@
             const items = getFilteredAppts(apptsCurrentFilter);
             const totalPages = Math.ceil(items.length / getApptsPerPage());
             if (apptsPageState[apptsCurrentFilter] < totalPages - 1) {
+                const list = document.getElementById('appts-list');
+                const savedScrollY = window.scrollY;
+                const savedHeight = list ? list.offsetHeight : 0;
+                if (list) list.style.minHeight = savedHeight + 'px';
                 apptsPageState[apptsCurrentFilter]++;
                 applyApptsPagination(apptsCurrentFilter);
-                scrollApptsToTop();
+                requestAnimationFrame(() => {
+                    if (list) list.style.minHeight = '';
+                    if (window.scrollY < savedScrollY) {
+                        window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+                    }
+                });
             }
-        }
-
-        function scrollApptsToTop() {
-            const list = document.getElementById('appts-list');
-            if (list) list.scrollTop = 0;
         }
 
         function setApptsSearchVisible(visible) {
@@ -1008,6 +1020,25 @@
                     }
                 });
                 clonePageInfo();
+            }
+
+            // Mobile: reposiciona clones e balão para garantir que paginação fique visível
+            if (window.innerWidth <= 768) {
+                const pagClones = document.querySelectorAll('.tutorial-clone.appts-page-btn');
+                if (pagClones.length) {
+                    const lastClone = pagClones[pagClones.length - 1];
+                    const rect = lastClone.getBoundingClientRect();
+                    if (rect.bottom > window.innerHeight - 10) {
+                        const shift = rect.bottom - window.innerHeight + 20;
+                        document.querySelectorAll('.tutorial-clone.appointment-item, .tutorial-clone.appts-page-btn, .tutorial-clone[data-tutorial-type="page-info"]').forEach(c => {
+                            c.style.top = (parseFloat(c.style.top) - shift) + 'px';
+                        });
+                        const balloon = document.getElementById('tutorial-balloon');
+                        if (balloon) {
+                            balloon.style.top = Math.max(10, parseFloat(balloon.style.top) - shift) + 'px';
+                        }
+                    }
+                }
             }
         }
 
@@ -1487,10 +1518,9 @@
             }
             const box = getCombinedBoundingBox(targets);
             const margin = 20;
-            const bottomVisible = window.scrollY + window.innerHeight;
             const targetBottom = box.bottom + margin;
-            if (targetBottom > bottomVisible) {
-                const scrollOffset = targetBottom - bottomVisible;
+            if (targetBottom > window.innerHeight) {
+                const scrollOffset = targetBottom - window.innerHeight;
                 window.scrollBy({ top: scrollOffset, behavior: 'instant' });
             }
         }
@@ -1585,7 +1615,7 @@
             const margin = 10;
 
             let left = (window.innerWidth / 2) - (bw / 2);
-            let top = box.top - bh - 55;
+            let top = box.top - bh - (window.innerWidth <= 768 ? 130 : 55);
 
             // Se não couber acima, posiciona abaixo dos targets
             if (top < margin) {
@@ -2085,7 +2115,8 @@
                             positionBalloon(balloon, inputEls.length ? inputEls : targets, window.innerWidth <= 768);
                             // Desce o balão um pouco no step do cartão
                             const currentTop = parseFloat(balloon.style.top) || 0;
-                            balloon.style.top = (currentTop + 145) + 'px';
+                            const shift = window.innerWidth > 768 ? -20 : 145;
+                            balloon.style.top = (currentTop + shift) + 'px';
                         } else {
                             positionBalloon(balloon, inputEls.length ? inputEls : targets, false);
                         }
