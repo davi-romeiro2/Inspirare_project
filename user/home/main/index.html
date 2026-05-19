@@ -246,12 +246,17 @@
             </div>
 
             <div class="filter-bar">
-                <button class="filter-btn active" onclick="filterAppts('scheduled', this)">Agendadas</button>
-                <button class="filter-btn" onclick="filterAppts('completed', this)">Concluídas</button>
-                <button class="filter-btn" onclick="filterAppts('cancelled', this)">Canceladas</button>
+                <button class="filter-btn active" onclick="filterAppts('scheduled', this)" data-filter="scheduled">Agendadas</button>
+                <button class="filter-btn" onclick="filterAppts('completed', this)" data-filter="completed">Concluídas</button>
+                <button class="filter-btn" onclick="filterAppts('cancelled', this)" data-filter="cancelled">Canceladas</button>
+            </div>
+
+            <div class="appts-search-bar">
+                <input type="text" id="appts-search" placeholder="Buscar por nome, data ou tipo..." oninput="searchAppts()">
             </div>
 
             <div id="appts-list">
+                <!-- Agendadas -->
                 <div class="appointment-item" data-status="scheduled">
                     <div class="appointment-info">
                         <h4>Consulta Online - Dra. Ana Beatriz</h4>
@@ -259,6 +264,109 @@
                     </div>
                     <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
                 </div>
+                <div class="appointment-item" data-status="scheduled">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dr. Marcos Vinícius</h4>
+                        <p>15 de Maio, 2026 - 10:00</p>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
+                </div>
+                <div class="appointment-item" data-status="scheduled">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dra. Cláudia Luna</h4>
+                        <p>18 de Maio, 2026 - 16:00</p>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
+                </div>
+                <div class="appointment-item" data-status="scheduled">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dr. Ricardo Souza</h4>
+                        <p>20 de Maio, 2026 - 09:00</p>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
+                </div>
+
+                <!-- Concluídas -->
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dra. Juliana Costa</h4>
+                        <p>1 de Maio, 2026 - 11:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dr. Fernando Lima</h4>
+                        <p>3 de Maio, 2026 - 14:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dra. Bianca Mendes</h4>
+                        <p>5 de Maio, 2026 - 15:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dra. Ana Beatriz</h4>
+                        <p>7 de Maio, 2026 - 10:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dr. Marcos Vinícius</h4>
+                        <p>8 de Maio, 2026 - 17:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dra. Cláudia Luna</h4>
+                        <p>9 de Maio, 2026 - 13:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="completed">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dr. Ricardo Souza</h4>
+                        <p>10 de Maio, 2026 - 09:00</p>
+                    </div>
+                </div>
+
+                <!-- Canceladas -->
+                <div class="appointment-item" data-status="cancelled">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dra. Juliana Costa</h4>
+                        <p>22 de Abril, 2026 - 11:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="cancelled">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dr. Fernando Lima</h4>
+                        <p>24 de Abril, 2026 - 14:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="cancelled">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dra. Bianca Mendes</h4>
+                        <p>26 de Abril, 2026 - 16:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="cancelled">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dra. Ana Beatriz</h4>
+                        <p>28 de Abril, 2026 - 10:00</p>
+                    </div>
+                </div>
+                <div class="appointment-item" data-status="cancelled">
+                    <div class="appointment-info">
+                        <h4>Consulta Online - Dr. Marcos Vinícius</h4>
+                        <p>29 de Abril, 2026 - 15:00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="appts-pagination" class="appts-pagination" style="display:none;">
+                <button class="appts-page-btn" id="appts-prev" onclick="prevApptsPage()">Anterior</button>
+                <span id="appts-page-info">1 / 1</span>
+                <button class="appts-page-btn" id="appts-next" onclick="nextApptsPage()">Próximo</button>
             </div>
         </div>
     </div>
@@ -510,6 +618,12 @@
             const container = document.getElementById('flow-' + flow);
             container.classList.add('active');
             if (flow === 'schedule') resetScheduleFlow();
+            if (flow === 'appointments') {
+                document.getElementById('appts-search').value = '';
+                apptsSearchQuery = '';
+                const firstBtn = document.querySelector('#flow-appointments .filter-btn[data-filter="scheduled"]');
+                filterAppts('scheduled', firstBtn);
+            }
         }
 
         function closeFlow() {
@@ -666,14 +780,127 @@
         /* =========================
            MINHAS CONSULTAS
            ========================= */
+        const APPTS_PER_PAGE = 3;
+        let apptsPageState = { scheduled: 0, completed: 0, cancelled: 0 };
+        let apptsCurrentFilter = 'scheduled';
+        let apptsSearchQuery = '';
+
+        function getFilteredAppts(status) {
+            const allItems = Array.from(document.querySelectorAll('.appointment-item'));
+            const byStatus = allItems.filter(item => item.dataset.status === status);
+            if (!apptsSearchQuery.trim()) return byStatus;
+            const q = apptsSearchQuery.toLowerCase();
+            return byStatus.filter(item => item.innerText.toLowerCase().includes(q));
+        }
+
+        function applyApptsPagination(status) {
+            const items = getFilteredAppts(status);
+            const page = apptsPageState[status] || 0;
+            const totalPages = Math.max(1, Math.ceil(items.length / APPTS_PER_PAGE));
+
+            if (page >= totalPages) apptsPageState[status] = totalPages - 1;
+            if (apptsPageState[status] < 0) apptsPageState[status] = 0;
+            const safePage = apptsPageState[status];
+
+            items.forEach((item, index) => {
+                const start = safePage * APPTS_PER_PAGE;
+                const end = start + APPTS_PER_PAGE;
+                item.style.display = (index >= start && index < end) ? 'flex' : 'none';
+            });
+
+            // Esconde os itens do mesmo status que não passaram no filtro de busca
+            const allByStatus = Array.from(document.querySelectorAll('.appointment-item')).filter(i => i.dataset.status === status);
+            allByStatus.forEach(item => {
+                if (!items.includes(item)) item.style.display = 'none';
+            });
+
+            const paginationEl = document.getElementById('appts-pagination');
+            if (items.length > APPTS_PER_PAGE) {
+                paginationEl.style.display = 'flex';
+                document.getElementById('appts-page-info').innerText = `${safePage + 1} / ${totalPages}`;
+                document.getElementById('appts-prev').disabled = safePage === 0;
+                document.getElementById('appts-next').disabled = safePage >= totalPages - 1;
+            } else {
+                paginationEl.style.display = 'none';
+            }
+        }
+
         function filterAppts(status, clickedBtn = null) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            const btn = clickedBtn || (typeof event !== 'undefined' ? event.target : null);
+            let btn = clickedBtn;
+            if (!btn) {
+                btn = document.querySelector(`#flow-appointments .filter-btn[data-filter="${status}"]`);
+            }
             if (btn) btn.classList.add('active');
-            const items = document.querySelectorAll('.appointment-item');
-            items.forEach(item => {
-                item.style.display = item.dataset.status === status ? 'flex' : 'none';
+
+            apptsCurrentFilter = status;
+            apptsPageState[status] = 0;
+
+            document.querySelectorAll('.appointment-item').forEach(item => {
+                if (item.dataset.status !== status) item.style.display = 'none';
             });
+
+            applyApptsPagination(status);
+            scrollApptsToTop();
+        }
+
+        function searchAppts() {
+            apptsSearchQuery = document.getElementById('appts-search').value;
+            apptsPageState[apptsCurrentFilter] = 0;
+            applyApptsPagination(apptsCurrentFilter);
+        }
+
+        function prevApptsPage() {
+            if (apptsPageState[apptsCurrentFilter] > 0) {
+                apptsPageState[apptsCurrentFilter]--;
+                applyApptsPagination(apptsCurrentFilter);
+                scrollApptsToTop();
+            }
+        }
+
+        function nextApptsPage() {
+            const items = getFilteredAppts(apptsCurrentFilter);
+            const totalPages = Math.ceil(items.length / APPTS_PER_PAGE);
+            if (apptsPageState[apptsCurrentFilter] < totalPages - 1) {
+                apptsPageState[apptsCurrentFilter]++;
+                applyApptsPagination(apptsCurrentFilter);
+                scrollApptsToTop();
+            }
+        }
+
+        function scrollApptsToTop() {
+            const list = document.getElementById('appts-list');
+            if (list) list.scrollTop = 0;
+        }
+
+        function setApptsSearchVisible(visible) {
+            const searchBar = document.querySelector('.appts-search-bar');
+            if (searchBar) searchBar.style.display = visible ? '' : 'none';
+        }
+
+        function scrollApptsTutorialIntoView(extraSelectors = []) {
+            const modal = document.getElementById('flow-appointments');
+            if (modal) {
+                const rect = modal.getBoundingClientRect();
+                const modalCenter = rect.top + (rect.height / 2);
+                const viewportCenter = window.innerHeight / 2;
+                const scrollOffset = modalCenter - viewportCenter;
+                if (Math.abs(scrollOffset) > 2) {
+                    window.scrollBy({ top: scrollOffset, behavior: 'instant' });
+                }
+                return;
+            }
+            const visibleCards = Array.from(document.querySelectorAll('.appointment-item')).filter(i => i.style.display !== 'none');
+            const pagination = document.getElementById('appts-pagination');
+            const targets = [...visibleCards];
+            if (pagination && pagination.style.display !== 'none') targets.push(pagination);
+            extraSelectors.forEach(s => {
+                document.querySelectorAll(s).forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.width > 0 || rect.height > 0) targets.push(el);
+                });
+            });
+            if (targets.length) scrollTargetsIntoView(targets);
         }
 
         function cancelAppt(btn) {
@@ -682,6 +909,7 @@
                 item.dataset.status = 'cancelled';
                 item.querySelector('.btn-cancel').style.display = 'none';
                 const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
+                apptsPageState.scheduled = 0;
                 filterAppts('scheduled', activeBtn);
             });
         }
@@ -858,6 +1086,7 @@
                     <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
                 `;
                 list.appendChild(item);
+                applyApptsPagination('scheduled');
             }
         }
 
@@ -869,25 +1098,59 @@
                     beforeShow: () => { closeFlow(); }
                 },
                 {
-                    targets: ['#flow-appointments .filter-btn.active'],
-                    text: 'Mantenha o filtro em "Agendadas" para ver só as consultas pendentes.',
+                    targets: ['#flow-appointments .filter-btn[data-filter="scheduled"]'],
+                    text: 'Clique em "Agendadas" para ver suas consultas pendentes.',
+                    forceAbove: true,
+                    advanceButton: true,
                     beforeShow: () => {
                         openFlow('appointments');
-                        const btn = document.querySelector('#flow-appointments .filter-bar button:nth-child(1)');
+                        const btn = document.querySelector('#flow-appointments .filter-btn[data-filter="scheduled"]');
                         if (btn) btn.classList.add('active');
                         filterAppts('scheduled', btn);
+                        ensureScheduledAppointment();
+                        scrollApptsTutorialIntoView();
+                    }
+                },
+                {
+                    targets: ['#appts-search'],
+                    text: 'Use a barra de pesquisa para encontrar a consulta que deseja cancelar por nome, data ou tipo.',
+                    forceAbove: true,
+                    advanceButton: true,
+                    beforeShow: () => {
+                        openFlow('appointments');
+                        setApptsSearchVisible(true);
+                        const input = document.getElementById('appts-search');
+                        if (input) {
+                            input.value = '';
+                            input.classList.add('tutorial-highlight-live');
+                        }
+                        apptsSearchQuery = '';
+                        const btn = document.querySelector('#flow-appointments .filter-btn[data-filter="scheduled"]');
+                        if (btn) btn.classList.add('active');
+                        filterAppts('scheduled', btn);
+                        ensureScheduledAppointment();
+                        scrollApptsTutorialIntoView();
                     }
                 },
                 {
                     targets: ['.appointment-item[data-status="scheduled"] .btn-cancel'],
-                    text: 'Para cancelar uma consulta, clique no botão Cancelar ao lado da consulta desejada.',
+                    visualTargets: ['.appointment-item[data-status="scheduled"]', '#appts-pagination'],
+                    text: 'Clique em "Cancelar" ao lado da consulta desejada. Você também pode usar "Anterior" e "Próximo" para navegar entre as páginas de consultas.',
                     endOnClick: true,
                     beforeShow: () => {
                         openFlow('appointments');
-                        const btn = document.querySelector('#flow-appointments .filter-bar button:nth-child(1)');
+                        setApptsSearchVisible(false);
+                        const input = document.getElementById('appts-search');
+                        if (input) {
+                            input.value = '';
+                            input.classList.remove('tutorial-highlight-live');
+                        }
+                        apptsSearchQuery = '';
+                        const btn = document.querySelector('#flow-appointments .filter-btn[data-filter="scheduled"]');
                         if (btn) btn.classList.add('active');
                         filterAppts('scheduled', btn);
                         ensureScheduledAppointment();
+                        scrollApptsTutorialIntoView();
                     }
                 }
             ];
@@ -941,6 +1204,8 @@
                 `;
                 list.appendChild(item);
             }
+
+            applyApptsPagination(apptsCurrentFilter);
         }
 
         function startViewTutorial() {
@@ -952,44 +1217,50 @@
                 },
                 {
                     targets: ['#flow-appointments .filter-btn:nth-child(1)'],
-                    visualTargets: ['.appointment-item[data-status="scheduled"]'],
+                    visualTargets: ['.appointment-item[data-status="scheduled"]', '#appts-pagination'],
                     text: 'Aqui você vê todas as consultas agendadas. Elas aparecem nesta lista.',
                     forceAbove: true,
                     advanceButton: true,
                     beforeShow: () => {
                         openFlow('appointments');
+                        setApptsSearchVisible(false);
                         const btn = document.querySelector('#flow-appointments .filter-btn:nth-child(1)');
                         if (btn) btn.classList.add('active');
                         filterAppts('scheduled', btn);
                         ensureViewAppointments();
+                        scrollApptsTutorialIntoView(['#flow-appointments .filter-btn:nth-child(1)']);
                     }
                 },
                 {
                     targets: ['#flow-appointments .filter-btn:nth-child(2)'],
-                    visualTargets: ['.appointment-item[data-status="completed"]'],
+                    visualTargets: ['.appointment-item[data-status="completed"]', '#appts-pagination'],
                     text: 'Aqui você vê suas consultas já concluídas.',
                     forceAbove: true,
                     advanceButton: true,
                     beforeShow: () => {
                         openFlow('appointments');
+                        setApptsSearchVisible(false);
                         const btn = document.querySelector('#flow-appointments .filter-btn:nth-child(2)');
                         if (btn) btn.classList.add('active');
                         filterAppts('completed', btn);
                         ensureViewAppointments();
+                        scrollApptsTutorialIntoView(['#flow-appointments .filter-btn:nth-child(2)']);
                     }
                 },
                 {
                     targets: ['#flow-appointments .filter-btn:nth-child(3)'],
-                    visualTargets: ['.appointment-item[data-status="cancelled"]'],
+                    visualTargets: ['.appointment-item[data-status="cancelled"]', '#appts-pagination'],
                     text: 'Aqui você vê as consultas que foram canceladas.',
                     forceAbove: true,
                     finishButton: true,
                     beforeShow: () => {
                         openFlow('appointments');
+                        setApptsSearchVisible(false);
                         const btn = document.querySelector('#flow-appointments .filter-btn:nth-child(3)');
                         if (btn) btn.classList.add('active');
                         filterAppts('cancelled', btn);
                         ensureViewAppointments();
+                        scrollApptsTutorialIntoView(['#flow-appointments .filter-btn:nth-child(3)']);
                     }
                 }
             ];
@@ -1284,6 +1555,9 @@
 
                         const isVisualOnly = step.advanceButton || step.finishButton;
                         targets.forEach(originalEl => {
+                            if (originalEl.classList.contains('tutorial-highlight-live')) return;
+                            const rect = originalEl.getBoundingClientRect();
+                            if (rect.width === 0 && rect.height === 0) return;
                             if (isVisualOnly) {
                                 makeClone(originalEl, false);
                             } else {
@@ -1320,7 +1594,11 @@
                         // Cria clones não-clicáveis para elementos visuais adicionais
                         if (step.visualTargets) {
                             step.visualTargets.forEach(s => {
-                                document.querySelectorAll(s).forEach(el => makeClone(el, false));
+                                document.querySelectorAll(s).forEach(el => {
+                                    const rect = el.getBoundingClientRect();
+                                    if (rect.width === 0 && rect.height === 0) return;
+                                    makeClone(el, false);
+                                });
                             });
                         }
 
@@ -1544,6 +1822,13 @@
 
         function closeTutorial() {
             closeTutorialVisuals();
+            setApptsSearchVisible(true);
+            const input = document.getElementById('appts-search');
+            if (input) {
+                input.value = '';
+                input.classList.remove('tutorial-highlight-live');
+            }
+            apptsSearchQuery = '';
 
             document.getElementById('tutorial-overlay').classList.remove('active');
             document.body.classList.remove('tutorial-lock');
