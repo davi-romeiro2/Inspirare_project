@@ -64,7 +64,7 @@
 
     <!-- Tutorial Overlay (no body, cobre tudo) -->
     <div id="tutorial-overlay" class="tutorial-overlay">
-        <div id="tutorial-balloon" class="tutorial-balloon">
+        <div id="tutorial-balloon" class="tutorial-balloon" style="display:none">
             <p id="tutorial-text"></p>
             <div class="balloon-arrow"></div>
             <div class="tutorial-buttons">
@@ -89,7 +89,10 @@
             <div class="custom-modal">
                 <h3 id="modal-title">Aviso</h3>
                 <p id="modal-text">Mensagem aqui</p>
-                <button class="btn-modal" id="modal-btn">Ok</button>
+                <div class="modal-actions">
+                    <button class="btn-modal btn-modal-secondary" id="modal-btn-no">Não</button>
+                    <button class="btn-modal btn-modal-primary" id="modal-btn-yes">Sim</button>
+                </div>
             </div>
         </div>
 
@@ -599,14 +602,37 @@
         /* =========================
            MODAL CUSTOMIZADO
            ========================= */
-        function showModal(title, text, callback = null) {
+        function showModal(title, text, onConfirm = null, onCancel = null) {
             const modal = document.getElementById('custom-modal');
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-text').innerText = text;
             modal.style.display = 'flex';
-            document.getElementById('modal-btn').onclick = () => {
+
+            const btnYes = document.getElementById('modal-btn-yes');
+            const btnNo = document.getElementById('modal-btn-no');
+
+            if (onConfirm && onCancel) {
+                // Diálogo Sim/Não
+                btnYes.innerText = 'Sim';
+                btnYes.style.display = 'inline-block';
+                btnNo.style.display = 'inline-block';
+            } else if (onConfirm) {
+                // Apenas confirmação (Ok)
+                btnYes.innerText = 'Ok';
+                btnYes.style.display = 'inline-block';
+                btnNo.style.display = 'none';
+            } else {
+                btnYes.style.display = 'none';
+                btnNo.style.display = 'none';
+            }
+
+            btnYes.onclick = () => {
                 modal.style.display = 'none';
-                if (callback) callback();
+                if (onConfirm) onConfirm();
+            };
+            btnNo.onclick = () => {
+                modal.style.display = 'none';
+                if (onCancel) onCancel();
             };
         }
 
@@ -878,18 +904,110 @@
             if (searchBar) searchBar.style.display = visible ? '' : 'none';
         }
 
-        function scrollApptsTutorialIntoView(extraSelectors = []) {
-            const modal = document.getElementById('flow-appointments');
-            if (modal) {
-                const rect = modal.getBoundingClientRect();
-                const modalCenter = rect.top + (rect.height / 2);
-                const viewportCenter = window.innerHeight / 2;
-                const scrollOffset = modalCenter - viewportCenter;
-                if (Math.abs(scrollOffset) > 2) {
-                    window.scrollBy({ top: scrollOffset, behavior: 'instant' });
+        function clonePageInfo() {
+            const originalEl = document.getElementById('appts-page-info');
+            if (!originalEl) return;
+
+            // Conta apenas os itens ORIGINAIS dentro de #appts-list (ignora clones do tutorial)
+            const list = document.getElementById('appts-list');
+            const originalItems = list
+                ? Array.from(list.querySelectorAll('.appointment-item')).filter(i => i.dataset.status === 'scheduled')
+                : [];
+            const page = apptsPageState['scheduled'] || 0;
+            const totalPages = Math.max(1, Math.ceil(originalItems.length / APPTS_PER_PAGE));
+            const safePage = Math.min(page, totalPages - 1);
+            const text = `${safePage + 1} / ${totalPages}`;
+
+            // Atualiza o original também para manter consistência visual
+            originalEl.innerText = text;
+
+            const rect = originalEl.getBoundingClientRect();
+            const clone = document.createElement('span');
+            clone.classList.add('tutorial-clone');
+            clone.setAttribute('data-tutorial-type', 'page-info');
+            clone.textContent = text;
+
+            const computed = window.getComputedStyle(originalEl);
+            clone.style.cssText = `
+                position: fixed;
+                top: ${rect.top}px;
+                left: ${rect.left}px;
+                width: ${rect.width}px;
+                height: ${rect.height}px;
+                margin: 0;
+                z-index: 2002;
+                pointer-events: none;
+                cursor: default;
+                padding: ${computed.padding};
+                border: ${computed.border};
+                border-radius: ${computed.borderRadius};
+                background: ${computed.background};
+                color: ${computed.color};
+                font: ${computed.font};
+                box-sizing: ${computed.boxSizing};
+                display: ${computed.display};
+                align-items: ${computed.alignItems};
+                justify-content: ${computed.justifyContent};
+                min-width: ${computed.minWidth};
+                text-align: ${computed.textAlign};
+            `;
+            document.body.appendChild(clone);
+            return clone;
+        }
+
+        function refreshCancelTutorialClones() {
+            // Remove clones dos elementos do step de cancelar
+            document.querySelectorAll('.tutorial-clone').forEach(c => {
+                const isPageInfo = c.classList.contains('tutorial-page-info') ||
+                                   c.getAttribute('data-tutorial-type') === 'page-info';
+                if (c.classList.contains('appointment-item') ||
+                    c.classList.contains('btn-cancel') ||
+                    c.classList.contains('appts-page-btn') ||
+                    isPageInfo) {
+                    c.remove();
                 }
-                return;
+            });
+
+            // Reclona cards visíveis
+            document.querySelectorAll('.appointment-item').forEach(el => {
+                if (el.style.display !== 'none') makeClone(el, false);
+            });
+
+            // Reclona botões cancelar dos cards visíveis
+            document.querySelectorAll('.appointment-item[data-status="scheduled"] .btn-cancel').forEach(btn => {
+                const parentItem = btn.closest('.appointment-item');
+                if (parentItem && parentItem.style.display !== 'none') {
+                    makeClone(btn, true, () => {
+                        closeTutorial();
+                        btn.click();
+                    });
+                }
+            });
+
+            // Reclona paginação (apenas botões individuais, sem container)
+            const apptsPagination = document.getElementById('appts-pagination');
+            if (apptsPagination && apptsPagination.style.display !== 'none') {
+                apptsPagination.querySelectorAll('.appts-page-btn').forEach(btn => {
+                    if (btn.disabled) {
+                        makeClone(btn, false);
+                    } else {
+                        makeClone(btn, true, () => {
+                            if (btn.id === 'appts-prev') {
+                                prevApptsPage();
+                            } else if (btn.id === 'appts-next') {
+                                nextApptsPage();
+                            }
+                            requestAnimationFrame(() => requestAnimationFrame(() => refreshCancelTutorialClones()));
+                        });
+                    }
+                });
+                clonePageInfo();
             }
+        }
+
+        function scrollApptsTutorialIntoView(extraSelectors = []) {
+            // Prioriza centralizar os elementos visíveis (cards + paginação)
+            // em vez do modal inteiro, garantindo que o que está aceso fique perfeitamente na tela
             const visibleCards = Array.from(document.querySelectorAll('.appointment-item')).filter(i => i.style.display !== 'none');
             const pagination = document.getElementById('appts-pagination');
             const targets = [...visibleCards];
@@ -900,18 +1018,38 @@
                     if (rect.width > 0 || rect.height > 0) targets.push(el);
                 });
             });
-            if (targets.length) scrollTargetsIntoView(targets);
+            if (targets.length) {
+                scrollTargetsIntoViewTop(targets);
+                return;
+            }
+
+            // Fallback: centraliza o modal só se não houver targets específicos visíveis
+            const modal = document.getElementById('flow-appointments');
+            if (modal) {
+                const rect = modal.getBoundingClientRect();
+                const modalCenter = rect.top + (rect.height / 2);
+                const viewportCenter = window.innerHeight / 2;
+                const scrollOffset = modalCenter - viewportCenter;
+                if (Math.abs(scrollOffset) > 2) {
+                    window.scrollBy({ top: scrollOffset, behavior: 'instant' });
+                }
+            }
         }
 
         function cancelAppt(btn) {
-            showModal('Confirmar Cancelamento', 'Deseja realmente cancelar esta consulta?', () => {
-                const item = btn.closest('.appointment-item');
-                item.dataset.status = 'cancelled';
-                item.querySelector('.btn-cancel').style.display = 'none';
-                const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
-                apptsPageState.scheduled = 0;
-                filterAppts('scheduled', activeBtn);
-            });
+            showModal(
+                'Confirmar Cancelamento',
+                'Deseja realmente cancelar esta consulta?',
+                () => { // Sim
+                    const item = btn.closest('.appointment-item');
+                    item.dataset.status = 'cancelled';
+                    item.querySelector('.btn-cancel').style.display = 'none';
+                    const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
+                    apptsPageState.scheduled = 0;
+                    filterAppts('scheduled', activeBtn);
+                },
+                () => { } // Não: apenas fecha o modal
+            );
         }
 
         /* =========================
@@ -963,6 +1101,16 @@
             const parcelasWrapper = document.getElementById('parcelas-wrapper');
             if (parcelasWrapper) parcelasWrapper.classList.remove('open');
             resetParcelasDropdownPosition();
+
+            // Limpa o valor do input de pesquisa para o próximo step
+            const apptsSearch = document.getElementById('appts-search');
+            if (apptsSearch) {
+                apptsSearch.value = '';
+                apptsSearch.classList.remove('tutorial-highlight-live');
+                apptsSearch.style.zIndex = '';
+                apptsSearch.style.position = '';
+            }
+            apptsSearchQuery = '';
 
             overlay.style.pointerEvents = '';
             overlay.style.background = '';
@@ -1120,10 +1268,7 @@
                         openFlow('appointments');
                         setApptsSearchVisible(true);
                         const input = document.getElementById('appts-search');
-                        if (input) {
-                            input.value = '';
-                            input.classList.add('tutorial-highlight-live');
-                        }
+                        if (input) input.value = '';
                         apptsSearchQuery = '';
                         const btn = document.querySelector('#flow-appointments .filter-btn[data-filter="scheduled"]');
                         if (btn) btn.classList.add('active');
@@ -1134,12 +1279,15 @@
                 },
                 {
                     targets: ['.appointment-item[data-status="scheduled"] .btn-cancel'],
-                    visualTargets: ['.appointment-item[data-status="scheduled"]', '#appts-pagination'],
+                    visualTargets: ['.appointment-item[data-status="scheduled"]'],
                     text: 'Clique em "Cancelar" ao lado da consulta desejada. Você também pode usar "Anterior" e "Próximo" para navegar entre as páginas de consultas.',
                     endOnClick: true,
-                    beforeShow: () => {
+                    alignTop: true,
+                    centerAbove: true,
+                    enablePagination: true,
+                    beforeShow: function () {
                         openFlow('appointments');
-                        setApptsSearchVisible(false);
+                        setApptsSearchVisible(true);
                         const input = document.getElementById('appts-search');
                         if (input) {
                             input.value = '';
@@ -1150,7 +1298,17 @@
                         if (btn) btn.classList.add('active');
                         filterAppts('scheduled', btn);
                         ensureScheduledAppointment();
-                        scrollApptsTutorialIntoView();
+
+                        // Verifica se há paginação visível
+                        const paginationEl = document.getElementById('appts-pagination');
+                        const hasPagination = paginationEl && paginationEl.style.display !== 'none';
+                        if (!hasPagination) {
+                            this.text = 'Clique em "Cancelar" ao lado da consulta desejada.';
+                            this.scrollToBottom = true;
+                        } else {
+                            this.text = 'Clique em "Cancelar" ao lado da consulta desejada. Você também pode usar "Anterior" e "Próximo" para navegar entre as páginas de consultas.';
+                            this.scrollToBottom = false;
+                        }
                     }
                 }
             ];
@@ -1304,6 +1462,33 @@
             }
         }
 
+        // Posiciona os elementos na parte superior da viewport, com margem de 80px do topo
+        function scrollTargetsIntoViewTop(elements) {
+            const box = getCombinedBoundingBox(elements);
+            const margin = 80;
+            const scrollOffset = box.top - margin;
+            if (Math.abs(scrollOffset) > 2) {
+                window.scrollBy({ top: scrollOffset, behavior: 'instant' });
+            }
+        }
+
+        // Garante que o bottom dos elementos (e paginação, se houver) fique visível na viewport
+        function scrollTargetsIntoViewWithPagination(elements) {
+            const pagination = document.getElementById('appts-pagination');
+            const targets = [...elements];
+            if (pagination && pagination.style.display !== 'none') {
+                targets.push(pagination);
+            }
+            const box = getCombinedBoundingBox(targets);
+            const margin = 20;
+            const bottomVisible = window.scrollY + window.innerHeight;
+            const targetBottom = box.bottom + margin;
+            if (targetBottom > bottomVisible) {
+                const scrollOffset = targetBottom - bottomVisible;
+                window.scrollBy({ top: scrollOffset, behavior: 'instant' });
+            }
+        }
+
         function positionBalloon(balloon, targetElements, fixedTop = false, forceAbove = false) {
             balloon.style.display = 'block';
 
@@ -1394,7 +1579,7 @@
             const margin = 10;
 
             let left = (window.innerWidth / 2) - (bw / 2);
-            let top = box.top - bh - 25;
+            let top = box.top - bh - 55;
 
             // Se não couber acima, posiciona abaixo dos targets
             if (top < margin) {
@@ -1418,9 +1603,76 @@
             const clone = originalEl.cloneNode(true);
             clone.classList.add('tutorial-clone', 'tutorial-highlight');
             clone.removeAttribute('onclick');
-            clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
-                `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:2002;` +
-                `pointer-events:${clickable ? 'auto' : 'none'};cursor:${clickable ? 'pointer' : 'default'};`;
+            clone.removeAttribute('id'); // evita IDs duplicados no DOM
+
+            // Preserva classe especial para botões específicos do tutorial
+            if (originalEl.id === 'next-to-date-btn') {
+                clone.classList.add('tutorial-next-btn');
+            } else if (originalEl.id === 'final-confirm-btn') {
+                clone.classList.add('tutorial-confirm-btn');
+            }
+
+            const tag = originalEl.tagName.toLowerCase();
+            const isFormControl = tag === 'input' || tag === 'select' || tag === 'textarea';
+
+            // Elementos clicáveis ficam acima dos visuais para evitar sobreposição
+            const baseZIndex = clickable ? '2003' : '2001';
+
+            if (isFormControl) {
+                // Remove ID duplicado para evitar conflitos com getElementById
+                clone.removeAttribute('id');
+
+                const computed = window.getComputedStyle(originalEl);
+
+                // Inputs de texto precisam de z-index acima do balão (9999) para serem editáveis
+                const isTextInput = tag === 'input' && (originalEl.type === 'text' || originalEl.type === 'search' || !originalEl.type);
+                const zIndex = isTextInput ? '10000' : baseZIndex;
+
+                clone.style.cssText = `
+                    position: fixed;
+                    top: ${rect.top}px;
+                    left: ${rect.left}px;
+                    width: ${rect.width}px;
+                    height: ${rect.height}px;
+                    margin: 0;
+                    z-index: ${zIndex};
+                    pointer-events: ${clickable ? 'auto' : 'none'};
+                    cursor: ${isTextInput ? 'text' : (clickable ? 'pointer' : 'default')};
+                    padding: ${computed.padding};
+                    border: ${computed.border};
+                    border-radius: ${computed.borderRadius};
+                    background: ${computed.background};
+                    color: ${computed.color};
+                    font: ${computed.font};
+                    box-sizing: ${computed.boxSizing};
+                    display: ${computed.display};
+                    align-items: ${computed.alignItems};
+                    justify-content: ${computed.justifyContent};
+                    outline: ${computed.outline};
+                `;
+
+                // Sincroniza digitação do clone de volta para o original
+                clone.addEventListener('input', (e) => {
+                    originalEl.value = e.target.value;
+                    originalEl.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+                clone.addEventListener('change', (e) => {
+                    originalEl.value = e.target.value;
+                    originalEl.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+
+                // Focus automático para facilitar digitação no tutorial
+                if (clickable && isTextInput) {
+                    requestAnimationFrame(() => {
+                        if (document.body.contains(clone)) clone.focus();
+                    });
+                }
+            } else {
+                clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
+                    `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:${baseZIndex};` +
+                    `pointer-events:${clickable ? 'auto' : 'none'};cursor:${clickable ? 'pointer' : 'default'};`;
+            }
+
             if (clickable && onClickFn) {
                 clone.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onClickFn(); });
             }
@@ -1463,11 +1715,28 @@
                 if (!targets.length) return;
 
                 const box = getCombinedBoundingBox(targets);
-                const targetCenter = box.top + (box.height / 2);
-                const viewportCenter = window.innerHeight / 2;
-                const scrollOffset = targetCenter - viewportCenter;
+                let scrollOffset;
+
+                if (step.scrollToBottom) {
+                    const docHeight = document.documentElement.scrollHeight;
+                    scrollOffset = docHeight - window.innerHeight - window.scrollY;
+                } else if (step.alignTop) {
+                    const margin = 80;
+                    scrollOffset = margin - box.top;
+                } else {
+                    const targetCenter = box.top + (box.height / 2);
+                    const viewportCenter = window.innerHeight / 2;
+                    scrollOffset = targetCenter - viewportCenter;
+                }
 
                 window.scrollBy({ top: scrollOffset, behavior: 'smooth' });
+
+                // Garante que paginação fique visível no mobile quando há pouca altura
+                if (step.enablePagination) {
+                    setTimeout(() => {
+                        scrollTargetsIntoViewWithPagination(targets);
+                    }, 400);
+                }
 
                 setTimeout(() => {
                     overlay.classList.add('active');
@@ -1558,7 +1827,14 @@
                             if (originalEl.classList.contains('tutorial-highlight-live')) return;
                             const rect = originalEl.getBoundingClientRect();
                             if (rect.width === 0 && rect.height === 0) return;
-                            if (isVisualOnly) {
+
+                            const tag = originalEl.tagName.toLowerCase();
+                            const isTextInput = tag === 'input' && (originalEl.type === 'text' || originalEl.type === 'search' || !originalEl.type);
+
+                            if (isTextInput) {
+                                // Input de texto: sempre clicável para permitir digitação, mas não avança o tutorial
+                                makeClone(originalEl, true, null);
+                            } else if (isVisualOnly) {
                                 makeClone(originalEl, false);
                             } else {
                                 makeClone(originalEl, true, () => {
@@ -1602,6 +1878,28 @@
                             });
                         }
 
+                        // Botões de paginação das consultas: apenas no step de cancelar
+                        if (step.enablePagination) {
+                            const apptsPagination = document.getElementById('appts-pagination');
+                            if (apptsPagination && apptsPagination.style.display !== 'none') {
+                                apptsPagination.querySelectorAll('.appts-page-btn').forEach(btn => {
+                                    if (btn.disabled) {
+                                        makeClone(btn, false);
+                                    } else {
+                                        makeClone(btn, true, () => {
+                                            if (btn.id === 'appts-prev') {
+                                                prevApptsPage();
+                                            } else if (btn.id === 'appts-next') {
+                                                nextApptsPage();
+                                            }
+                                            requestAnimationFrame(() => requestAnimationFrame(() => refreshCancelTutorialClones()));
+                                        });
+                                    }
+                                });
+                                clonePageInfo();
+                            }
+                        }
+
                         // Usa apenas os targets visíveis na viewport para posicionar o balão
                         // evitando que grids grandes (datas/horas) criem um bounding box gigante
                         const visibleTargets = targets.filter(t => {
@@ -1609,7 +1907,11 @@
                             return rect.top < window.innerHeight && rect.bottom > 0;
                         });
                         const positioningTargets = visibleTargets.length > 0 ? visibleTargets : targets;
-                        positionBalloon(balloon, positioningTargets, false, !!step.forceAbove);
+                        if (step.centerAbove) {
+                            positionBalloonCenterTop(balloon, positioningTargets);
+                        } else {
+                            positionBalloon(balloon, positioningTargets, false, !!step.forceAbove);
+                        }
                     }
                 }, 500);
             }, 150);
@@ -1753,16 +2055,18 @@
 
                                         // Intercepta o fechamento do modal para continuar o tutorial
                                         setTimeout(() => {
-                                            const modalBtn = document.getElementById('modal-btn');
-                                            modalBtn.onclick = () => {
-                                                modal.style.display = 'none';
-                                                modal.style.zIndex = '';
+                                            const modalBtnYes = document.getElementById('modal-btn-yes');
+                                            if (modalBtnYes) {
+                                                modalBtnYes.onclick = () => {
+                                                    modal.style.display = 'none';
+                                                    modal.style.zIndex = '';
 
-                                                tutorialActiveBranch = null;
-                                                tutorialHistory.push(2);
-                                                tutorialCurrentStep = 3;
-                                                nextTutorialStep();
-                                            };
+                                                    tutorialActiveBranch = null;
+                                                    tutorialHistory.push(2);
+                                                    tutorialCurrentStep = 3;
+                                                    nextTutorialStep();
+                                                };
+                                            }
                                         }, 50);
                                     });
                                 }
