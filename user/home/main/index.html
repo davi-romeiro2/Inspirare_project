@@ -1703,6 +1703,22 @@
                         if (document.body.contains(clone)) clone.focus();
                     });
                 }
+
+                // Reposiciona o clone se a viewport mudar (teclado virtual no mobile)
+                if (isTextInput) {
+                    const reposition = () => {
+                        if (!document.body.contains(clone)) {
+                            window.removeEventListener('resize', reposition);
+                            return;
+                        }
+                        const newRect = originalEl.getBoundingClientRect();
+                        clone.style.top = newRect.top + 'px';
+                        clone.style.left = newRect.left + 'px';
+                        clone.style.width = newRect.width + 'px';
+                        clone.style.height = newRect.height + 'px';
+                    };
+                    window.addEventListener('resize', reposition);
+                }
             } else {
                 clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
                     `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:${baseZIndex};` +
