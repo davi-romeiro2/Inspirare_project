@@ -456,6 +456,9 @@
                 if (psychCurrentPage < 0) psychCurrentPage = 0;
                 renderProfessionalsPage();
             }
+            if (document.getElementById('flow-appointments').classList.contains('active')) {
+                applyApptsPagination(apptsCurrentFilter);
+            }
         });
 
         /* =========================
@@ -806,7 +809,9 @@
         /* =========================
            MINHAS CONSULTAS
            ========================= */
-        const APPTS_PER_PAGE = 3;
+        function getApptsPerPage() {
+            return window.innerWidth <= 768 ? 2 : 3;
+        }
         let apptsPageState = { scheduled: 0, completed: 0, cancelled: 0 };
         let apptsCurrentFilter = 'scheduled';
         let apptsSearchQuery = '';
@@ -822,15 +827,16 @@
         function applyApptsPagination(status) {
             const items = getFilteredAppts(status);
             const page = apptsPageState[status] || 0;
-            const totalPages = Math.max(1, Math.ceil(items.length / APPTS_PER_PAGE));
+            const totalPages = Math.max(1, Math.ceil(items.length / getApptsPerPage()));
 
             if (page >= totalPages) apptsPageState[status] = totalPages - 1;
             if (apptsPageState[status] < 0) apptsPageState[status] = 0;
             const safePage = apptsPageState[status];
 
             items.forEach((item, index) => {
-                const start = safePage * APPTS_PER_PAGE;
-                const end = start + APPTS_PER_PAGE;
+                const perPage = getApptsPerPage();
+                const start = safePage * perPage;
+                const end = start + perPage;
                 item.style.display = (index >= start && index < end) ? 'flex' : 'none';
             });
 
@@ -841,7 +847,7 @@
             });
 
             const paginationEl = document.getElementById('appts-pagination');
-            if (items.length > APPTS_PER_PAGE) {
+            if (items.length > getApptsPerPage()) {
                 paginationEl.style.display = 'flex';
                 document.getElementById('appts-page-info').innerText = `${safePage + 1} / ${totalPages}`;
                 document.getElementById('appts-prev').disabled = safePage === 0;
@@ -886,7 +892,7 @@
 
         function nextApptsPage() {
             const items = getFilteredAppts(apptsCurrentFilter);
-            const totalPages = Math.ceil(items.length / APPTS_PER_PAGE);
+            const totalPages = Math.ceil(items.length / getApptsPerPage());
             if (apptsPageState[apptsCurrentFilter] < totalPages - 1) {
                 apptsPageState[apptsCurrentFilter]++;
                 applyApptsPagination(apptsCurrentFilter);
@@ -914,7 +920,7 @@
                 ? Array.from(list.querySelectorAll('.appointment-item')).filter(i => i.dataset.status === 'scheduled')
                 : [];
             const page = apptsPageState['scheduled'] || 0;
-            const totalPages = Math.max(1, Math.ceil(originalItems.length / APPTS_PER_PAGE));
+            const totalPages = Math.max(1, Math.ceil(originalItems.length / getApptsPerPage()));
             const safePage = Math.min(page, totalPages - 1);
             const text = `${safePage + 1} / ${totalPages}`;
 
@@ -2075,11 +2081,14 @@
 
                         // Usa os inputs reais para posicionar o balão (não os labels)
                         const inputEls = targets.filter(el => el.tagName.toLowerCase() !== 'label');
-                        positionBalloon(
-                            balloon,
-                            inputEls.length ? inputEls : targets,
-                            branchKey === 'card' && window.innerWidth <= 768
-                        );
+                        if (branchKey === 'card') {
+                            positionBalloon(balloon, inputEls.length ? inputEls : targets, window.innerWidth <= 768);
+                            // Desce o balão um pouco no step do cartão
+                            const currentTop = parseFloat(balloon.style.top) || 0;
+                            balloon.style.top = (currentTop + 145) + 'px';
+                        } else {
+                            positionBalloon(balloon, inputEls.length ? inputEls : targets, false);
+                        }
 
                     } else {
                         // Pix: QR placeholder é visual; botão copiar é clicável
