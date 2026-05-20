@@ -1027,7 +1027,23 @@
                     } else {
                         makeClone(btn, true, () => {
                             closeTutorial();
-                            btn.click();
+                            // Abre o modal de confirmação manualmente para interceptar o fechamento
+                            showModal(
+                                'Confirmar Cancelamento',
+                                'Deseja realmente cancelar esta consulta?',
+                                () => { // Sim
+                                    const item = btn.closest('.appointment-item');
+                                    item.dataset.status = 'cancelled';
+                                    item.querySelector('.btn-cancel').style.display = 'none';
+                                    const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
+                                    apptsPageState.scheduled = 0;
+                                    filterAppts('scheduled', activeBtn);
+                                    setTimeout(() => showReactivationHint(), 400);
+                                },
+                                () => { // Não
+                                    setTimeout(() => showReactivationHint(), 400);
+                                }
+                            );
                         });
                     }
                 }
@@ -1080,14 +1096,16 @@
                 }
             }
 
-            // Reposiciona o balão sobre os botões de cancelar visíveis para manter alinhamento
-            const balloon = document.getElementById('tutorial-balloon');
-            const visibleCancelBtns = Array.from(document.querySelectorAll('.appointment-item[data-status="scheduled"] .btn-cancel')).filter(b => {
-                const item = b.closest('.appointment-item');
-                return item && item.style.display !== 'none';
-            });
-            if (balloon && visibleCancelBtns.length) {
-                positionBalloonCenterTop(balloon, visibleCancelBtns);
+            // No tutorial de cancelamento, reposiciona o balão sobre os botões de cancelar visíveis
+            if (currentTutorialType === 'cancel') {
+                const balloon = document.getElementById('tutorial-balloon');
+                const visibleCancelBtns = Array.from(document.querySelectorAll('.appointment-item[data-status="scheduled"] .btn-cancel')).filter(b => {
+                    const item = b.closest('.appointment-item');
+                    return item && item.style.display !== 'none';
+                });
+                if (balloon && visibleCancelBtns.length) {
+                    positionBalloonCenterTop(balloon, visibleCancelBtns);
+                }
             }
 
             // Mobile: reposiciona clones e balão para garantir que paginação fique visível
@@ -1568,10 +1586,13 @@
         }
 
         function finishTutorial() {
-            const wasViewTutorial = currentTutorialType === 'view';
+            const type = currentTutorialType;
             closeTutorial();
-            if (!wasViewTutorial) {
+            if (type !== 'view') {
                 closeFlow();
+            }
+            if (type === 'view' || type === 'cancel') {
+                setTimeout(() => showReactivationHint(), 400);
             }
         }
 
