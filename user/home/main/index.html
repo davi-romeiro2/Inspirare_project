@@ -1056,6 +1056,19 @@
                 clonePageInfo();
             }
 
+            // Atualiza clone do filtro ativo, se existir, para refletir posição atual
+            const activeFilterBtn = document.querySelector('#flow-appointments .filter-btn.active');
+            const existingFilterClone = document.querySelector('.tutorial-clone.filter-btn');
+            if (existingFilterClone && activeFilterBtn) {
+                existingFilterClone.remove();
+                const newClone = makeClone(activeFilterBtn, false);
+                if (currentTutorialType === 'view') {
+                    newClone.classList.remove('tutorial-highlight');
+                    newClone.style.animation = 'none';
+                    newClone.style.boxShadow = '0 0 0 2px var(--primary-color)';
+                }
+            }
+
             // Mobile: reposiciona clones e balão para garantir que paginação fique visível
             if (window.innerWidth <= 768) {
                 const pagClones = document.querySelectorAll('.tutorial-clone.appts-page-btn');
