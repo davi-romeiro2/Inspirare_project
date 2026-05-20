@@ -38,6 +38,18 @@ body.tutorial-lock {
     touch-action: none;
 }
 
+/* No tutorial de visualização, cards e botões de paginação ficam com
+   borda rosa estática (sem animação pulsante que cria sombra preta) */
+body.tutorial-view-mode .tutorial-clone.appointment-item {
+    animation: none !important;
+    box-shadow: 0 0 0 3px var(--primary-color) !important;
+}
+
+body.tutorial-view-mode .tutorial-clone.appts-page-btn {
+    animation: none !important;
+    box-shadow: 0 0 0 2px var(--primary-color) !important;
+}
+
 .container {
     max-width: 1000px;
     margin: 0 auto;
