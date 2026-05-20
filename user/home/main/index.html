@@ -1301,12 +1301,32 @@
                     ]
                 },
                 {
+                    targets: ['#psych-search'],
+                    text: 'Você pode pesquisar pelo nome ou especialidade do psicólogo.',
+                    forceAbove: true,
+                    advanceButton: true,
+                    beforeShow: () => { goToScheduleStep(4); }
+                },
+                {
                     targets: ['#psych-grid .psych-card', '#psych-pagination'],
                     text: '',
                     beforeShow: function () {
-                        goToScheduleStep(4);
+                        const query = document.getElementById('psych-search').value.toLowerCase().trim();
+                        if (query) {
+                            const filtered = professionals.filter(prof =>
+                                prof.name.toLowerCase().includes(query) ||
+                                prof.specialty.toLowerCase().includes(query)
+                            );
+                            psychActiveList = filtered.length > 0 ? filtered : null;
+                        } else {
+                            psychActiveList = null;
+                        }
+                        psychCurrentPage = 0;
+                        renderProfessionalsPage();
+
                         const itemsPerPage = getItemsPerPage();
-                        const totalPages = Math.ceil(professionals.length / itemsPerPage);
+                        const sourceList = psychActiveList || professionals;
+                        const totalPages = Math.ceil(sourceList.length / itemsPerPage);
                         let text = 'Escolha o profissional desejado.';
                         if (totalPages > 1) {
                             text += ' Use Anterior / Próxima para navegar.';
@@ -2020,40 +2040,45 @@
                                 setTimeout(() => nextTutorialStep(), 300);
                             }));
 
-                            if (pagination) {
+                            if (pagination && pagination.style.display !== 'none') {
                                 makeClone(pagination, false);
                                 pagination.querySelectorAll('.btn-page').forEach(btn => {
                                     const dir = btn.id === 'btn-next-page' ? 1 : -1;
-                                    makeClone(btn, true, () => {
-                                        document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
-                                        const grid = document.getElementById('psych-grid');
-                                        if (grid) grid.style.opacity = '0';
-                                        changePage(dir);
-                                        if (tutorialPsychTimeout) clearTimeout(tutorialPsychTimeout);
-                                        tutorialPsychTimeout = setTimeout(() => {
-                                            tutorialPsychTimeout = null;
-                                            requestAnimationFrame(() => requestAnimationFrame(() => {
-                                                const newCards = document.querySelectorAll('#psych-grid .psych-card');
-                                                const newPagination = document.getElementById('psych-pagination');
-                                                const newTargets = [...newCards, newPagination].filter(Boolean);
-                                                if (newTargets.length) scrollTargetsIntoView(newTargets);
-                                                requestAnimationFrame(() => {
-                                                    setupPsychTutorialClones(true);
-                                                    if (grid) grid.style.opacity = '';
-                                                });
-                                            }));
-                                        }, 300);
-                                    });
+                                    if (btn.disabled) {
+                                        makeClone(btn, false);
+                                    } else {
+                                        makeClone(btn, true, () => {
+                                            document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                                            const grid = document.getElementById('psych-grid');
+                                            if (grid) grid.style.opacity = '0';
+                                            changePage(dir);
+                                            if (tutorialPsychTimeout) clearTimeout(tutorialPsychTimeout);
+                                            tutorialPsychTimeout = setTimeout(() => {
+                                                tutorialPsychTimeout = null;
+                                                requestAnimationFrame(() => requestAnimationFrame(() => {
+                                                    const newCards = document.querySelectorAll('#psych-grid .psych-card');
+                                                    const newPagination = document.getElementById('psych-pagination');
+                                                    const newTargets = [...newCards, newPagination].filter(Boolean);
+                                                    if (newTargets.length) scrollTargetsIntoView(newTargets);
+                                                    requestAnimationFrame(() => {
+                                                        setupPsychTutorialClones(true);
+                                                        if (grid) grid.style.opacity = '';
+                                                    });
+                                                }));
+                                            }, 300);
+                                        });
+                                    }
                                 });
                             }
 
-                            const allTargets = [...cards, pagination].filter(Boolean);
+                            const visiblePagination = pagination && pagination.style.display !== 'none' ? pagination : null;
+                            const allTargets = [...cards, visiblePagination].filter(Boolean);
                             if (allTargets.length) {
                                 positionBalloonCenterTop(balloon, allTargets);
                             }
 
                             // Garante que a paginação esteja visível na viewport (apenas na primeira exibição, nunca durante navegação)
-                            if (!skipScroll && pagination) {
+                            if (!skipScroll && visiblePagination) {
                                 const paginationRect = pagination.getBoundingClientRect();
                                 const balloonRect = balloon.getBoundingClientRect();
                                 const bottommost = Math.max(paginationRect.bottom, balloonRect.bottom);
