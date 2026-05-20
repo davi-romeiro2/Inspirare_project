@@ -345,6 +345,32 @@ body.tutorial-view-mode .tutorial-clone.appts-page-btn {
 /* =========================================================
    PSICÓLOGOS - GRID
    ========================================================= */
+.psych-search-bar {
+    margin-bottom: 20px;
+}
+
+#psych-search {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1.5px solid var(--neutral-color);
+    background: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+#psych-search:focus {
+    border-color: var(--primary-color);
+}
+
+#psych-search::placeholder {
+    color: var(--accent-color);
+    opacity: 0.7;
+}
+
 .psych-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

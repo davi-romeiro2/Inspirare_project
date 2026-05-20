@@ -209,7 +209,10 @@
 
             <!-- Step 4: Psychologist Selection -->
             <div id="sched-step-4" class="sched-step" style="display:none;">
-                <p style="margin-bottom: 20px; text-align: center;">Escolha seu profissional:</p>
+                <p style="margin-bottom: 15px; text-align: center;">Escolha seu psicólogo:</p>
+                <div class="psych-search-bar">
+                    <input type="text" id="psych-search" placeholder="Pesquisar psicólogo..." oninput="searchProfessionals()">
+                </div>
                 <div id="psych-grid" class="psych-grid"></div>
                 <div class="pagination-controls" id="psych-pagination">
                     <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)"
@@ -412,6 +415,7 @@
             { name: 'Dra. Bianca Mendes', specialty: 'Experiente em Burnout e Qualidade de Vida.' }
         ];
         let psychCurrentPage = 0;
+        let psychActiveList = null; // null = lista completa; array = lista filtrada
 
         function getItemsPerPage() {
             return window.innerWidth >= 1024 ? 6 : 2;
@@ -420,10 +424,11 @@
         function renderProfessionalsPage() {
             const grid = document.getElementById('psych-grid');
             const itemsPerPage = getItemsPerPage();
+            const sourceList = psychActiveList || professionals;
             const start = psychCurrentPage * itemsPerPage;
             const end = start + itemsPerPage;
-            const pageItems = professionals.slice(start, end);
-            const totalPages = Math.ceil(professionals.length / itemsPerPage);
+            const pageItems = sourceList.slice(start, end);
+            const totalPages = Math.ceil(sourceList.length / itemsPerPage);
 
             grid.innerHTML = '';
             pageItems.forEach(prof => {
@@ -438,17 +443,38 @@
                 grid.appendChild(card);
             });
 
-            document.getElementById('page-indicator').textContent = `${psychCurrentPage + 1} / ${totalPages}`;
-            document.getElementById('btn-prev-page').disabled = psychCurrentPage === 0;
-            document.getElementById('btn-next-page').disabled = psychCurrentPage >= totalPages - 1;
+            const paginationEl = document.getElementById('psych-pagination');
+            if (sourceList.length <= itemsPerPage) {
+                paginationEl.style.display = 'none';
+            } else {
+                paginationEl.style.display = 'flex';
+                document.getElementById('page-indicator').textContent = `${psychCurrentPage + 1} / ${totalPages}`;
+                document.getElementById('btn-prev-page').disabled = psychCurrentPage === 0;
+                document.getElementById('btn-next-page').disabled = psychCurrentPage >= totalPages - 1;
+            }
 
             document.querySelectorAll('.psych-card').forEach(card => card.classList.remove('selected'));
             document.getElementById('next-to-date-btn').style.display = 'none';
         }
 
+        function searchProfessionals() {
+            const query = document.getElementById('psych-search').value.toLowerCase().trim();
+            if (query) {
+                psychActiveList = professionals.filter(prof =>
+                    prof.name.toLowerCase().includes(query) ||
+                    prof.specialty.toLowerCase().includes(query)
+                );
+            } else {
+                psychActiveList = null;
+            }
+            psychCurrentPage = 0;
+            renderProfessionalsPage();
+        }
+
         function changePage(direction) {
             const itemsPerPage = getItemsPerPage();
-            const totalPages = Math.ceil(professionals.length / itemsPerPage);
+            const sourceList = psychActiveList || professionals;
+            const totalPages = Math.ceil(sourceList.length / itemsPerPage);
             const newPage = psychCurrentPage + direction;
             if (newPage >= 0 && newPage < totalPages) {
                 psychCurrentPage = newPage;
@@ -459,7 +485,8 @@
         window.addEventListener('resize', () => {
             if (document.getElementById('sched-step-4').style.display !== 'none') {
                 const itemsPerPage = getItemsPerPage();
-                const totalPages = Math.ceil(professionals.length / itemsPerPage);
+                const sourceList = psychActiveList || professionals;
+                const totalPages = Math.ceil(sourceList.length / itemsPerPage);
                 if (psychCurrentPage >= totalPages) psychCurrentPage = totalPages - 1;
                 if (psychCurrentPage < 0) psychCurrentPage = 0;
                 renderProfessionalsPage();
@@ -704,6 +731,9 @@
 
             if (step === 4) {
                 psychCurrentPage = 0;
+                psychActiveList = null;
+                const searchInput = document.getElementById('psych-search');
+                if (searchInput) searchInput.value = '';
                 renderProfessionalsPage();
             }
 
