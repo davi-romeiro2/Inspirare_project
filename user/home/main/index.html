@@ -1051,7 +1051,11 @@
                             } else if (btn.id === 'appts-next') {
                                 nextApptsPage();
                             }
-                            requestAnimationFrame(() => requestAnimationFrame(() => refreshCancelTutorialClones()));
+                            // Espera o scroll estabilizar, garante elementos visiveis e recria clones
+                            setTimeout(() => {
+                                scrollApptsTutorialIntoView();
+                                refreshCancelTutorialClones();
+                            }, 0);
                         });
                         if (currentTutorialType === 'view') {
                             clone.classList.remove('tutorial-highlight');
@@ -1074,6 +1078,16 @@
                     newClone.style.animation = 'none';
                     newClone.style.boxShadow = '0 0 0 2px var(--primary-color)';
                 }
+            }
+
+            // Reposiciona o balão sobre os botões de cancelar visíveis para manter alinhamento
+            const balloon = document.getElementById('tutorial-balloon');
+            const visibleCancelBtns = Array.from(document.querySelectorAll('.appointment-item[data-status="scheduled"] .btn-cancel')).filter(b => {
+                const item = b.closest('.appointment-item');
+                return item && item.style.display !== 'none';
+            });
+            if (balloon && visibleCancelBtns.length) {
+                positionBalloonCenterTop(balloon, visibleCancelBtns);
             }
 
             // Mobile: reposiciona clones e balão para garantir que paginação fique visível
