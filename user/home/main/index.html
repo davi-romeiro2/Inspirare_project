@@ -390,6 +390,7 @@
         let tutorialActiveBranch = null;
         let tutorialPsychTimeout = null; // Controla o rebuild dos clones no step de profissionais
         let showTutorialReactivation = false; // Controla o balão de reativação ao final do tutorial
+        let currentTutorialType = null; // 'schedule' | 'cancel' | 'view'
 
         /* =========================
            PROFISSIONAIS - PAGINAÇÃO
@@ -1253,6 +1254,7 @@
             tutorialHistory = [];
             tutorialActiveBranch = null;
             tutorialCurrentStep = 0;
+            currentTutorialType = 'schedule';
             showTutorialStep(0);
         }
 
@@ -1354,6 +1356,7 @@
             tutorialHistory = [];
             tutorialActiveBranch = null;
             tutorialCurrentStep = 0;
+            currentTutorialType = 'cancel';
             showTutorialStep(0);
         }
 
@@ -1464,6 +1467,7 @@
             tutorialHistory = [];
             tutorialActiveBranch = null;
             tutorialCurrentStep = 0;
+            currentTutorialType = 'view';
             showTutorialStep(0);
         }
 
@@ -1474,8 +1478,11 @@
         }
 
         function finishTutorial() {
+            const wasViewTutorial = currentTutorialType === 'view';
             closeTutorial();
-            closeFlow();
+            if (!wasViewTutorial) {
+                closeFlow();
+            }
         }
 
         function getCombinedBoundingBox(elements) {
@@ -1773,7 +1780,20 @@
                 });
                 if (!targets.length) return;
 
-                const box = getCombinedBoundingBox(targets);
+                // Para steps com visualTargets e forceAbove, inclui os visuais no scroll
+                // para garantir que o conteúdo abaixo (cards de consultas) também fique visível
+                let scrollTargets = targets;
+                if (step.visualTargets && step.forceAbove) {
+                    scrollTargets = [...targets];
+                    step.visualTargets.forEach(s => {
+                        document.querySelectorAll(s).forEach(el => {
+                            const rect = el.getBoundingClientRect();
+                            if (rect.width > 0 || rect.height > 0) scrollTargets.push(el);
+                        });
+                    });
+                }
+
+                const box = getCombinedBoundingBox(scrollTargets);
                 let scrollOffset;
 
                 if (step.scrollToBottom) {
@@ -2206,6 +2226,7 @@
             tutorialCurrentStep = 0;
             tutorialHistory = [];
             tutorialActiveBranch = null;
+            currentTutorialType = null;
         }
     </script>
 </body>
