@@ -1369,7 +1369,7 @@
                 },
                 {
                     targets: ['#appts-search'],
-                    text: 'Use a barra de pesquisa para encontrar a consulta que deseja cancelar por nome, data ou tipo.',
+                    text: 'Use a barra de pesquisa para encontrar a consulta que deseja cancelar por nome, data ou tipo. (Opcional)',
                     forceAbove: true,
                     advanceButton: true,
                     beforeShow: () => {
@@ -1522,7 +1522,7 @@
                     visualTargets: ['.appointment-item[data-status="cancelled"]'],
                     text: 'Aqui você vê as consultas que foram canceladas.',
                     forceAbove: true,
-                    finishButton: true,
+                    advanceButton: true,
                     enablePagination: true,
                     beforeShow: () => {
                         openFlow('appointments');
@@ -1532,6 +1532,23 @@
                         filterAppts('cancelled', btn);
                         ensureViewAppointments();
                         scrollApptsTutorialIntoView(['#flow-appointments .filter-btn:nth-child(3)']);
+                    }
+                },
+                {
+                    targets: ['#appts-search'],
+                    text: 'Use a barra de pesquisa para encontrar consultas por nome, data ou tipo.',
+                    forceAbove: true,
+                    finishButton: true,
+                    beforeShow: () => {
+                        openFlow('appointments');
+                        setApptsSearchVisible(true);
+                        const input = document.getElementById('appts-search');
+                        if (input) input.value = '';
+                        apptsSearchQuery = '';
+                        const btn = document.querySelector('#flow-appointments .filter-btn.active');
+                        if (btn) filterAppts(btn.dataset.filter || 'scheduled', btn);
+                        ensureViewAppointments();
+                        scrollApptsTutorialIntoView(['#appts-search']);
                     }
                 }
             ];
