@@ -38,6 +38,18 @@ body.tutorial-lock {
     touch-action: none;
 }
 
+/* No tutorial de visualização, cards e botões de paginação ficam com
+   borda rosa estática (sem animação pulsante que cria sombra preta) */
+body.tutorial-view-mode .tutorial-clone.appointment-item {
+    animation: none !important;
+    box-shadow: 0 0 0 3px var(--primary-color) !important;
+}
+
+body.tutorial-view-mode .tutorial-clone.appts-page-btn {
+    animation: none !important;
+    box-shadow: 0 0 0 2px var(--primary-color) !important;
+}
+
 .container {
     max-width: 1000px;
     margin: 0 auto;
@@ -333,6 +345,32 @@ body.tutorial-lock {
 /* =========================================================
    PSICÓLOGOS - GRID
    ========================================================= */
+.psych-search-bar {
+    margin-bottom: 20px;
+}
+
+#psych-search {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1.5px solid var(--neutral-color);
+    background: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+#psych-search:focus {
+    border-color: var(--primary-color);
+}
+
+#psych-search::placeholder {
+    color: var(--accent-color);
+    opacity: 0.7;
+}
+
 .psych-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

@@ -209,7 +209,10 @@
 
             <!-- Step 4: Psychologist Selection -->
             <div id="sched-step-4" class="sched-step" style="display:none;">
-                <p style="margin-bottom: 20px; text-align: center;">Escolha seu profissional:</p>
+                <p style="margin-bottom: 15px; text-align: center;">Escolha seu psicólogo:</p>
+                <div class="psych-search-bar">
+                    <input type="text" id="psych-search" placeholder="Pesquisar psicólogo..." oninput="searchProfessionals()">
+                </div>
                 <div id="psych-grid" class="psych-grid"></div>
                 <div class="pagination-controls" id="psych-pagination">
                     <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)"
@@ -278,6 +281,13 @@
                     <div class="appointment-info">
                         <h4>Consulta Online - Dra. Cláudia Luna</h4>
                         <p>18 de Maio, 2026 - 16:00</p>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
+                </div>
+                <div class="appointment-item" data-status="scheduled">
+                    <div class="appointment-info">
+                        <h4>Consulta Presencial - Dr. Ricardo Souza</h4>
+                        <p>20 de Maio, 2026 - 09:00</p>
                     </div>
                     <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
                 </div>
@@ -390,6 +400,7 @@
         let tutorialActiveBranch = null;
         let tutorialPsychTimeout = null; // Controla o rebuild dos clones no step de profissionais
         let showTutorialReactivation = false; // Controla o balão de reativação ao final do tutorial
+        let currentTutorialType = null; // 'schedule' | 'cancel' | 'view'
 
         /* =========================
            PROFISSIONAIS - PAGINAÇÃO
@@ -404,6 +415,7 @@
             { name: 'Dra. Bianca Mendes', specialty: 'Experiente em Burnout e Qualidade de Vida.' }
         ];
         let psychCurrentPage = 0;
+        let psychActiveList = null; // null = lista completa; array = lista filtrada
 
         function getItemsPerPage() {
             return window.innerWidth >= 1024 ? 6 : 2;
@@ -412,10 +424,11 @@
         function renderProfessionalsPage() {
             const grid = document.getElementById('psych-grid');
             const itemsPerPage = getItemsPerPage();
+            const sourceList = psychActiveList || professionals;
             const start = psychCurrentPage * itemsPerPage;
             const end = start + itemsPerPage;
-            const pageItems = professionals.slice(start, end);
-            const totalPages = Math.ceil(professionals.length / itemsPerPage);
+            const pageItems = sourceList.slice(start, end);
+            const totalPages = Math.ceil(sourceList.length / itemsPerPage);
 
             grid.innerHTML = '';
             pageItems.forEach(prof => {
@@ -430,17 +443,38 @@
                 grid.appendChild(card);
             });
 
-            document.getElementById('page-indicator').textContent = `${psychCurrentPage + 1} / ${totalPages}`;
-            document.getElementById('btn-prev-page').disabled = psychCurrentPage === 0;
-            document.getElementById('btn-next-page').disabled = psychCurrentPage >= totalPages - 1;
+            const paginationEl = document.getElementById('psych-pagination');
+            if (sourceList.length <= itemsPerPage) {
+                paginationEl.style.display = 'none';
+            } else {
+                paginationEl.style.display = 'flex';
+                document.getElementById('page-indicator').textContent = `${psychCurrentPage + 1} / ${totalPages}`;
+                document.getElementById('btn-prev-page').disabled = psychCurrentPage === 0;
+                document.getElementById('btn-next-page').disabled = psychCurrentPage >= totalPages - 1;
+            }
 
             document.querySelectorAll('.psych-card').forEach(card => card.classList.remove('selected'));
             document.getElementById('next-to-date-btn').style.display = 'none';
         }
 
+        function searchProfessionals() {
+            const query = document.getElementById('psych-search').value.toLowerCase().trim();
+            if (query) {
+                psychActiveList = professionals.filter(prof =>
+                    prof.name.toLowerCase().includes(query) ||
+                    prof.specialty.toLowerCase().includes(query)
+                );
+            } else {
+                psychActiveList = null;
+            }
+            psychCurrentPage = 0;
+            renderProfessionalsPage();
+        }
+
         function changePage(direction) {
             const itemsPerPage = getItemsPerPage();
-            const totalPages = Math.ceil(professionals.length / itemsPerPage);
+            const sourceList = psychActiveList || professionals;
+            const totalPages = Math.ceil(sourceList.length / itemsPerPage);
             const newPage = psychCurrentPage + direction;
             if (newPage >= 0 && newPage < totalPages) {
                 psychCurrentPage = newPage;
@@ -451,7 +485,8 @@
         window.addEventListener('resize', () => {
             if (document.getElementById('sched-step-4').style.display !== 'none') {
                 const itemsPerPage = getItemsPerPage();
-                const totalPages = Math.ceil(professionals.length / itemsPerPage);
+                const sourceList = psychActiveList || professionals;
+                const totalPages = Math.ceil(sourceList.length / itemsPerPage);
                 if (psychCurrentPage >= totalPages) psychCurrentPage = totalPages - 1;
                 if (psychCurrentPage < 0) psychCurrentPage = 0;
                 renderProfessionalsPage();
@@ -696,6 +731,9 @@
 
             if (step === 4) {
                 psychCurrentPage = 0;
+                psychActiveList = null;
+                const searchInput = document.getElementById('psych-search');
+                if (searchInput) searchInput.value = '';
                 renderProfessionalsPage();
             }
 
@@ -817,7 +855,8 @@
         let apptsSearchQuery = '';
 
         function getFilteredAppts(status) {
-            const allItems = Array.from(document.querySelectorAll('.appointment-item'));
+            const allItems = Array.from(document.querySelectorAll('.appointment-item'))
+                .filter(item => !item.classList.contains('tutorial-clone'));
             const byStatus = allItems.filter(item => item.dataset.status === status);
             if (!apptsSearchQuery.trim()) return byStatus;
             const q = apptsSearchQuery.toLowerCase();
@@ -841,7 +880,8 @@
             });
 
             // Esconde os itens do mesmo status que não passaram no filtro de busca
-            const allByStatus = Array.from(document.querySelectorAll('.appointment-item')).filter(i => i.dataset.status === status);
+            const allByStatus = Array.from(document.querySelectorAll('.appointment-item'))
+                .filter(i => i.dataset.status === status && !i.classList.contains('tutorial-clone'));
             allByStatus.forEach(item => {
                 if (!items.includes(item)) item.style.display = 'none';
             });
@@ -928,10 +968,11 @@
 
             // Conta apenas os itens ORIGINAIS dentro de #appts-list (ignora clones do tutorial)
             const list = document.getElementById('appts-list');
+            const filter = apptsCurrentFilter || 'scheduled';
             const originalItems = list
-                ? Array.from(list.querySelectorAll('.appointment-item')).filter(i => i.dataset.status === 'scheduled')
+                ? Array.from(list.querySelectorAll('.appointment-item')).filter(i => i.dataset.status === filter && !i.classList.contains('tutorial-clone'))
                 : [];
-            const page = apptsPageState['scheduled'] || 0;
+            const page = apptsPageState[filter] || 0;
             const totalPages = Math.max(1, Math.ceil(originalItems.length / getApptsPerPage()));
             const safePage = Math.min(page, totalPages - 1);
             const text = `${safePage + 1} / ${totalPages}`;
@@ -980,7 +1021,9 @@
                                    c.getAttribute('data-tutorial-type') === 'page-info';
                 if (c.classList.contains('appointment-item') ||
                     c.classList.contains('btn-cancel') ||
+                    c.classList.contains('tutorial-cancel-btn') ||
                     c.classList.contains('appts-page-btn') ||
+                    c.tagName.toLowerCase() === 'div' && c.classList.contains('tutorial-clone') ||
                     isPageInfo) {
                     c.remove();
                 }
@@ -988,17 +1031,51 @@
 
             // Reclona cards visíveis
             document.querySelectorAll('.appointment-item').forEach(el => {
-                if (el.style.display !== 'none') makeClone(el, false);
+                if (el.style.display !== 'none') {
+                    const clone = makeClone(el, false);
+                    // No tutorial de visualização, remove .tutorial-highlight
+                    // (que aplica fundo branco + sombra preta) e aplica borda rosa estática
+                    if (currentTutorialType === 'view') {
+                        clone.classList.remove('tutorial-highlight');
+                        clone.style.animation = 'none';
+                        clone.style.boxShadow = '0 0 0 3px var(--primary-color)';
+                    }
+                }
             });
 
             // Reclona botões cancelar dos cards visíveis
             document.querySelectorAll('.appointment-item[data-status="scheduled"] .btn-cancel').forEach(btn => {
                 const parentItem = btn.closest('.appointment-item');
                 if (parentItem && parentItem.style.display !== 'none') {
-                    makeClone(btn, true, () => {
-                        closeTutorial();
-                        btn.click();
-                    });
+                    // No tutorial de visualização, o botão cancelar é clicável mas não faz nada
+                    // (intercepta o clique para não chegar no botão original)
+                    if (currentTutorialType === 'view') {
+                        // Em vez de clonar (que herda estilos inline indesejados),
+                        // cria um overlay transparente sobre o botão para bloquear cliques
+                        const blocker = makeClickBlocker(btn);
+                        blocker.classList.add('tutorial-cancel-btn');
+                    } else {
+                        makeClone(btn, true, () => {
+                            closeTutorial();
+                            // Abre o modal de confirmação manualmente para interceptar o fechamento
+                            showModal(
+                                'Confirmar Cancelamento',
+                                'Deseja realmente cancelar esta consulta?',
+                                () => { // Sim
+                                    const item = btn.closest('.appointment-item');
+                                    item.dataset.status = 'cancelled';
+                                    item.querySelector('.btn-cancel').style.display = 'none';
+                                    const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
+                                    apptsPageState.scheduled = 0;
+                                    filterAppts('scheduled', activeBtn);
+                                    setTimeout(() => showReactivationHint(), 400);
+                                },
+                                () => { // Não
+                                    setTimeout(() => showReactivationHint(), 400);
+                                }
+                            );
+                        });
+                    }
                 }
             });
 
@@ -1007,19 +1084,58 @@
             if (apptsPagination && apptsPagination.style.display !== 'none') {
                 apptsPagination.querySelectorAll('.appts-page-btn').forEach(btn => {
                     if (btn.disabled) {
-                        makeClone(btn, false);
+                        const clone = makeClone(btn, false);
+                        if (currentTutorialType === 'view') {
+                            clone.classList.remove('tutorial-highlight');
+                            clone.style.animation = 'none';
+                            clone.style.boxShadow = '0 0 0 2px var(--primary-color)';
+                        }
                     } else {
-                        makeClone(btn, true, () => {
+                        const clone = makeClone(btn, true, () => {
                             if (btn.id === 'appts-prev') {
                                 prevApptsPage();
                             } else if (btn.id === 'appts-next') {
                                 nextApptsPage();
                             }
-                            requestAnimationFrame(() => requestAnimationFrame(() => refreshCancelTutorialClones()));
+                            // Espera o scroll estabilizar, garante elementos visiveis e recria clones
+                            setTimeout(() => {
+                                scrollApptsTutorialIntoView();
+                                refreshCancelTutorialClones();
+                            }, 0);
                         });
+                        if (currentTutorialType === 'view') {
+                            clone.classList.remove('tutorial-highlight');
+                            clone.style.animation = 'none';
+                            clone.style.boxShadow = '0 0 0 2px var(--primary-color)';
+                        }
                     }
                 });
                 clonePageInfo();
+            }
+
+            // Atualiza clone do filtro ativo, se existir, para refletir posição atual
+            const activeFilterBtn = document.querySelector('#flow-appointments .filter-btn.active');
+            const existingFilterClone = document.querySelector('.tutorial-clone.filter-btn');
+            if (existingFilterClone && activeFilterBtn) {
+                existingFilterClone.remove();
+                const newClone = makeClone(activeFilterBtn, false);
+                if (currentTutorialType === 'view') {
+                    newClone.classList.remove('tutorial-highlight');
+                    newClone.style.animation = 'none';
+                    newClone.style.boxShadow = '0 0 0 2px var(--primary-color)';
+                }
+            }
+
+            // No tutorial de cancelamento, reposiciona o balão sobre os botões de cancelar visíveis
+            if (currentTutorialType === 'cancel') {
+                const balloon = document.getElementById('tutorial-balloon');
+                const visibleCancelBtns = Array.from(document.querySelectorAll('.appointment-item[data-status="scheduled"] .btn-cancel')).filter(b => {
+                    const item = b.closest('.appointment-item');
+                    return item && item.style.display !== 'none';
+                });
+                if (balloon && visibleCancelBtns.length) {
+                    positionBalloonCenterTop(balloon, visibleCancelBtns);
+                }
             }
 
             // Mobile: reposiciona clones e balão para garantir que paginação fique visível
@@ -1030,13 +1146,15 @@
                     const rect = lastClone.getBoundingClientRect();
                     if (rect.bottom > window.innerHeight - 10) {
                         const shift = rect.bottom - window.innerHeight + 20;
-                        document.querySelectorAll('.tutorial-clone.appointment-item, .tutorial-clone.appts-page-btn, .tutorial-clone[data-tutorial-type="page-info"]').forEach(c => {
+                        document.querySelectorAll('.tutorial-clone.appointment-item, .tutorial-clone.appts-page-btn, .tutorial-clone[data-tutorial-type="page-info"], .tutorial-clone.filter-btn').forEach(c => {
                             c.style.top = (parseFloat(c.style.top) - shift) + 'px';
                         });
                         const balloon = document.getElementById('tutorial-balloon');
                         if (balloon) {
                             balloon.style.top = Math.max(10, parseFloat(balloon.style.top) - shift) + 'px';
                         }
+                        // Rola a página para baixo na mesma medida, mantendo clones alinhados com os originais
+                        window.scrollBy({ top: shift, behavior: 'instant' });
                     }
                 }
             }
@@ -1183,12 +1301,32 @@
                     ]
                 },
                 {
+                    targets: ['#psych-search'],
+                    text: 'Você pode pesquisar pelo nome ou especialidade do psicólogo.',
+                    forceAbove: true,
+                    advanceButton: true,
+                    beforeShow: () => { goToScheduleStep(4); }
+                },
+                {
                     targets: ['#psych-grid .psych-card', '#psych-pagination'],
                     text: '',
                     beforeShow: function () {
-                        goToScheduleStep(4);
+                        const query = document.getElementById('psych-search').value.toLowerCase().trim();
+                        if (query) {
+                            const filtered = professionals.filter(prof =>
+                                prof.name.toLowerCase().includes(query) ||
+                                prof.specialty.toLowerCase().includes(query)
+                            );
+                            psychActiveList = filtered.length > 0 ? filtered : null;
+                        } else {
+                            psychActiveList = null;
+                        }
+                        psychCurrentPage = 0;
+                        renderProfessionalsPage();
+
                         const itemsPerPage = getItemsPerPage();
-                        const totalPages = Math.ceil(professionals.length / itemsPerPage);
+                        const sourceList = psychActiveList || professionals;
+                        const totalPages = Math.ceil(sourceList.length / itemsPerPage);
                         let text = 'Escolha o profissional desejado.';
                         if (totalPages > 1) {
                             text += ' Use Anterior / Próxima para navegar.';
@@ -1253,6 +1391,7 @@
             tutorialHistory = [];
             tutorialActiveBranch = null;
             tutorialCurrentStep = 0;
+            currentTutorialType = 'schedule';
             showTutorialStep(0);
         }
 
@@ -1298,7 +1437,7 @@
                 },
                 {
                     targets: ['#appts-search'],
-                    text: 'Use a barra de pesquisa para encontrar a consulta que deseja cancelar por nome, data ou tipo.',
+                    text: 'Use a barra de pesquisa para encontrar a consulta que deseja cancelar por nome, data ou tipo. (Opcional)',
                     forceAbove: true,
                     advanceButton: true,
                     beforeShow: () => {
@@ -1354,6 +1493,7 @@
             tutorialHistory = [];
             tutorialActiveBranch = null;
             tutorialCurrentStep = 0;
+            currentTutorialType = 'cancel';
             showTutorialStep(0);
         }
 
@@ -1404,6 +1544,7 @@
         }
 
         function startViewTutorial() {
+            document.body.classList.add('tutorial-view-mode');
             tutorialSteps = [
                 {
                     targets: ['.menu-card[onclick="openFlow(\'appointments\')"]'],
@@ -1412,10 +1553,11 @@
                 },
                 {
                     targets: ['#flow-appointments .filter-btn:nth-child(1)'],
-                    visualTargets: ['.appointment-item[data-status="scheduled"]', '#appts-pagination'],
+                    visualTargets: ['.appointment-item[data-status="scheduled"]'],
                     text: 'Aqui você vê todas as consultas agendadas. Elas aparecem nesta lista.',
                     forceAbove: true,
                     advanceButton: true,
+                    enablePagination: true,
                     beforeShow: () => {
                         openFlow('appointments');
                         setApptsSearchVisible(false);
@@ -1428,10 +1570,11 @@
                 },
                 {
                     targets: ['#flow-appointments .filter-btn:nth-child(2)'],
-                    visualTargets: ['.appointment-item[data-status="completed"]', '#appts-pagination'],
+                    visualTargets: ['.appointment-item[data-status="completed"]'],
                     text: 'Aqui você vê suas consultas já concluídas.',
                     forceAbove: true,
                     advanceButton: true,
+                    enablePagination: true,
                     beforeShow: () => {
                         openFlow('appointments');
                         setApptsSearchVisible(false);
@@ -1444,10 +1587,11 @@
                 },
                 {
                     targets: ['#flow-appointments .filter-btn:nth-child(3)'],
-                    visualTargets: ['.appointment-item[data-status="cancelled"]', '#appts-pagination'],
+                    visualTargets: ['.appointment-item[data-status="cancelled"]'],
                     text: 'Aqui você vê as consultas que foram canceladas.',
                     forceAbove: true,
-                    finishButton: true,
+                    advanceButton: true,
+                    enablePagination: true,
                     beforeShow: () => {
                         openFlow('appointments');
                         setApptsSearchVisible(false);
@@ -1457,6 +1601,23 @@
                         ensureViewAppointments();
                         scrollApptsTutorialIntoView(['#flow-appointments .filter-btn:nth-child(3)']);
                     }
+                },
+                {
+                    targets: ['#appts-search'],
+                    text: 'Use a barra de pesquisa para encontrar consultas por nome, data ou tipo.',
+                    forceAbove: true,
+                    finishButton: true,
+                    beforeShow: () => {
+                        openFlow('appointments');
+                        setApptsSearchVisible(true);
+                        const input = document.getElementById('appts-search');
+                        if (input) input.value = '';
+                        apptsSearchQuery = '';
+                        const btn = document.querySelector('#flow-appointments .filter-btn.active');
+                        if (btn) filterAppts(btn.dataset.filter || 'scheduled', btn);
+                        ensureViewAppointments();
+                        scrollApptsTutorialIntoView(['#appts-search']);
+                    }
                 }
             ];
 
@@ -1464,6 +1625,7 @@
             tutorialHistory = [];
             tutorialActiveBranch = null;
             tutorialCurrentStep = 0;
+            currentTutorialType = 'view';
             showTutorialStep(0);
         }
 
@@ -1474,8 +1636,14 @@
         }
 
         function finishTutorial() {
+            const type = currentTutorialType;
             closeTutorial();
-            closeFlow();
+            if (type !== 'view') {
+                closeFlow();
+            }
+            if (type === 'view' || type === 'cancel') {
+                setTimeout(() => showReactivationHint(), 400);
+            }
         }
 
         function getCombinedBoundingBox(elements) {
@@ -1633,6 +1801,29 @@
             balloon.style.transform = 'none';
         }
 
+        // Cria um overlay transparente sobre o elemento para bloquear cliques
+        // sem alterar a aparência visual do elemento original
+        function makeClickBlocker(originalEl) {
+            const rect = originalEl.getBoundingClientRect();
+            const blocker = document.createElement('div');
+            blocker.classList.add('tutorial-clone', 'tutorial-cancel-btn');
+            blocker.style.cssText = `
+                position: fixed;
+                top: ${rect.top}px;
+                left: ${rect.left}px;
+                width: ${rect.width}px;
+                height: ${rect.height}px;
+                margin: 0;
+                z-index: 2003;
+                pointer-events: auto;
+                cursor: not-allowed;
+                background: transparent;
+                border: none;
+            `;
+            document.body.appendChild(blocker);
+            return blocker;
+        }
+
         // Cria um clone fixed no body de um elemento, com opção de ser clicável
         function makeClone(originalEl, clickable, onClickFn) {
             const rect = originalEl.getBoundingClientRect();
@@ -1764,6 +1955,12 @@
             const overlay = document.getElementById('tutorial-overlay');
             document.getElementById('tutorial-text').innerText = step.text || '';
 
+            // No tutorial de visualização, usa delays menores para fluidade
+            const isViewTutorial = currentTutorialType === 'view';
+            const initialDelay = isViewTutorial ? 50 : 150;
+            const overlayDelay = isViewTutorial ? 100 : 500;
+            const reflowDelay = isViewTutorial ? 100 : 400;
+
             setTimeout(() => {
                 // Resolve targets: querySelectorAll para seletores que podem retornar múltiplos
                 const targets = [];
@@ -1773,7 +1970,20 @@
                 });
                 if (!targets.length) return;
 
-                const box = getCombinedBoundingBox(targets);
+                // Para steps com visualTargets e forceAbove, inclui os visuais no scroll
+                // para garantir que o conteúdo abaixo (cards de consultas) também fique visível
+                let scrollTargets = targets;
+                if (step.visualTargets && step.forceAbove) {
+                    scrollTargets = [...targets];
+                    step.visualTargets.forEach(s => {
+                        document.querySelectorAll(s).forEach(el => {
+                            const rect = el.getBoundingClientRect();
+                            if (rect.width > 0 || rect.height > 0) scrollTargets.push(el);
+                        });
+                    });
+                }
+
+                const box = getCombinedBoundingBox(scrollTargets);
                 let scrollOffset;
 
                 if (step.scrollToBottom) {
@@ -1788,13 +1998,16 @@
                     scrollOffset = targetCenter - viewportCenter;
                 }
 
-                window.scrollBy({ top: scrollOffset, behavior: 'smooth' });
+                // No tutorial de visualização usa scroll instantâneo para evitar
+                // posicionamento errado dos clones quando o conteúdo é pequeno
+                const scrollBehavior = isViewTutorial ? 'instant' : 'smooth';
+                window.scrollBy({ top: scrollOffset, behavior: scrollBehavior });
 
                 // Garante que paginação fique visível no mobile quando há pouca altura
                 if (step.enablePagination) {
                     setTimeout(() => {
                         scrollTargetsIntoViewWithPagination(targets);
-                    }, 400);
+                    }, isViewTutorial ? 100 : 400);
                 }
 
                 setTimeout(() => {
@@ -1802,7 +2015,7 @@
 
                     setTimeout(() => {
                         document.body.style.overflow = 'hidden';
-                    }, 350);
+                    }, isViewTutorial ? 50 : 350);
 
                     // Flag para evitar duplicação de clones no step de profissionais
                     const hasPsychCards = targets.some(t => t.classList && t.classList.contains('psych-card'));
@@ -1827,40 +2040,45 @@
                                 setTimeout(() => nextTutorialStep(), 300);
                             }));
 
-                            if (pagination) {
+                            if (pagination && pagination.style.display !== 'none') {
                                 makeClone(pagination, false);
                                 pagination.querySelectorAll('.btn-page').forEach(btn => {
                                     const dir = btn.id === 'btn-next-page' ? 1 : -1;
-                                    makeClone(btn, true, () => {
-                                        document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
-                                        const grid = document.getElementById('psych-grid');
-                                        if (grid) grid.style.opacity = '0';
-                                        changePage(dir);
-                                        if (tutorialPsychTimeout) clearTimeout(tutorialPsychTimeout);
-                                        tutorialPsychTimeout = setTimeout(() => {
-                                            tutorialPsychTimeout = null;
-                                            requestAnimationFrame(() => requestAnimationFrame(() => {
-                                                const newCards = document.querySelectorAll('#psych-grid .psych-card');
-                                                const newPagination = document.getElementById('psych-pagination');
-                                                const newTargets = [...newCards, newPagination].filter(Boolean);
-                                                if (newTargets.length) scrollTargetsIntoView(newTargets);
-                                                requestAnimationFrame(() => {
-                                                    setupPsychTutorialClones(true);
-                                                    if (grid) grid.style.opacity = '';
-                                                });
-                                            }));
-                                        }, 300);
-                                    });
+                                    if (btn.disabled) {
+                                        makeClone(btn, false);
+                                    } else {
+                                        makeClone(btn, true, () => {
+                                            document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                                            const grid = document.getElementById('psych-grid');
+                                            if (grid) grid.style.opacity = '0';
+                                            changePage(dir);
+                                            if (tutorialPsychTimeout) clearTimeout(tutorialPsychTimeout);
+                                            tutorialPsychTimeout = setTimeout(() => {
+                                                tutorialPsychTimeout = null;
+                                                requestAnimationFrame(() => requestAnimationFrame(() => {
+                                                    const newCards = document.querySelectorAll('#psych-grid .psych-card');
+                                                    const newPagination = document.getElementById('psych-pagination');
+                                                    const newTargets = [...newCards, newPagination].filter(Boolean);
+                                                    if (newTargets.length) scrollTargetsIntoView(newTargets);
+                                                    requestAnimationFrame(() => {
+                                                        setupPsychTutorialClones(true);
+                                                        if (grid) grid.style.opacity = '';
+                                                    });
+                                                }));
+                                            }, 300);
+                                        });
+                                    }
                                 });
                             }
 
-                            const allTargets = [...cards, pagination].filter(Boolean);
+                            const visiblePagination = pagination && pagination.style.display !== 'none' ? pagination : null;
+                            const allTargets = [...cards, visiblePagination].filter(Boolean);
                             if (allTargets.length) {
                                 positionBalloonCenterTop(balloon, allTargets);
                             }
 
                             // Garante que a paginação esteja visível na viewport (apenas na primeira exibição, nunca durante navegação)
-                            if (!skipScroll && pagination) {
+                            if (!skipScroll && visiblePagination) {
                                 const paginationRect = pagination.getBoundingClientRect();
                                 const balloonRect = balloon.getBoundingClientRect();
                                 const bottommost = Math.max(paginationRect.bottom, balloonRect.bottom);
@@ -1873,107 +2091,170 @@
 
                         setupPsychTutorialClones();
                     } else {
-                        // Configura botões do balão com base no tipo de step
-                        const btnStop = document.getElementById('btn-tutorial-stop');
-                        const btnNext = document.getElementById('btn-tutorial-next');
-                        const btnFinish = document.getElementById('btn-tutorial-finish');
-                        if (btnStop) btnStop.style.display = step.finishButton ? 'none' : 'inline-block';
-                        if (btnNext) btnNext.style.display = step.advanceButton ? 'inline-block' : 'none';
-                        if (btnFinish) btnFinish.style.display = step.finishButton ? 'inline-block' : 'none';
-
-                        const isVisualOnly = step.advanceButton || step.finishButton;
-                        targets.forEach(originalEl => {
-                            if (originalEl.classList.contains('tutorial-highlight-live')) return;
-                            const rect = originalEl.getBoundingClientRect();
-                            if (rect.width === 0 && rect.height === 0) return;
-
-                            const tag = originalEl.tagName.toLowerCase();
-                            const isTextInput = tag === 'input' && (originalEl.type === 'text' || originalEl.type === 'search' || !originalEl.type);
-
-                            if (isTextInput) {
-                                // Input de texto: sempre clicável para permitir digitação, mas não avança o tutorial
-                                makeClone(originalEl, true, null);
-                            } else if (isVisualOnly) {
-                                makeClone(originalEl, false);
-                            } else {
-                                makeClone(originalEl, true, () => {
-                                    if (step.endOnClick) {
-                                        closeTutorial();
-                                        originalEl.click();
-                                        return;
-                                    }
-
-                                    closeTutorialVisuals();
-
-                                    if (stepIndex === tutorialSteps.length - 1) {
-                                        showTutorialReactivation = true;
-                                    }
-
-                                    originalEl.click();
-
-                                    if (step.branchedTargets) {
-                                        const matched = step.branchedTargets.find(b => originalEl.matches(b.selector));
-                                        if (matched) {
-                                            tutorialHistory.push(stepIndex);
-                                            setTimeout(() => showTutorialBranch(matched.branch), 300);
-                                            return;
-                                        }
-                                    }
-                                    tutorialHistory.push(stepIndex);
-                                    tutorialCurrentStep = stepIndex + 1;
-                                    setTimeout(() => nextTutorialStep(), 300);
-                                });
-                            }
-                        });
-
-                        // Cria clones não-clicáveis para elementos visuais adicionais
-                        if (step.visualTargets) {
-                            step.visualTargets.forEach(s => {
-                                document.querySelectorAll(s).forEach(el => {
-                                    const rect = el.getBoundingClientRect();
-                                    if (rect.width === 0 && rect.height === 0) return;
-                                    makeClone(el, false);
-                                });
-                            });
-                        }
-
-                        // Botões de paginação das consultas: apenas no step de cancelar
-                        if (step.enablePagination) {
-                            const apptsPagination = document.getElementById('appts-pagination');
-                            if (apptsPagination && apptsPagination.style.display !== 'none') {
-                                apptsPagination.querySelectorAll('.appts-page-btn').forEach(btn => {
-                                    if (btn.disabled) {
-                                        makeClone(btn, false);
-                                    } else {
-                                        makeClone(btn, true, () => {
-                                            if (btn.id === 'appts-prev') {
-                                                prevApptsPage();
-                                            } else if (btn.id === 'appts-next') {
-                                                nextApptsPage();
-                                            }
-                                            requestAnimationFrame(() => requestAnimationFrame(() => refreshCancelTutorialClones()));
+                        // No tutorial de visualização, espera o reflow completar
+                        // antes de criar clones (evita posicionamento errado no mobile)
+                        if (isViewTutorial) {
+                            requestAnimationFrame(() => {
+                                setTimeout(() => {
+                                    // Refaz o scroll para garantir posicionamento correto
+                                    // após o reflow do filtro de consultas
+                                    let scrollTargets = targets;
+                                    if (step.visualTargets && step.forceAbove) {
+                                        scrollTargets = [...targets];
+                                        step.visualTargets.forEach(s => {
+                                            document.querySelectorAll(s).forEach(el => {
+                                                const rect = el.getBoundingClientRect();
+                                                if (rect.width > 0 || rect.height > 0) scrollTargets.push(el);
+                                            });
                                         });
                                     }
-                                });
-                                clonePageInfo();
-                            }
-                        }
-
-                        // Usa apenas os targets visíveis na viewport para posicionar o balão
-                        // evitando que grids grandes (datas/horas) criem um bounding box gigante
-                        const visibleTargets = targets.filter(t => {
-                            const rect = t.getBoundingClientRect();
-                            return rect.top < window.innerHeight && rect.bottom > 0;
-                        });
-                        const positioningTargets = visibleTargets.length > 0 ? visibleTargets : targets;
-                        if (step.centerAbove) {
-                            positionBalloonCenterTop(balloon, positioningTargets);
+                                    const box = getCombinedBoundingBox(scrollTargets);
+                                    const margin = step.alignTop ? 80 : 0;
+                                    let scrollOffset;
+                                    if (step.alignTop) {
+                                        scrollOffset = margin - box.top;
+                                    } else {
+                                        const targetCenter = box.top + (box.height / 2);
+                                        const viewportCenter = window.innerHeight / 2;
+                                        scrollOffset = targetCenter - viewportCenter;
+                                    }
+                                    window.scrollBy({ top: scrollOffset, behavior: 'instant' });
+                                    setupViewTutorialClones(step, stepIndex, targets, balloon);
+                                }, reflowDelay);
+                            });
                         } else {
-                            positionBalloon(balloon, positioningTargets, false, !!step.forceAbove);
+                            setupViewTutorialClones(step, stepIndex, targets, balloon);
                         }
                     }
-                }, 500);
-            }, 150);
+                }, overlayDelay);
+            }, initialDelay);
+        }
+
+        function setupViewTutorialClones(step, stepIndex, targets, balloon) {
+            // Configura botões do balão com base no tipo de step
+            const btnStop = document.getElementById('btn-tutorial-stop');
+            const btnNext = document.getElementById('btn-tutorial-next');
+            const btnFinish = document.getElementById('btn-tutorial-finish');
+            if (btnStop) btnStop.style.display = step.finishButton ? 'none' : 'inline-block';
+            if (btnNext) btnNext.style.display = step.advanceButton ? 'inline-block' : 'none';
+            if (btnFinish) btnFinish.style.display = step.finishButton ? 'inline-block' : 'none';
+
+            const isVisualOnly = step.advanceButton || step.finishButton;
+            targets.forEach(originalEl => {
+                if (originalEl.classList.contains('tutorial-highlight-live')) return;
+                const rect = originalEl.getBoundingClientRect();
+                if (rect.width === 0 && rect.height === 0) return;
+
+                const tag = originalEl.tagName.toLowerCase();
+                const isTextInput = tag === 'input' && (originalEl.type === 'text' || originalEl.type === 'search' || !originalEl.type);
+
+                if (isTextInput) {
+                    makeClone(originalEl, true, null);
+                } else if (isVisualOnly) {
+                    const clone = makeClone(originalEl, false);
+                    // No tutorial de visualização, remove .tutorial-highlight
+                    // (que aplica fundo branco + sombra preta) dos filtros
+                    if (currentTutorialType === 'view' && originalEl.classList.contains('filter-btn')) {
+                        clone.classList.remove('tutorial-highlight');
+                        clone.style.animation = 'none';
+                        clone.style.boxShadow = '0 0 0 2px var(--primary-color)';
+                    }
+                } else {
+                    makeClone(originalEl, true, () => {
+                        if (step.endOnClick) {
+                            closeTutorial();
+                            originalEl.click();
+                            return;
+                        }
+
+                        closeTutorialVisuals();
+
+                        if (stepIndex === tutorialSteps.length - 1) {
+                            showTutorialReactivation = true;
+                        }
+
+                        originalEl.click();
+
+                        if (step.branchedTargets) {
+                            const matched = step.branchedTargets.find(b => originalEl.matches(b.selector));
+                            if (matched) {
+                                tutorialHistory.push(stepIndex);
+                                setTimeout(() => showTutorialBranch(matched.branch), 300);
+                                return;
+                            }
+                        }
+                        tutorialHistory.push(stepIndex);
+                        tutorialCurrentStep = stepIndex + 1;
+                        setTimeout(() => nextTutorialStep(), 300);
+                    });
+                }
+            });
+
+            // Cria clones para elementos visuais adicionais
+            if (step.visualTargets) {
+                step.visualTargets.forEach(s => {
+                    document.querySelectorAll(s).forEach(el => {
+                        const rect = el.getBoundingClientRect();
+                        if (rect.width === 0 && rect.height === 0) return;
+                        if (currentTutorialType === 'view') {
+                            const clone = makeClone(el, true);
+                            // Remove .tutorial-highlight (fundo branco + sombra preta)
+                            // e aplica borda rosa estática nos cards de consulta
+                            if (el.classList.contains('appointment-item')) {
+                                clone.classList.remove('tutorial-highlight');
+                                clone.style.animation = 'none';
+                                clone.style.boxShadow = '0 0 0 3px var(--primary-color)';
+                            }
+                        } else {
+                            makeClone(el, false);
+                        }
+                    });
+                });
+            }
+
+            // Botões de paginação
+            if (step.enablePagination) {
+                const apptsPagination = document.getElementById('appts-pagination');
+                if (apptsPagination && apptsPagination.style.display !== 'none') {
+                    apptsPagination.querySelectorAll('.appts-page-btn').forEach(btn => {
+                        if (btn.disabled) {
+                            const clone = makeClone(btn, false);
+                            if (currentTutorialType === 'view') {
+                                clone.classList.remove('tutorial-highlight');
+                                clone.style.animation = 'none';
+                                clone.style.boxShadow = '0 0 0 2px var(--primary-color)';
+                            }
+                        } else {
+                            const clone = makeClone(btn, true, () => {
+                                if (btn.id === 'appts-prev') {
+                                    prevApptsPage();
+                                } else if (btn.id === 'appts-next') {
+                                    nextApptsPage();
+                                }
+                                requestAnimationFrame(() => requestAnimationFrame(() => refreshCancelTutorialClones()));
+                            });
+                            if (currentTutorialType === 'view') {
+                                clone.classList.remove('tutorial-highlight');
+                                clone.style.animation = 'none';
+                                clone.style.boxShadow = '0 0 0 2px var(--primary-color)';
+                            }
+                        }
+                    });
+                    clonePageInfo();
+                }
+            }
+
+            // Posiciona o balão
+            const visibleTargets = targets.filter(t => {
+                const rect = t.getBoundingClientRect();
+                return rect.top < window.innerHeight && rect.bottom > 0;
+            });
+            const positioningTargets = visibleTargets.length > 0 ? visibleTargets : targets;
+            if (step.centerAbove) {
+                positionBalloonCenterTop(balloon, positioningTargets);
+            } else {
+                positionBalloon(balloon, positioningTargets, false, !!step.forceAbove);
+            }
         }
 
         function showTutorialBranch(branchKey) {
@@ -2199,6 +2480,7 @@
 
             document.getElementById('tutorial-overlay').classList.remove('active');
             document.body.classList.remove('tutorial-lock');
+            document.body.classList.remove('tutorial-view-mode');
 
             document.body.style.overflow = '';
             document.body.style.touchAction = '';
@@ -2206,6 +2488,7 @@
             tutorialCurrentStep = 0;
             tutorialHistory = [];
             tutorialActiveBranch = null;
+            currentTutorialType = null;
         }
     </script>
 </body>
