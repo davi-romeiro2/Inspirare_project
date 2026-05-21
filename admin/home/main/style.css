@@ -313,55 +313,82 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.35);
     display: none;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(4px);
+    z-index: 4000;
+    backdrop-filter: blur(6px);
 }
 
 .custom-modal {
     background: var(--white);
-    padding: 30px;
-    border-radius: 24px;
-    max-width: 400px;
+    padding: 28px 32px;
+    border-radius: 20px;
+    max-width: 380px;
     width: 90%;
     text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-    animation: modalPop 0.3s ease forwards;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes modalPop {
-    from { opacity: 0; scale(0.8); }
-    to { opacity: 1; scale(1); }
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .custom-modal h3 {
     font-family: 'Playfair Display', serif;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     color: var(--secondary-color);
+    font-size: 1.3rem;
 }
 
 .custom-modal p {
-    margin-bottom: 25px;
+    margin-bottom: 24px;
     color: var(--accent-color);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
 }
 
 .btn-modal {
-    background: var(--primary-color);
+    background: var(--secondary-color);
     color: white;
     border: none;
-    padding: 12px 30px;
-    border-radius: 12px;
+    padding: 11px 28px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
-    transition: background 0.3s;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
 }
 
-.btn-modal:hover {
-    background: #a6757d;
+.modal-actions-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.modal-actions-row .btn-modal {
+    flex: 1;
+    max-width: 140px;
+}
+
+.btn-modal-secondary {
+    background: transparent;
+    color: var(--secondary-color);
+    border: 1.5px solid var(--neutral-color);
+}
+
+.btn-modal-secondary:hover {
+    background: #f5f5f5;
+    border-color: var(--accent-color);
+    box-shadow: none;
+}
+
+.btn-modal-primary:hover {
+    background: #2d3f30;
+    box-shadow: 0 4px 12px rgba(58, 80, 61, 0.25);
 }
 
 /* Psychologists Grid Refinement */
@@ -1022,21 +1049,21 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--accent-color);
+    margin-bottom: 6px;
 }
 
 .annotation-date i {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
 }
 
 .annotation-text {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--secondary-color);
-    line-height: 1.5;
+    line-height: 1.4;
     white-space: pre-wrap;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -1048,9 +1075,9 @@ body {
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    border: 1px solid var(--neutral-color);
-    background: white;
-    color: var(--accent-color);
+    border: none;
+    background: var(--primary-color);
+    color: white;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1062,9 +1089,8 @@ body {
 }
 
 .annotation-more:hover {
-    background: var(--bg-color);
-    border-color: var(--accent-color);
-    color: var(--secondary-color);
+    background: #a6757d;
+    transform: scale(1.05);
 }
 
 .annotation-more i {
@@ -1072,50 +1098,25 @@ body {
     height: 16px;
 }
 
-.annotation-new {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    background: #f9faf9;
-    border-radius: 16px;
-    padding: 20px;
-    border: 1px solid var(--neutral-color);
-}
-
-.annotation-new label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--secondary-color);
-}
-
-.annotation-new textarea {
+.btn-new-note {
     width: 100%;
-    min-height: 100px;
-    padding: 12px 14px;
-    border: 1.5px solid var(--neutral-color);
+    padding: 14px;
     border-radius: 12px;
+    border: 1.5px solid var(--neutral-color);
+    background: #f5f5f5;
+    color: #777;
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.btn-new-note:hover {
+    background: #eee;
     color: var(--secondary-color);
-    resize: vertical;
-    outline: none;
-}
-
-.annotation-new textarea:focus {
-    border-color: var(--primary-color);
-}
-
-.annotation-new .btn-confirm {
-    background-color: var(--secondary-color);
-    color: white;
-    margin-top: 0;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.annotation-new .btn-confirm:hover {
-    background-color: var(--secondary-color);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(58, 80, 61, 0.2);
+    border-color: var(--accent-color);
 }
 
 .btn-notes {
@@ -1355,43 +1356,207 @@ body {
     overflow: hidden;
 }
 
-.annotation-expand-header {
-    padding: 24px 28px 16px;
-    border-bottom: 1px solid #eee;
+.annotation-expand-topbar {
+    background: var(--primary-color);
+    padding: 14px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-.annotation-expand-header h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.3rem;
-    color: var(--secondary-color);
-    margin: 0;
-}
-
-.annotation-expand-body {
-    padding: 24px 28px;
-    overflow-y: auto;
-    font-size: 1rem;
-    color: var(--secondary-color);
-    line-height: 1.7;
-    white-space: pre-wrap;
-}
-
-.annotation-expand-date {
+.annotation-expand-topbar .annotation-expand-date {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 16px;
+    margin: 0;
 }
 
-.annotation-expand-date i {
+.annotation-expand-topbar .annotation-expand-date i {
+    width: 14px;
+    height: 14px;
+}
+
+.annotation-expand-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.annotation-expand-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
+}
+
+.annotation-expand-close i {
+    width: 14px;
+    height: 14px;
+}
+
+.annotation-expand-body {
+    padding: 16px 20px 20px;
+    overflow-y: auto;
+    font-size: 0.95rem;
+    color: var(--secondary-color);
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* New Note Modal */
+.new-note-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    backdrop-filter: blur(5px);
+    padding: 20px;
+}
+
+.new-note-modal {
+    background: var(--white);
+    border-radius: 24px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 25px 50px rgba(58, 80, 61, 0.15);
+    animation: modalPop 0.3s ease forwards;
+    overflow: hidden;
+}
+
+.new-note-topbar {
+    background: var(--primary-color);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.new-note-date-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+}
+
+.new-note-date-wrapper i {
     width: 16px;
     height: 16px;
+}
+
+.new-note-date-input {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+}
+
+.new-note-date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+.new-note-date-input:focus {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.new-note-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.new-note-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
+}
+
+.new-note-close i {
+    width: 14px;
+    height: 14px;
+}
+
+.new-note-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.new-note-body textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 14px;
+    border: 1.5px solid var(--neutral-color);
+    border-radius: 14px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    color: var(--secondary-color);
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+}
+
+.new-note-body textarea:focus {
+    border-color: var(--primary-color);
+}
+
+.new-note-footer {
+    padding: 16px 20px 20px;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #f0f0f0;
+}
+
+.new-note-save {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 12px 28px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.new-note-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(58, 80, 61, 0.2);
 }
 
 /* Responsive Annotations */
@@ -1408,8 +1573,27 @@ body {
         max-height: 85vh;
     }
 
-    .annotation-expand-header,
+    .annotation-expand-topbar {
+        padding: 12px 16px;
+    }
+
     .annotation-expand-body {
-        padding: 20px 22px;
+        padding: 14px 16px 18px;
+    }
+
+    .new-note-modal {
+        max-height: 90vh;
+    }
+
+    .new-note-body {
+        padding: 16px;
+    }
+
+    .new-note-body textarea {
+        min-height: 160px;
+    }
+
+    .new-note-footer {
+        padding: 14px 16px 18px;
     }
 }
