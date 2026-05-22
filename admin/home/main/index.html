@@ -88,7 +88,7 @@
                         <span class="detail-value" id="modal-time"></span>
                     </div>
                     <div class="modal-detail-item">
-                        <span class="detail-label"><i data-lucide="video"></i> Modalidade</span>
+                        <span class="detail-label"><i data-lucide="video" id="modal-modality-icon"></i> Modalidade</span>
                         <span class="detail-value" id="modal-modality"></span>
                     </div>
                     <div class="modal-detail-item">
@@ -104,6 +104,22 @@
                     <button class="btn-modal-action btn-cancel-action" id="modal-cancel-btn" onclick="modalCancelAppointment()">
                         <i data-lucide="x"></i> Cancelar consulta
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancel Confirmation Modal -->
+        <div id="cancel-modal" class="cancel-modal-overlay">
+            <div class="cancel-modal">
+                <h3>Quer mesmo cancelar a consulta?</h3>
+                <div class="cancel-checkbox-row">
+                    <input type="checkbox" id="cancel-reason-check" onchange="toggleCancelReason()">
+                    <label for="cancel-reason-check">Escrever motivo do cancelamento</label>
+                </div>
+                <textarea id="cancel-reason-text" class="cancel-reason-text" placeholder="Escreva o motivo do cancelamento..." style="display:none;"></textarea>
+                <div class="cancel-actions-row">
+                    <button class="btn-cancel-modal btn-cancel-no" onclick="closeCancelModal()">Não</button>
+                    <button class="btn-cancel-modal btn-cancel-yes" onclick="confirmCancelAppointment()">Sim</button>
                 </div>
             </div>
         </div>
@@ -134,6 +150,7 @@
             <div class="menu-card" onclick="openFlow('consultas')">
                 <div class="icon-box"><i data-lucide="calendar-check"></i></div>
                 <h3>Consultas marcadas</h3>
+                <span class="card-badge" id="badge-consultas">0</span>
             </div>
             <div class="menu-card" onclick="alert('Em desenvolvimento: Lista de pacientes')">
                 <div class="icon-box"><i data-lucide="users"></i></div>
@@ -445,7 +462,7 @@
                             <div class="appointment-meta">
                                 <span><i data-lucide="calendar"></i> ${formatDate(a.date)}</span>
                                 <span><i data-lucide="clock"></i> ${a.time}</span>
-                                <span><i data-lucide="video"></i> ${a.modality}</span>
+                                <span><i data-lucide="${a.modality === 'Presencial' ? 'user' : 'video'}"></i> ${a.modality}</span>
                             </div>
                             <div class="appointment-tags">
                                 <span class="tag-status ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
@@ -485,6 +502,7 @@
                 a.status = 'cancelled';
                 showModal('Cancelado', `Consulta de ${a.patient} foi cancelada.`);
                 filterAppointments(document.querySelector('.filter-btn.active').dataset.filter);
+                updateAppointmentBadge();
             }
         }
 
@@ -505,6 +523,10 @@
             document.getElementById('modal-date').textContent = formatDate(a.date);
             document.getElementById('modal-time').textContent = a.time;
             document.getElementById('modal-modality').textContent = a.modality;
+            const modalityIcon = document.getElementById('modal-modality-icon');
+            if (modalityIcon) {
+                modalityIcon.setAttribute('data-lucide', a.modality === 'Presencial' ? 'user' : 'video');
+            }
             document.getElementById('modal-type').textContent = a.type;
 
             const cancelBtn = document.getElementById('modal-cancel-btn');
@@ -531,8 +553,38 @@
         }
 
         function modalCancelAppointment() {
+            document.getElementById('cancel-modal').style.display = 'flex';
+            document.getElementById('cancel-reason-check').checked = false;
+            document.getElementById('cancel-reason-text').style.display = 'none';
+            document.getElementById('cancel-reason-text').value = '';
+        }
+
+        function toggleCancelReason() {
+            const checkbox = document.getElementById('cancel-reason-check');
+            const textarea = document.getElementById('cancel-reason-text');
+            textarea.style.display = checkbox.checked ? 'block' : 'none';
+            if (checkbox.checked) {
+                textarea.focus();
+            }
+        }
+
+        function closeCancelModal() {
+            document.getElementById('cancel-modal').style.display = 'none';
+        }
+
+        function confirmCancelAppointment() {
             const a = appointments.find(x => x.id === currentModalId);
             if (!a) return;
+
+            const checkbox = document.getElementById('cancel-reason-check');
+            const reasonText = document.getElementById('cancel-reason-text').value.trim();
+
+            if (checkbox.checked && !reasonText) {
+                showModal('Aviso', 'Por favor, escreva o motivo do cancelamento.');
+                return;
+            }
+
+            closeCancelModal();
             closeAppointmentModal();
             cancelAppointment(currentModalId);
         }
@@ -865,6 +917,17 @@
                 );
             }
         }
+
+        function updateAppointmentBadge() {
+            const count = appointments.filter(a => a.status !== 'completed' && a.status !== 'cancelled').length;
+            const badge = document.getElementById('badge-consultas');
+            if (badge) {
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+        }
+
+        updateAppointmentBadge();
     </script>
 </body>
 
