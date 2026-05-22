@@ -240,6 +240,12 @@ body {
     flex-direction: column;
 }
 
+#flow-consultas.active {
+    max-width: 1200px;
+    width: 100%;
+    padding: 40px;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -307,55 +313,82 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.35);
     display: none;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(4px);
+    z-index: 4000;
+    backdrop-filter: blur(6px);
 }
 
 .custom-modal {
     background: var(--white);
-    padding: 30px;
-    border-radius: 24px;
-    max-width: 400px;
+    padding: 28px 32px;
+    border-radius: 20px;
+    max-width: 380px;
     width: 90%;
     text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-    animation: modalPop 0.3s ease forwards;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes modalPop {
-    from { opacity: 0; scale(0.8); }
-    to { opacity: 1; scale(1); }
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .custom-modal h3 {
     font-family: 'Playfair Display', serif;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     color: var(--secondary-color);
+    font-size: 1.3rem;
 }
 
 .custom-modal p {
-    margin-bottom: 25px;
+    margin-bottom: 24px;
     color: var(--accent-color);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
 }
 
 .btn-modal {
-    background: var(--primary-color);
+    background: var(--secondary-color);
     color: white;
     border: none;
-    padding: 12px 30px;
-    border-radius: 12px;
+    padding: 11px 28px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
-    transition: background 0.3s;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
 }
 
-.btn-modal:hover {
-    background: #a6757d;
+.modal-actions-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.modal-actions-row .btn-modal {
+    flex: 1;
+    max-width: 140px;
+}
+
+.btn-modal-secondary {
+    background: transparent;
+    color: var(--secondary-color);
+    border: 1.5px solid var(--neutral-color);
+}
+
+.btn-modal-secondary:hover {
+    background: #f5f5f5;
+    border-color: var(--accent-color);
+    box-shadow: none;
+}
+
+.btn-modal-primary:hover {
+    background: #2d3f30;
+    box-shadow: 0 4px 12px rgba(58, 80, 61, 0.25);
 }
 
 /* Psychologists Grid Refinement */
@@ -606,24 +639,28 @@ body {
 }
 
 .filter-bar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
 }
 
 .filter-btn {
-    padding: 6px 12px;
-    border-radius: 20px;
+    padding: 14px 16px;
+    border-radius: 12px;
     border: 1px solid var(--neutral-color);
     background: white;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.2s ease;
 }
 
 .filter-btn.active {
     background: var(--secondary-color);
     color: white;
+    border-color: var(--secondary-color);
 }
 
 .btn-confirm {
@@ -637,4 +674,926 @@ body {
     cursor: pointer;
     width: 100%;
     margin-top: 20px;
+}
+
+/* Appointments Page */
+.appointments-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.appointments-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+    position: relative;
+    min-height: 60px;
+}
+
+.appointments-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--secondary-color);
+    margin: 0;
+}
+
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(58, 80, 61, 0.06);
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.appointments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.appointment-row {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 8px rgba(58, 80, 61, 0.04);
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.appointment-row:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 6px 18px rgba(58, 80, 61, 0.08);
+}
+
+.appointment-main {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    min-width: 0;
+}
+
+.appointment-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #d4a5ad 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.appointment-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.appointment-details h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin-bottom: 6px;
+}
+
+.appointment-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 8px;
+}
+
+.appointment-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--accent-color);
+}
+
+.appointment-meta i {
+    width: 14px;
+    height: 14px;
+}
+
+.appointment-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tag-type {
+    background: #f0f4f1;
+    color: var(--secondary-color);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.tag-status {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-confirmed {
+    background: #e6f4ea;
+    color: #1e7e34;
+}
+
+.status-pending {
+    background: #fff8e6;
+    color: #b38f00;
+}
+
+.status-completed {
+    background: #eef2ff;
+    color: #4a5fd3;
+}
+
+.status-cancelled {
+    background: #fce8e6;
+    color: #c0392b;
+}
+
+.appointment-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--neutral-color);
+    background: white;
+    color: var(--secondary-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.btn-action i {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-action:hover {
+    transform: scale(1.05);
+}
+
+.btn-confirm {
+    border-color: #1e7e34;
+    color: #1e7e34;
+}
+
+.btn-confirm:hover {
+    background: #e6f4ea;
+}
+
+.btn-complete {
+    border-color: #4a5fd3;
+    color: #4a5fd3;
+}
+
+.btn-complete:hover {
+    background: #eef2ff;
+}
+
+.btn-cancel {
+    border-color: var(--error-color);
+    color: var(--error-color);
+}
+
+.btn-cancel:hover {
+    background: #fce8e6;
+}
+
+.btn-info:hover {
+    background: var(--bg-color);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--accent-color);
+}
+
+.empty-state i {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: var(--neutral-color);
+}
+
+.empty-state p {
+    font-size: 0.95rem;
+}
+
+/* Desktop - mais horizontal */
+@media (min-width: 1024px) {
+    .appointments-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .appointment-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 20px;
+    }
+
+    .appointment-main {
+        width: 100%;
+    }
+
+    .appointment-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .stats-bar {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Responsive Appointments */
+@media (max-width: 768px) {
+    .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .appointment-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .appointment-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-card {
+        padding: 14px;
+    }
+
+    .stat-number {
+        font-size: 1.4rem;
+    }
+
+    .appointment-main {
+        width: 100%;
+    }
+
+    .appointment-meta {
+        gap: 10px;
+    }
+
+    .appointment-meta span {
+        font-size: 0.75rem;
+    }
+}
+
+/* Annotations Flow */
+#flow-anotacoes.active {
+    max-width: 800px;
+    width: 100%;
+    padding: 40px;
+}
+
+.annotations-history {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 55vh;
+    overflow-y: auto;
+    padding-right: 8px;
+    margin-bottom: 24px;
+}
+
+.annotation-card {
+    background: #fdfdfd;
+    border: 1px solid var(--neutral-color);
+    border-radius: 14px;
+    padding: 16px 18px;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.annotation-card:hover {
+    border-color: var(--accent-color);
+}
+
+.annotation-card-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.annotation-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--accent-color);
+    margin-bottom: 6px;
+}
+
+.annotation-date i {
+    width: 13px;
+    height: 13px;
+}
+
+.annotation-text {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    line-height: 1.4;
+    white-space: pre-wrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.annotation-more {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.annotation-more:hover {
+    background: #a6757d;
+    transform: scale(1.05);
+}
+
+.annotation-more i {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-new-note {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--neutral-color);
+    background: #f5f5f5;
+    color: #777;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.btn-new-note:hover {
+    background: #eee;
+    color: var(--secondary-color);
+    border-color: var(--accent-color);
+}
+
+.btn-notes {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.btn-notes:hover {
+    background: #f0f4f1;
+}
+
+.btn-more {
+    border-color: var(--neutral-color);
+    color: var(--accent-color);
+}
+
+.btn-more:hover {
+    background: var(--bg-color);
+    border-color: var(--accent-color);
+}
+
+/* Appointment Detail Modal */
+.appointment-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+    padding: 20px;
+}
+
+.appointment-modal {
+    background: var(--white);
+    border-radius: 24px;
+    max-width: 520px;
+    width: 100%;
+    padding: 32px;
+    position: relative;
+    box-shadow: 0 25px 50px rgba(58, 80, 61, 0.15);
+    animation: modalPop 0.3s ease forwards;
+}
+
+.modal-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--neutral-color);
+    background: white;
+    color: var(--accent-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.modal-close:hover {
+    background: var(--bg-color);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.modal-patient {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.modal-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #d4a5ad 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.modal-patient-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modal-patient-info h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--secondary-color);
+    margin: 0;
+}
+
+.modal-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.modal-detail-item {
+    background: #f9faf9;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.detail-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-label i {
+    width: 14px;
+    height: 14px;
+}
+
+.detail-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.modal-actions-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.btn-modal-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: 1.5px solid var(--neutral-color);
+    background: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-action:hover {
+    transform: translateY(-2px);
+}
+
+.btn-notes-action {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.btn-notes-action:hover {
+    background: #f0f4f1;
+    box-shadow: 0 4px 12px rgba(58, 80, 61, 0.1);
+}
+
+.btn-cancel-action {
+    border-color: var(--error-color);
+    color: var(--error-color);
+}
+
+.btn-cancel-action:hover {
+    background: #fce8e6;
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.1);
+}
+
+/* Responsive Modal */
+@media (max-width: 560px) {
+    .appointment-modal {
+        padding: 24px;
+    }
+
+    .modal-patient-info h3 {
+        font-size: 1.15rem;
+    }
+
+    .modal-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-actions-bar {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Annotation Expand Modal */
+.annotation-expand-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    backdrop-filter: blur(5px);
+    padding: 20px;
+}
+
+.annotation-expand-modal {
+    background: var(--white);
+    border-radius: 24px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 25px 50px rgba(58, 80, 61, 0.15);
+    animation: modalPop 0.3s ease forwards;
+    overflow: hidden;
+}
+
+.annotation-expand-topbar {
+    background: var(--primary-color);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.annotation-expand-topbar .annotation-expand-date {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+.annotation-expand-topbar .annotation-expand-date i {
+    width: 14px;
+    height: 14px;
+}
+
+.annotation-expand-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.annotation-expand-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
+}
+
+.annotation-expand-close i {
+    width: 14px;
+    height: 14px;
+}
+
+.annotation-expand-body {
+    padding: 16px 20px 20px;
+    overflow-y: auto;
+    font-size: 0.95rem;
+    color: var(--secondary-color);
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* New Note Modal */
+.new-note-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    backdrop-filter: blur(5px);
+    padding: 20px;
+}
+
+.new-note-modal {
+    background: var(--white);
+    border-radius: 24px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 25px 50px rgba(58, 80, 61, 0.15);
+    animation: modalPop 0.3s ease forwards;
+    overflow: hidden;
+}
+
+.new-note-topbar {
+    background: var(--primary-color);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.new-note-date-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+}
+
+.new-note-date-wrapper i {
+    width: 16px;
+    height: 16px;
+}
+
+.new-note-date-input {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+}
+
+.new-note-date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+.new-note-date-input:focus {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.new-note-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.new-note-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
+}
+
+.new-note-close i {
+    width: 14px;
+    height: 14px;
+}
+
+.new-note-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.new-note-body textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 14px;
+    border: 1.5px solid var(--neutral-color);
+    border-radius: 14px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    color: var(--secondary-color);
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+}
+
+.new-note-body textarea:focus {
+    border-color: var(--primary-color);
+}
+
+.new-note-footer {
+    padding: 16px 20px 20px;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #f0f0f0;
+}
+
+.new-note-save {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 12px 28px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.new-note-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(58, 80, 61, 0.2);
+}
+
+/* Responsive Annotations */
+@media (max-width: 768px) {
+    #flow-anotacoes.active {
+        padding: 24px;
+    }
+
+    .annotations-history {
+        max-height: 50vh;
+    }
+
+    .annotation-expand-modal {
+        max-height: 85vh;
+    }
+
+    .annotation-expand-topbar {
+        padding: 12px 16px;
+    }
+
+    .annotation-expand-body {
+        padding: 14px 16px 18px;
+    }
+
+    .new-note-modal {
+        max-height: 90vh;
+    }
+
+    .new-note-body {
+        padding: 16px;
+    }
+
+    .new-note-body textarea {
+        min-height: 160px;
+    }
+
+    .new-note-footer {
+        padding: 14px 16px 18px;
+    }
 }

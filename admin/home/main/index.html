@@ -59,13 +59,73 @@
             <div class="custom-modal">
                 <h3 id="modal-title">Aviso</h3>
                 <p id="modal-text">Mensagem aqui</p>
-                <button class="btn-modal" id="modal-btn">Ok</button>
+                <div class="modal-actions-row">
+                    <button class="btn-modal btn-modal-secondary" id="modal-btn-no" style="display:none;">Não sair</button>
+                    <button class="btn-modal btn-modal-primary" id="modal-btn-yes">Ok</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Detail Modal -->
+        <div id="appointment-modal" class="appointment-modal-overlay">
+            <div class="appointment-modal">
+                <button class="modal-close" onclick="closeAppointmentModal()"><i data-lucide="x"></i></button>
+                <div class="modal-patient">
+                    <div class="modal-avatar" id="modal-avatar"></div>
+                    <div class="modal-patient-info">
+                        <h3 id="modal-patient-name"></h3>
+                        <span class="tag-status" id="modal-status"></span>
+                    </div>
+                </div>
+
+                <div class="modal-details-grid">
+                    <div class="modal-detail-item">
+                        <span class="detail-label"><i data-lucide="calendar"></i> Data</span>
+                        <span class="detail-value" id="modal-date"></span>
+                    </div>
+                    <div class="modal-detail-item">
+                        <span class="detail-label"><i data-lucide="clock"></i> Horário</span>
+                        <span class="detail-value" id="modal-time"></span>
+                    </div>
+                    <div class="modal-detail-item">
+                        <span class="detail-label"><i data-lucide="video"></i> Modalidade</span>
+                        <span class="detail-value" id="modal-modality"></span>
+                    </div>
+                    <div class="modal-detail-item">
+                        <span class="detail-label"><i data-lucide="file-text"></i> Tipo</span>
+                        <span class="detail-value" id="modal-type"></span>
+                    </div>
+                </div>
+
+                <div class="modal-actions-bar">
+                    <button class="btn-modal-action btn-notes-action" onclick="modalOpenAnnotations()">
+                        <i data-lucide="notebook-pen"></i> Anotações
+                    </button>
+                    <button class="btn-modal-action btn-cancel-action" id="modal-cancel-btn" onclick="modalCancelAppointment()">
+                        <i data-lucide="x"></i> Cancelar consulta
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Annotation Expand Modal -->
+        <div id="annotation-expand" class="annotation-expand-overlay">
+            <div class="annotation-expand-modal">
+                <div class="annotation-expand-topbar">
+                    <div class="annotation-expand-date" id="expand-date"></div>
+                    <button class="annotation-expand-close" onclick="closeAnnotationExpand()">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div class="annotation-expand-body">
+                    <div id="expand-text"></div>
+                </div>
             </div>
         </div>
 
         <!-- Main Dashboard -->
         <div id="view-home" class="dashboard-grid">
-            <div class="menu-card" onclick="alert('Em desenvolvimento: Consultas marcadas')">
+            <div class="menu-card" onclick="openFlow('consultas')">
                 <div class="icon-box"><i data-lucide="calendar-check"></i></div>
                 <h3>Consultas marcadas</h3>
             </div>
@@ -79,12 +139,62 @@
             </div>
         </div>
 
-        <!-- Placeholder for future flows (can keep same as user but hidden) -->
-        <!-- We'll keep the same flow containers but they are not used; can be omitted for simplicity -->
-        <!-- For brevity, we omit the extensive flow sections; but to keep same structure we can keep them hidden -->
-        <!-- However, to keep the page lightweight, we can remove them. The user didn't require flows. -->
-        <!-- We'll just keep the essential parts: header, sidebar, modal, dashboard. -->
-        <!-- We'll keep the script for toggleMenu and modal functions. -->
+        <!-- Flow: Consultas Marcadas -->
+        <div id="flow-consultas" class="flow-container">
+            <div class="appointments-header">
+                <button type="button" class="btn-back-small" onclick="closeFlow()">
+                    <i data-lucide="arrow-left"></i> Voltar
+                </button>
+                <h2>Consultas Marcadas</h2>
+            </div>
+
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all" onclick="filterAppointments('all')">Marcadas</button>
+                <button class="filter-btn" data-filter="completed" onclick="filterAppointments('completed')">Realizadas</button>
+                <button class="filter-btn" data-filter="cancelled" onclick="filterAppointments('cancelled')">Canceladas</button>
+            </div>
+
+            <div class="appointments-list" id="appointments-list">
+            </div>
+        </div>
+
+        <!-- Flow: Anotações do Paciente -->
+        <div id="flow-anotacoes" class="flow-container">
+            <div class="appointments-header">
+                <button type="button" class="btn-back-small" onclick="closeAnnotations()">
+                    <i data-lucide="arrow-left"></i> Voltar
+                </button>
+                <h2 id="anotacoes-title">Anotações</h2>
+            </div>
+
+            <div class="annotations-history" id="annotations-history">
+            </div>
+
+            <button class="btn-new-note" onclick="openNewNoteModal()">Nova anotação +</button>
+        </div>
+    </div>
+
+    <!-- Modal: Nova Anotação -->
+    <div id="new-note-modal" class="new-note-overlay">
+        <div class="new-note-modal">
+            <div class="new-note-topbar">
+                <div class="new-note-date-wrapper">
+                    <i data-lucide="calendar"></i>
+                    <input type="date" id="new-note-date" class="new-note-date-input">
+                </div>
+                <button class="new-note-close" onclick="closeNewNoteModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="new-note-body">
+                <textarea id="new-note-text" placeholder="Escreva aqui sobre a consulta..."></textarea>
+            </div>
+
+            <div class="new-note-footer">
+                <button class="new-note-save" onclick="saveNewNote()">Salvar anotação</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -111,18 +221,431 @@
             lucide.createIcons();
         }
 
-        function showModal(title, text, callback = null) {
+        function showModal(title, text, onYes = null, onNo = null) {
             const modal = document.getElementById('custom-modal');
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-text').innerText = text;
             modal.style.display = 'flex';
-            document.getElementById('modal-btn').onclick = () => {
+
+            const btnYes = document.getElementById('modal-btn-yes');
+            const btnNo = document.getElementById('modal-btn-no');
+
+            if (onNo) {
+                btnYes.innerText = 'Sair';
+                btnNo.style.display = 'inline-block';
+                btnNo.innerText = 'Não sair';
+            } else {
+                btnYes.innerText = 'Ok';
+                btnNo.style.display = 'none';
+            }
+
+            btnYes.onclick = () => {
                 modal.style.display = 'none';
-                if (callback) callback();
+                if (onYes) onYes();
+            };
+            btnNo.onclick = () => {
+                modal.style.display = 'none';
+                if (onNo) onNo();
             };
         }
 
-        // Optional: keep other functions if needed; but we can leave them out.
+        /* =========================
+           FLUXOS (HOME / CONSULTAS)
+           ========================= */
+        function openFlow(flow) {
+            document.getElementById('view-home').style.display = 'none';
+            const container = document.getElementById('flow-' + flow);
+            if (container) container.classList.add('active');
+            if (flow === 'consultas') {
+                renderAppointments(appointments);
+            }
+        }
+
+        function closeFlow() {
+            document.querySelectorAll('.flow-container').forEach(f => f.classList.remove('active'));
+            document.getElementById('view-home').style.display = 'grid';
+        }
+
+        /* =========================
+           CONSULTAS MARCADAS
+           ========================= */
+        const appointments = [
+            {
+                id: 1,
+                patient: 'Ana Clara Mendes',
+                photo: 'AM',
+                date: '2026-05-21',
+                time: '09:00',
+                type: 'Individual',
+                status: 'confirmed',
+                modality: 'Presencial',
+                annotations: [
+                    { date: '2026-05-14', text: 'Paciente relatou melhora no sono após técnicas de respiração.' },
+                    { date: '2026-05-07', text: 'Discussão sobre estresse no trabalho. Introduzido diário de gratidão.' }
+                ]
+            },
+            {
+                id: 2,
+                patient: 'Bruno Oliveira',
+                photo: 'BO',
+                date: '2026-05-21',
+                time: '10:30',
+                type: 'Individual',
+                status: 'pending',
+                modality: 'Online',
+                annotations: []
+            },
+            {
+                id: 3,
+                patient: 'Carla Souza',
+                photo: 'CS',
+                date: '2026-05-21',
+                time: '14:00',
+                type: 'Primeira consulta',
+                status: 'confirmed',
+                modality: 'Presencial',
+                annotations: []
+            },
+            {
+                id: 4,
+                patient: 'Diego Ferreira',
+                photo: 'DF',
+                date: '2026-05-22',
+                time: '09:00',
+                type: 'Individual',
+                status: 'confirmed',
+                modality: 'Online',
+                annotations: [
+                    { date: '2026-05-15', text: 'Primeira sessão: queixa principal é ansiedade social. Criado plano de exposição gradual.' }
+                ]
+            },
+            {
+                id: 5,
+                patient: 'Elisa Rocha',
+                photo: 'ER',
+                date: '2026-05-23',
+                time: '11:00',
+                type: 'Casal',
+                status: 'pending',
+                modality: 'Presencial',
+                annotations: []
+            },
+            {
+                id: 6,
+                patient: 'Felipe Costa',
+                photo: 'FC',
+                date: '2026-05-24',
+                time: '16:00',
+                type: 'Individual',
+                status: 'confirmed',
+                modality: 'Online',
+                annotations: []
+            },
+            {
+                id: 7,
+                patient: 'Gabriela Lima',
+                photo: 'GL',
+                date: '2026-05-20',
+                time: '15:00',
+                type: 'Individual',
+                status: 'completed',
+                modality: 'Presencial',
+                annotations: [
+                    { date: '2026-05-20', text: 'Última sessão: paciente trouxe feedback positivo sobre dinâmica familiar.' },
+                    { date: '2026-05-13', text: 'Trabalhado reconhecimento de padrões de comunicação assertiva.' },
+                    { date: '2026-05-06', text: 'Início do tratamento: queixa de conflitos recorrentes com familiares.' }
+                ]
+            },
+            {
+                id: 8,
+                patient: 'Henrique Dias',
+                photo: 'HD',
+                date: '2026-05-19',
+                time: '10:00',
+                type: 'Individual',
+                status: 'cancelled',
+                modality: 'Online',
+                annotations: []
+            }
+        ];
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+
+            if (d.getTime() === today.getTime()) return 'Hoje';
+            if (d.getTime() === tomorrow.getTime()) return 'Amanhã';
+            return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+        }
+
+        function getStatusLabel(status) {
+            const map = {
+                confirmed: 'Confirmada',
+                pending: 'Pendente',
+                completed: 'Realizada',
+                cancelled: 'Cancelada'
+            };
+            return map[status] || status;
+        }
+
+        function getStatusClass(status) {
+            return 'status-' + status;
+        }
+
+        function renderAppointments(list) {
+            const container = document.getElementById('appointments-list');
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i data-lucide="calendar-x"></i>
+                        <p>Nenhuma consulta encontrada</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const todayStr = new Date().toISOString().slice(0, 10);
+
+            container.innerHTML = list.map(a => `
+                <div class="appointment-row ${a.status}">
+                    <div class="appointment-main">
+                        <div class="appointment-avatar">${a.photo}</div>
+                        <div class="appointment-details">
+                            <h4>${a.patient}</h4>
+                            <div class="appointment-meta">
+                                <span><i data-lucide="calendar"></i> ${formatDate(a.date)}</span>
+                                <span><i data-lucide="clock"></i> ${a.time}</span>
+                                <span><i data-lucide="video"></i> ${a.modality}</span>
+                            </div>
+                            <div class="appointment-tags">
+                                <span class="tag-status ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="appointment-actions">
+                        <button class="btn-action btn-more" onclick="openAppointmentModal(${a.id})" title="Mais opções">
+                            <i data-lucide="more-vertical"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function filterAppointments(filter) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+
+            let filtered = appointments;
+            if (filter === 'all') {
+                filtered = appointments.filter(a => a.status !== 'completed' && a.status !== 'cancelled');
+            } else if (filter === 'completed') {
+                filtered = appointments.filter(a => a.status === 'completed');
+            } else if (filter === 'cancelled') {
+                filtered = appointments.filter(a => a.status === 'cancelled');
+            }
+
+            renderAppointments(filtered);
+        }
+
+        function cancelAppointment(id) {
+            const a = appointments.find(x => x.id === id);
+            if (a) {
+                a.status = 'cancelled';
+                showModal('Cancelado', `Consulta de ${a.patient} foi cancelada.`);
+                filterAppointments(document.querySelector('.filter-btn.active').dataset.filter);
+            }
+        }
+
+        let currentModalId = null;
+
+        function openAppointmentModal(id) {
+            const a = appointments.find(x => x.id === id);
+            if (!a) return;
+            currentModalId = id;
+
+            document.getElementById('modal-avatar').textContent = a.photo;
+            document.getElementById('modal-patient-name').textContent = a.patient;
+
+            const statusEl = document.getElementById('modal-status');
+            statusEl.textContent = getStatusLabel(a.status);
+            statusEl.className = 'tag-status ' + getStatusClass(a.status);
+
+            document.getElementById('modal-date').textContent = formatDate(a.date);
+            document.getElementById('modal-time').textContent = a.time;
+            document.getElementById('modal-modality').textContent = a.modality;
+            document.getElementById('modal-type').textContent = a.type;
+
+            const cancelBtn = document.getElementById('modal-cancel-btn');
+            if (a.status === 'confirmed' || a.status === 'pending') {
+                cancelBtn.style.display = 'inline-flex';
+            } else {
+                cancelBtn.style.display = 'none';
+            }
+
+            const overlay = document.getElementById('appointment-modal');
+            overlay.style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeAppointmentModal() {
+            document.getElementById('appointment-modal').style.display = 'none';
+            currentModalId = null;
+        }
+
+        function modalOpenAnnotations() {
+            const id = currentModalId;
+            closeAppointmentModal();
+            openAnnotations(id);
+        }
+
+        function modalCancelAppointment() {
+            const a = appointments.find(x => x.id === currentModalId);
+            if (!a) return;
+            closeAppointmentModal();
+            cancelAppointment(currentModalId);
+        }
+
+        let currentAnnotationId = null;
+        let previousFlowId = null;
+        let currentAnnotationsSorted = [];
+
+        function openAnnotations(id) {
+            const a = appointments.find(x => x.id === id);
+            if (!a) return;
+            currentAnnotationId = id;
+
+            const active = document.querySelector('.flow-container.active');
+            previousFlowId = active ? active.id : null;
+
+            document.getElementById('view-home').style.display = 'none';
+            document.querySelectorAll('.flow-container').forEach(f => f.classList.remove('active'));
+            document.getElementById('flow-anotacoes').classList.add('active');
+            document.getElementById('anotacoes-title').innerText = `Anotações - ${a.patient}`;
+            document.getElementById('annotation-text').value = '';
+
+            renderAnnotations(a.annotations);
+        }
+
+        function closeAnnotations() {
+            document.getElementById('flow-anotacoes').classList.remove('active');
+            if (previousFlowId && document.getElementById(previousFlowId)) {
+                document.getElementById(previousFlowId).classList.add('active');
+            } else {
+                document.getElementById('view-home').style.display = 'grid';
+            }
+            currentAnnotationId = null;
+            previousFlowId = null;
+        }
+
+        function renderAnnotations(list) {
+            const container = document.getElementById('annotations-history');
+            if (!list || list.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i data-lucide="file-text"></i>
+                        <p>Nenhuma anotação registrada ainda.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            currentAnnotationsSorted = [...list].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            container.innerHTML = currentAnnotationsSorted.map((note, index) => `
+                <div class="annotation-card">
+                    <div class="annotation-card-content">
+                        <div class="annotation-date">
+                            <i data-lucide="calendar"></i>
+                            ${new Date(note.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        </div>
+                        <div class="annotation-text">${note.text}</div>
+                    </div>
+                    <button class="annotation-more" onclick="openAnnotationExpand(${index})" title="Expandir">
+                        <i data-lucide="more-vertical"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function openNewNoteModal() {
+            const today = new Date().toISOString().slice(0, 10);
+            document.getElementById('new-note-date').value = today;
+            document.getElementById('new-note-text').value = '';
+            document.getElementById('new-note-modal').style.display = 'flex';
+        }
+
+        function closeNewNoteModal(force = false) {
+            const text = document.getElementById('new-note-text').value.trim();
+            if (!force && text) {
+                showModal(
+                    'Sair sem salvar?',
+                    'Você tem uma anotação não salva. Deseja sair mesmo assim?',
+                    () => {
+                        document.getElementById('new-note-modal').style.display = 'none';
+                        document.getElementById('new-note-text').value = '';
+                    },
+                    () => {}
+                );
+                return;
+            }
+            document.getElementById('new-note-modal').style.display = 'none';
+            document.getElementById('new-note-text').value = '';
+        }
+
+        function saveNewNote() {
+            const text = document.getElementById('new-note-text').value.trim();
+            if (!text) {
+                showModal('Aviso', 'Escreva algo antes de salvar.');
+                return;
+            }
+            const a = appointments.find(x => x.id === currentAnnotationId);
+            if (!a) return;
+
+            const date = document.getElementById('new-note-date').value;
+            a.annotations.push({ date, text });
+
+            renderAnnotations(a.annotations);
+            document.getElementById('new-note-modal').style.display = 'none';
+            document.getElementById('new-note-text').value = '';
+            showModal('Salvo', 'Anotação registrada com sucesso.');
+        }
+
+        function openAnnotationExpand(index) {
+            const note = currentAnnotationsSorted[index];
+            if (!note) return;
+
+            document.getElementById('expand-date').innerHTML = `
+                <i data-lucide="calendar"></i>
+                ${new Date(note.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+            `;
+            document.getElementById('expand-text').textContent = note.text;
+
+            const overlay = document.getElementById('annotation-expand');
+            overlay.style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeAnnotationExpand() {
+            document.getElementById('annotation-expand').style.display = 'none';
+        }
+
+        function viewDetails(id) {
+            const a = appointments.find(x => x.id === id);
+            if (a) {
+                showModal('Detalhes da Consulta',
+                    `Paciente: ${a.patient}\nData: ${formatDate(a.date)} às ${a.time}\nTipo: ${a.type}\nModalidade: ${a.modality}\nStatus: ${getStatusLabel(a.status)}`
+                );
+            }
+        }
     </script>
 </body>
 
