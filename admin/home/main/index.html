@@ -119,6 +119,12 @@
                 </div>
                 <div class="annotation-expand-body">
                     <div id="expand-text"></div>
+                    <textarea id="expand-textarea" class="expand-textarea" placeholder="Escreva aqui..."></textarea>
+                </div>
+                <div class="annotation-expand-footer">
+                    <button class="btn-expand-action btn-expand-delete" onclick="deleteAnnotation()">Deletar</button>
+                    <button class="btn-expand-action btn-expand-edit" onclick="enableAnnotationEdit()">Editar</button>
+                    <button class="btn-expand-action btn-expand-save" onclick="saveAnnotationEdit()" disabled>Salvar</button>
                 </div>
             </div>
         </div>
@@ -165,9 +171,28 @@
                     <i data-lucide="arrow-left"></i> Voltar
                 </button>
                 <h2 id="anotacoes-title">Anotações</h2>
+                <div class="sort-dropdown">
+                    <button class="sort-dropdown-btn" onclick="toggleSortDropdown()" id="sort-dropdown-btn">
+                        <i data-lucide="arrow-down-up"></i>
+                        <span id="sort-label">Mais recente</span>
+                    </button>
+                    <div class="sort-dropdown-menu" id="sort-dropdown-menu">
+                        <button class="sort-option active" data-sort="desc" onclick="setAnnotationSort('desc')">Mais recente</button>
+                        <button class="sort-option" data-sort="asc" onclick="setAnnotationSort('asc')">Mais antigo</button>
+                    </div>
+                </div>
             </div>
 
             <div class="annotations-history" id="annotations-history">
+            </div>
+
+            <div class="scroll-arrows" id="scroll-arrows">
+                <button class="scroll-arrow-btn" id="scroll-up-btn" onclick="scrollAnnotations('up')" title="Ver anteriores">
+                    <i data-lucide="chevron-up"></i>
+                </button>
+                <button class="scroll-arrow-btn" id="scroll-down-btn" onclick="scrollAnnotations('down')" title="Ver próximos">
+                    <i data-lucide="chevron-down"></i>
+                </button>
             </div>
 
             <button class="btn-new-note" onclick="openNewNoteModal()">Nova anotação +</button>
@@ -259,6 +284,7 @@
             if (flow === 'consultas') {
                 renderAppointments(appointments);
             }
+            window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
         function closeFlow() {
@@ -514,6 +540,11 @@
         let currentAnnotationId = null;
         let previousFlowId = null;
         let currentAnnotationsSorted = [];
+        let currentExpandAnnotationIndex = null;
+        let originalAnnotationText = '';
+        let annotationEditDirty = false;
+        let annotationSortOrder = 'desc';
+        let annotationPage = 0;
 
         function openAnnotations(id) {
             const a = appointments.find(x => x.id === id);
@@ -528,9 +559,37 @@
             document.getElementById('flow-anotacoes').classList.add('active');
             document.getElementById('anotacoes-title').innerText = `Anotações - ${a.patient}`;
             document.getElementById('annotation-text').value = '';
+            annotationPage = 0;
 
             renderAnnotations(a.annotations);
+            window.scrollTo({ top: 0, behavior: 'instant' });
         }
+
+        function toggleSortDropdown() {
+            document.getElementById('sort-dropdown-menu').classList.toggle('open');
+        }
+
+        function setAnnotationSort(order) {
+            annotationSortOrder = order;
+            document.getElementById('sort-label').innerText = order === 'desc' ? 'Mais recente' : 'Mais antigo';
+            document.querySelectorAll('.sort-option').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.sort === order);
+            });
+            document.getElementById('sort-dropdown-menu').classList.remove('open');
+
+            const a = appointments.find(x => x.id === currentAnnotationId);
+            if (a) {
+                renderAnnotations(a.annotations);
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.querySelector('.sort-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                const menu = document.getElementById('sort-dropdown-menu');
+                if (menu) menu.classList.remove('open');
+            }
+        });
 
         function closeAnnotations() {
             document.getElementById('flow-anotacoes').classList.remove('active');
@@ -543,6 +602,44 @@
             previousFlowId = null;
         }
 
+        function truncateAnnotationText(text, maxChars = 100) {
+            const lines = text.split('\n');
+            let firstLine = '';
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed) {
+                    firstLine = trimmed;
+                    break;
+                }
+            }
+            if (!firstLine) return text;
+            if (firstLine.length > maxChars) {
+                return firstLine.substring(0, maxChars) + '...';
+            }
+            return firstLine;
+        }
+
+        function scrollAnnotations(direction) {
+            if (!currentAnnotationsSorted.length) return;
+            const totalPages = Math.ceil(currentAnnotationsSorted.length / 3);
+            if (direction === 'up') {
+                annotationPage = Math.max(0, annotationPage - 1);
+            } else {
+                annotationPage = Math.min(totalPages - 1, annotationPage + 1);
+            }
+            renderAnnotations(currentAnnotationsSorted);
+        }
+
+        function updateScrollArrows() {
+            const upBtn = document.getElementById('scroll-up-btn');
+            const downBtn = document.getElementById('scroll-down-btn');
+            if (!upBtn || !downBtn) return;
+
+            const totalPages = Math.ceil(currentAnnotationsSorted.length / 3);
+            upBtn.disabled = annotationPage <= 0;
+            downBtn.disabled = annotationPage >= totalPages - 1 || totalPages <= 1;
+        }
+
         function renderAnnotations(list) {
             const container = document.getElementById('annotations-history');
             if (!list || list.length === 0) {
@@ -553,27 +650,36 @@
                     </div>
                 `;
                 lucide.createIcons();
+                updateScrollArrows();
                 return;
             }
 
-            currentAnnotationsSorted = [...list].sort((a, b) => new Date(b.date) - new Date(a.date));
+            currentAnnotationsSorted = [...list].sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return annotationSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            });
 
-            container.innerHTML = currentAnnotationsSorted.map((note, index) => `
+            const startIndex = annotationPage * 3;
+            const pageItems = currentAnnotationsSorted.slice(startIndex, startIndex + 3);
+
+            container.innerHTML = pageItems.map((note, index) => `
                 <div class="annotation-card">
                     <div class="annotation-card-content">
                         <div class="annotation-date">
                             <i data-lucide="calendar"></i>
                             ${new Date(note.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </div>
-                        <div class="annotation-text">${note.text}</div>
+                        <div class="annotation-text">${truncateAnnotationText(note.text)}</div>
                     </div>
-                    <button class="annotation-more" onclick="openAnnotationExpand(${index})" title="Expandir">
+                    <button class="annotation-more" onclick="openAnnotationExpand(${startIndex + index})" title="Expandir">
                         <i data-lucide="more-vertical"></i>
                     </button>
                 </div>
             `).join('');
 
             lucide.createIcons();
+            updateScrollArrows();
         }
 
         function openNewNoteModal() {
@@ -612,6 +718,7 @@
 
             const date = document.getElementById('new-note-date').value;
             a.annotations.push({ date, text });
+            annotationPage = 0;
 
             renderAnnotations(a.annotations);
             document.getElementById('new-note-modal').style.display = 'none';
@@ -623,18 +730,130 @@
             const note = currentAnnotationsSorted[index];
             if (!note) return;
 
+            currentExpandAnnotationIndex = index;
+            originalAnnotationText = note.text;
+            annotationEditDirty = false;
+
             document.getElementById('expand-date').innerHTML = `
                 <i data-lucide="calendar"></i>
                 ${new Date(note.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
             `;
-            document.getElementById('expand-text').textContent = note.text;
+
+            const textDiv = document.getElementById('expand-text');
+            const textarea = document.getElementById('expand-textarea');
+            const editBtn = document.querySelector('.btn-expand-edit');
+            const saveBtn = document.querySelector('.btn-expand-save');
+
+            textDiv.textContent = note.text;
+            textDiv.style.display = 'block';
+            textarea.style.display = 'none';
+            textarea.value = note.text;
+            editBtn.style.display = 'inline-flex';
+            saveBtn.disabled = true;
 
             const overlay = document.getElementById('annotation-expand');
             overlay.style.display = 'flex';
             lucide.createIcons();
         }
 
-        function closeAnnotationExpand() {
+        function enableAnnotationEdit() {
+            const textDiv = document.getElementById('expand-text');
+            const textarea = document.getElementById('expand-textarea');
+            const editBtn = document.querySelector('.btn-expand-edit');
+            const saveBtn = document.querySelector('.btn-expand-save');
+
+            textDiv.style.display = 'none';
+            textarea.style.display = 'block';
+            editBtn.style.display = 'none';
+            saveBtn.disabled = true;
+            annotationEditDirty = false;
+            textarea.focus();
+        }
+
+        function saveAnnotationEdit() {
+            const textarea = document.getElementById('expand-textarea');
+            const newText = textarea.value.trim();
+
+            if (!newText) {
+                showModal('Aviso', 'A anotação não pode ficar vazia.');
+                return;
+            }
+
+            if (newText === originalAnnotationText.trim()) {
+                annotationEditDirty = false;
+                closeAnnotationExpand(true);
+                showModal('Aviso', 'Nenhuma alteração detectada.');
+                return;
+            }
+
+            const note = currentAnnotationsSorted[currentExpandAnnotationIndex];
+            if (!note) return;
+
+            note.text = newText;
+
+            const a = appointments.find(x => x.id === currentAnnotationId);
+            if (a) {
+                renderAnnotations(a.annotations);
+            }
+
+            annotationEditDirty = false;
+            closeAnnotationExpand(true);
+            showModal('Salvo', 'Anotação atualizada com sucesso.');
+        }
+
+        function deleteAnnotation() {
+            const note = currentAnnotationsSorted[currentExpandAnnotationIndex];
+            if (!note) return;
+
+            showModal(
+                'Confirmar exclusão',
+                'Tem certeza que deseja deletar esta anotação?',
+                () => {
+                    const a = appointments.find(x => x.id === currentAnnotationId);
+                    if (!a) return;
+
+                    a.annotations = a.annotations.filter(n => n !== note);
+                    const totalPagesAfter = Math.ceil(a.annotations.length / 3);
+                    if (annotationPage >= totalPagesAfter && totalPagesAfter > 0) {
+                        annotationPage = totalPagesAfter - 1;
+                    }
+                    renderAnnotations(a.annotations);
+                    annotationEditDirty = false;
+                    closeAnnotationExpand(true);
+                    showModal('Deletado', 'Anotação removida com sucesso.');
+                },
+                () => {}
+            );
+        }
+
+        function updateSaveButtonState() {
+            const textarea = document.getElementById('expand-textarea');
+            const saveBtn = document.querySelector('.btn-expand-save');
+            const val = textarea.value.trim();
+            const hasChanges = val !== originalAnnotationText.trim();
+            annotationEditDirty = hasChanges;
+            saveBtn.disabled = !val || !hasChanges;
+        }
+
+        document.getElementById('expand-textarea').addEventListener('input', updateSaveButtonState);
+
+        function closeAnnotationExpand(force = false) {
+            const textarea = document.getElementById('expand-textarea');
+            const isEditing = textarea.style.display !== 'none' && textarea.style.display !== '';
+
+            if (!force && isEditing && annotationEditDirty) {
+                showModal(
+                    'Sair sem salvar?',
+                    'Você tem alterações não salvas. Deseja sair mesmo assim?',
+                    () => {
+                        annotationEditDirty = false;
+                        document.getElementById('annotation-expand').style.display = 'none';
+                    },
+                    () => {}
+                );
+                return;
+            }
+            annotationEditDirty = false;
             document.getElementById('annotation-expand').style.display = 'none';
         }
 
