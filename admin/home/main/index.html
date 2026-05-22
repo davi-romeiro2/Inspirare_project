@@ -152,9 +152,13 @@
                 <h3>Consultas marcadas</h3>
                 <span class="card-badge" id="badge-consultas">0</span>
             </div>
-            <div class="menu-card" onclick="alert('Em desenvolvimento: Lista de pacientes')">
+            <div class="menu-card" onclick="openFlow('pacientes')">
                 <div class="icon-box"><i data-lucide="users"></i></div>
                 <h3>Lista de pacientes</h3>
+            </div>
+            <div class="menu-card" onclick="openFlow('precos')">
+                <div class="icon-box"><i data-lucide="dollar-sign"></i></div>
+                <h3>Controle de preços</h3>
             </div>
             <div class="menu-card" onclick="alert('Em desenvolvimento: Meu perfil')">
                 <div class="icon-box"><i data-lucide="user"></i></div>
@@ -178,6 +182,62 @@
             </div>
 
             <div class="appointments-list" id="appointments-list">
+            </div>
+        </div>
+
+        <!-- Flow: Lista de Pacientes -->
+        <div id="flow-pacientes" class="flow-container">
+            <div class="appointments-header">
+                <button type="button" class="btn-back-small" onclick="closeFlow()">
+                    <i data-lucide="arrow-left"></i> Voltar
+                </button>
+                <h2>Lista de Pacientes</h2>
+                <button type="button" class="btn-send-global" onclick="openSendMessageModal()">
+                    <i data-lucide="send"></i>
+                    <span>Enviar</span>
+                </button>
+            </div>
+            <div class="patients-toolbar">
+                <div class="patients-search-wrapper">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="patients-search" class="patients-search" placeholder="Buscar por nome, telefone ou email..." oninput="filterPatients()">
+                </div>
+                <div class="sort-dropdown">
+                    <button class="sort-dropdown-btn" onclick="togglePatientsSortDropdown()" id="patients-sort-btn">
+                        <i data-lucide="arrow-down-up"></i>
+                        <span id="patients-sort-label">A-Z</span>
+                    </button>
+                    <div class="sort-dropdown-menu" id="patients-sort-menu">
+                        <button class="sort-option active" data-sort="az" onclick="setPatientsSort('az')">A-Z</button>
+                        <button class="sort-option" data-sort="za" onclick="setPatientsSort('za')">Z-A</button>
+                        <button class="sort-option" data-sort="recent" onclick="setPatientsSort('recent')">Mais recente</button>
+                        <button class="sort-option" data-sort="oldest" onclick="setPatientsSort('oldest')">Mais antigos</button>
+                    </div>
+                </div>
+            </div>
+            <div class="patients-list" id="patients-list"></div>
+            <div class="scroll-arrows" id="patients-scroll-arrows">
+                <button class="scroll-arrow-btn" id="patients-scroll-up-btn" onclick="scrollPatients('up')" title="Ver anteriores">
+                    <i data-lucide="chevron-up"></i>
+                </button>
+                <button class="scroll-arrow-btn" id="patients-scroll-down-btn" onclick="scrollPatients('down')" title="Ver próximos">
+                    <i data-lucide="chevron-down"></i>
+                </button>
+            </div>
+            <button class="btn-new-note" onclick="openRegisterUserModal()">Cadastrar usuario +</button>
+        </div>
+
+        <!-- Flow: Controle de Preços -->
+        <div id="flow-precos" class="flow-container">
+            <div class="appointments-header">
+                <button type="button" class="btn-back-small" onclick="closeFlow()">
+                    <i data-lucide="arrow-left"></i> Voltar
+                </button>
+                <h2>Controle de Preços</h2>
+            </div>
+            <div class="empty-state">
+                <i data-lucide="dollar-sign"></i>
+                <p>Funcionalidade em desenvolvimento.</p>
             </div>
         </div>
 
@@ -213,6 +273,108 @@
             </div>
 
             <button class="btn-new-note" onclick="openNewNoteModal()">Nova anotação +</button>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Paciente -->
+    <div id="patient-edit-modal" class="patient-edit-overlay">
+        <div class="patient-edit-modal">
+            <div class="patient-edit-topbar">
+                <div class="patient-edit-title"><span>Detalhes do Paciente</span></div>
+                <button class="patient-edit-close" onclick="closePatientEditModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="patient-edit-body">
+                <div class="patient-edit-field">
+                    <label>Nome</label>
+                    <input type="text" id="patient-edit-name">
+                </div>
+                <div class="patient-edit-field">
+                    <label>Email</label>
+                    <input type="email" id="patient-edit-email">
+                </div>
+                <div class="patient-edit-field">
+                    <label>Telefone</label>
+                    <input type="text" id="patient-edit-phone">
+                </div>
+            </div>
+            <div class="patient-edit-footer">
+                <button class="btn-patient-edit btn-patient-delete" onclick="deletePatient()">Deletar</button>
+                <button class="btn-patient-edit btn-patient-edit-action" onclick="enablePatientEditMode()">Editar</button>
+                <button class="btn-patient-edit btn-patient-save" onclick="savePatientEdit()" disabled>Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Cadastrar Usuario -->
+    <div id="register-user-modal" class="register-user-overlay">
+        <div class="register-user-modal">
+            <div class="register-user-topbar">
+                <div class="register-user-title"><span>Cadastrar Usuario</span></div>
+                <button class="register-user-close" onclick="closeRegisterUserModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="register-user-body">
+                <div class="register-user-field">
+                    <label>Nome</label>
+                    <input type="text" id="register-user-name">
+                </div>
+                <div class="register-user-field">
+                    <label>Email</label>
+                    <input type="email" id="register-user-email">
+                </div>
+                <div class="register-user-field">
+                    <label>Telefone</label>
+                    <input type="text" id="register-user-phone">
+                </div>
+                <div class="register-user-field">
+                    <label>Tipo</label>
+                    <select id="register-user-type">
+                        <option value="Paciente">Paciente</option>
+                        <option value="Psicologo">Psicologo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="register-user-footer">
+                <button class="btn-register-user btn-register-save" onclick="saveNewUser()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Enviar Mensagem -->
+    <div id="send-message-modal" class="send-message-overlay">
+        <div class="send-message-modal">
+            <div class="send-message-topbar">
+                <div class="send-message-title">
+                    <i data-lucide="send"></i>
+                    <span>Enviar mensagem</span>
+                </div>
+                <button class="send-message-close" onclick="closeSendMessageModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="send-message-body">
+                <div class="send-message-channels">
+                    <label class="channel-checkbox">
+                        <input type="checkbox" id="channel-whatsapp">
+                        <span class="checkmark"></span>
+                        <span>WhatsApp</span>
+                    </label>
+                    <label class="channel-checkbox">
+                        <input type="checkbox" id="channel-email">
+                        <span class="checkmark"></span>
+                        <span>Email</span>
+                    </label>
+                </div>
+                <textarea id="send-message-text" class="send-message-textarea" placeholder="Escreva sua mensagem aqui..."></textarea>
+            </div>
+
+            <div class="send-message-footer">
+                <button class="send-message-btn" onclick="sendGlobalMessage()">Enviar mensagem</button>
+            </div>
         </div>
     </div>
 
@@ -296,10 +458,15 @@
            ========================= */
         function openFlow(flow) {
             document.getElementById('view-home').style.display = 'none';
+            document.querySelectorAll('.flow-container').forEach(f => f.classList.remove('active'));
             const container = document.getElementById('flow-' + flow);
             if (container) container.classList.add('active');
             if (flow === 'consultas') {
                 renderAppointments(appointments);
+            }
+            if (flow === 'pacientes') {
+                patientsPage = 0;
+                renderPatients();
             }
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
@@ -412,6 +579,17 @@
             }
         ];
 
+        const patients = [
+            { id: 1, name: 'Ana Clara Mendes', email: 'ana.mendes@email.com', phone: '(11) 98765-4321', createdAt: '2025-12-10' },
+            { id: 2, name: 'Bruno Oliveira', email: 'bruno.oliveira@email.com', phone: '(11) 91234-5678', createdAt: '2026-01-15' },
+            { id: 3, name: 'Carla Souza', email: 'carla.souza@email.com', phone: '(11) 99876-5432', createdAt: '2025-11-20' },
+            { id: 4, name: 'Diego Ferreira', email: 'diego.ferreira@email.com', phone: '(11) 96543-2109', createdAt: '2026-03-05' },
+            { id: 5, name: 'Elisa Rocha', email: 'elisa.rocha@email.com', phone: '(11) 93456-7890', createdAt: '2026-02-18' },
+            { id: 6, name: 'Felipe Costa', email: 'felipe.costa@email.com', phone: '(11) 94567-8901', createdAt: '2025-10-08' },
+            { id: 7, name: 'Gabriela Lima', email: 'gabriela.lima@email.com', phone: '(11) 95678-9012', createdAt: '2026-04-12' },
+            { id: 8, name: 'Henrique Dias', email: 'henrique.dias@email.com', phone: '(11) 96789-0123', createdAt: '2025-09-22' }
+        ];
+
         function formatDate(dateStr) {
             const d = new Date(dateStr + 'T00:00:00');
             const today = new Date();
@@ -436,6 +614,114 @@
 
         function getStatusClass(status) {
             return 'status-' + status;
+        }
+
+        let patientsSortOrder = 'az';
+        let patientsSearchTerm = '';
+        let patientsPage = 0;
+        let currentPatientsFiltered = [];
+
+        function togglePatientsSortDropdown() {
+            document.getElementById('patients-sort-menu').classList.toggle('open');
+        }
+
+        function setPatientsSort(order) {
+            patientsSortOrder = order;
+            patientsPage = 0;
+            const labels = { az: 'A-Z', za: 'Z-A', recent: 'Mais recente', oldest: 'Mais antigos' };
+            document.getElementById('patients-sort-label').innerText = labels[order] || 'A-Z';
+            document.querySelectorAll('#patients-sort-menu .sort-option').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.sort === order);
+            });
+            document.getElementById('patients-sort-menu').classList.remove('open');
+            renderPatients();
+        }
+
+        function filterPatients() {
+            patientsSearchTerm = document.getElementById('patients-search').value.trim().toLowerCase();
+            patientsPage = 0;
+            renderPatients();
+        }
+
+        function getSortedAndFilteredPatients() {
+            let list = patients.filter(p => {
+                if (!patientsSearchTerm) return true;
+                const term = patientsSearchTerm;
+                return p.name.toLowerCase().includes(term) ||
+                       p.email.toLowerCase().includes(term) ||
+                       p.phone.toLowerCase().includes(term);
+            });
+
+            list.sort((a, b) => {
+                if (patientsSortOrder === 'az') return a.name.localeCompare(b.name);
+                if (patientsSortOrder === 'za') return b.name.localeCompare(a.name);
+                if (patientsSortOrder === 'recent') return new Date(b.createdAt) - new Date(a.createdAt);
+                if (patientsSortOrder === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+                return 0;
+            });
+
+            currentPatientsFiltered = list;
+            return list;
+        }
+
+        function scrollPatients(direction) {
+            if (!currentPatientsFiltered.length) return;
+            const totalPages = Math.ceil(currentPatientsFiltered.length / 3);
+            if (direction === 'up') {
+                patientsPage = Math.max(0, patientsPage - 1);
+            } else {
+                patientsPage = Math.min(totalPages - 1, patientsPage + 1);
+            }
+            renderPatients();
+        }
+
+        function updatePatientsScrollArrows() {
+            const upBtn = document.getElementById('patients-scroll-up-btn');
+            const downBtn = document.getElementById('patients-scroll-down-btn');
+            if (!upBtn || !downBtn) return;
+
+            const totalPages = Math.ceil(currentPatientsFiltered.length / 3);
+            upBtn.disabled = patientsPage <= 0;
+            downBtn.disabled = patientsPage >= totalPages - 1 || totalPages <= 1;
+        }
+
+        function renderPatients() {
+            const container = document.getElementById('patients-list');
+            const list = getSortedAndFilteredPatients();
+
+            if (!list || list.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i data-lucide="users"></i>
+                        <p>Nenhum paciente encontrado.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                updatePatientsScrollArrows();
+                return;
+            }
+
+            const startIndex = patientsPage * 3;
+            const pageItems = list.slice(startIndex, startIndex + 3);
+
+            container.innerHTML = pageItems.map((p) => `
+                <div class="patient-row">
+                    <div class="patient-avatar">${p.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}</div>
+                    <div class="patient-info">
+                        <h4>${p.name}</h4>
+                        <div class="patient-meta">
+                            <span><i data-lucide="mail"></i> ${p.email}</span>
+                            <span><i data-lucide="phone"></i> ${p.phone}</span>
+                        </div>
+                    </div>
+                    <button class="patient-more" onclick="openPatientEditModal(${p.id})" title="Mais opções">
+                        <i data-lucide="more-vertical"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+            updatePatientsScrollArrows();
         }
 
         function renderAppointments(list) {
@@ -639,6 +925,11 @@
             const dropdown = document.querySelector('.sort-dropdown');
             if (dropdown && !dropdown.contains(e.target)) {
                 const menu = document.getElementById('sort-dropdown-menu');
+                if (menu) menu.classList.remove('open');
+            }
+            const patientsDropdown = document.querySelector('#flow-pacientes .sort-dropdown');
+            if (patientsDropdown && !patientsDropdown.contains(e.target)) {
+                const menu = document.getElementById('patients-sort-menu');
                 if (menu) menu.classList.remove('open');
             }
         });
@@ -888,6 +1179,217 @@
         }
 
         document.getElementById('expand-textarea').addEventListener('input', updateSaveButtonState);
+
+        let currentEditPatientId = null;
+        let originalPatientData = {};
+
+        function openPatientEditModal(id) {
+            const p = patients.find(x => x.id === id);
+            if (!p) return;
+            currentEditPatientId = id;
+            originalPatientData = { name: p.name, email: p.email, phone: p.phone };
+
+            document.getElementById('patient-edit-name').value = p.name;
+            document.getElementById('patient-edit-email').value = p.email;
+            document.getElementById('patient-edit-phone').value = p.phone;
+
+            setPatientInputsDisabled(true);
+            document.querySelector('.btn-patient-edit-action').style.display = 'inline-flex';
+            document.querySelector('.btn-patient-save').disabled = true;
+
+            document.getElementById('patient-edit-modal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function setPatientInputsDisabled(disabled) {
+            document.getElementById('patient-edit-name').disabled = disabled;
+            document.getElementById('patient-edit-email').disabled = disabled;
+            document.getElementById('patient-edit-phone').disabled = disabled;
+        }
+
+        function enablePatientEditMode() {
+            setPatientInputsDisabled(false);
+            document.querySelector('.btn-patient-edit-action').style.display = 'none';
+            document.querySelector('.btn-patient-save').disabled = true;
+            document.getElementById('patient-edit-name').focus();
+        }
+
+        function closePatientEditModal(force = false) {
+            const name = document.getElementById('patient-edit-name').value.trim();
+            const email = document.getElementById('patient-edit-email').value.trim();
+            const phone = document.getElementById('patient-edit-phone').value.trim();
+            const hasChanges = name !== originalPatientData.name || email !== originalPatientData.email || phone !== originalPatientData.phone;
+
+            if (!force && hasChanges && !document.getElementById('patient-edit-name').disabled) {
+                showModal(
+                    'Sair sem salvar?',
+                    'Você tem alterações não salvas. Deseja sair mesmo assim?',
+                    () => {
+                        document.getElementById('patient-edit-modal').style.display = 'none';
+                    },
+                    () => {}
+                );
+                return;
+            }
+            document.getElementById('patient-edit-modal').style.display = 'none';
+        }
+
+        function savePatientEdit() {
+            const name = document.getElementById('patient-edit-name').value.trim();
+            const email = document.getElementById('patient-edit-email').value.trim();
+            const phone = document.getElementById('patient-edit-phone').value.trim();
+
+            if (!name || !email || !phone) {
+                showModal('Aviso', 'Preencha todos os campos.');
+                return;
+            }
+
+            const p = patients.find(x => x.id === currentEditPatientId);
+            if (!p) return;
+
+            p.name = name;
+            p.email = email;
+            p.phone = phone;
+
+            renderPatients();
+            closePatientEditModal(true);
+            showModal('Salvo', 'Dados do paciente atualizados com sucesso.');
+        }
+
+        function deletePatient() {
+            const p = patients.find(x => x.id === currentEditPatientId);
+            if (!p) return;
+
+            showModal(
+                'Confirmar exclusão',
+                `Tem certeza que deseja deletar ${p.name}?`,
+                () => {
+                    const index = patients.findIndex(x => x.id === currentEditPatientId);
+                    if (index > -1) {
+                        patients.splice(index, 1);
+                        const totalPagesAfter = Math.ceil(currentPatientsFiltered.length / 3);
+                        if (patientsPage >= totalPagesAfter && totalPagesAfter > 0) {
+                            patientsPage = totalPagesAfter - 1;
+                        }
+                        renderPatients();
+                    }
+                    closePatientEditModal(true);
+                    showModal('Deletado', 'Paciente removido com sucesso.');
+                },
+                () => {}
+            );
+        }
+
+        function updatePatientSaveButton() {
+            const name = document.getElementById('patient-edit-name').value.trim();
+            const email = document.getElementById('patient-edit-email').value.trim();
+            const phone = document.getElementById('patient-edit-phone').value.trim();
+            const hasChanges = name !== originalPatientData.name || email !== originalPatientData.email || phone !== originalPatientData.phone;
+            const allFilled = name && email && phone;
+            document.querySelector('.btn-patient-save').disabled = !hasChanges || !allFilled;
+        }
+
+        document.getElementById('patient-edit-name').addEventListener('input', updatePatientSaveButton);
+        document.getElementById('patient-edit-email').addEventListener('input', updatePatientSaveButton);
+        document.getElementById('patient-edit-phone').addEventListener('input', updatePatientSaveButton);
+
+        function openRegisterUserModal() {
+            document.getElementById('register-user-name').value = '';
+            document.getElementById('register-user-email').value = '';
+            document.getElementById('register-user-phone').value = '';
+            document.getElementById('register-user-modal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeRegisterUserModal() {
+            document.getElementById('register-user-modal').style.display = 'none';
+        }
+
+        function saveNewUser() {
+            const name = document.getElementById('register-user-name').value.trim();
+            const email = document.getElementById('register-user-email').value.trim();
+            const phone = document.getElementById('register-user-phone').value.trim();
+            const type = document.getElementById('register-user-type').value;
+
+            if (!name || !email || !phone) {
+                showModal('Aviso', 'Preencha todos os campos.');
+                return;
+            }
+
+            const newId = Math.max(...patients.map(p => p.id), 0) + 1;
+            patients.push({
+                id: newId,
+                name,
+                email,
+                phone,
+                type,
+                createdAt: new Date().toISOString().split('T')[0]
+            });
+
+            renderPatients();
+            closeRegisterUserModal();
+            showModal('Sucesso', 'Usuario cadastrado. Redirecionando para criacao de senha...', () => {
+                window.location.href = '../../../forgot-password/index.html?user=' + encodeURIComponent(email) + '&create=true';
+            });
+        }
+
+        let sendMessageDirty = false;
+
+        function openSendMessageModal() {
+            document.getElementById('send-message-modal').style.display = 'flex';
+            document.getElementById('channel-whatsapp').checked = false;
+            document.getElementById('channel-email').checked = false;
+            document.getElementById('send-message-text').value = '';
+            sendMessageDirty = false;
+            lucide.createIcons();
+        }
+
+        function closeSendMessageModal(force = false) {
+            const textarea = document.getElementById('send-message-text');
+            const val = textarea.value.trim();
+
+            if (!force && val) {
+                showModal(
+                    'Descartar mensagem?',
+                    'Tem certeza que deseja descartar a mensagem?',
+                    () => {
+                        document.getElementById('send-message-modal').style.display = 'none';
+                        sendMessageDirty = false;
+                    },
+                    () => {}
+                );
+                return;
+            }
+            document.getElementById('send-message-modal').style.display = 'none';
+            sendMessageDirty = false;
+        }
+
+        document.getElementById('send-message-text').addEventListener('input', function() {
+            sendMessageDirty = this.value.trim().length > 0;
+        });
+
+        function sendGlobalMessage() {
+            const whatsapp = document.getElementById('channel-whatsapp').checked;
+            const email = document.getElementById('channel-email').checked;
+            const text = document.getElementById('send-message-text').value.trim();
+
+            if (!whatsapp && !email) {
+                showModal('Aviso', 'Selecione pelo menos um canal de envio (WhatsApp ou Email).');
+                return;
+            }
+
+            if (!text) {
+                showModal('Aviso', 'Escreva uma mensagem antes de enviar.');
+                return;
+            }
+
+            const channels = [];
+            if (whatsapp) channels.push('WhatsApp');
+            if (email) channels.push('Email');
+
+            closeSendMessageModal(true);
+            showModal('Enviado', `Mensagem enviada com sucesso via ${channels.join(' e ')}.`);
+        }
 
         function closeAnnotationExpand(force = false) {
             const textarea = document.getElementById('expand-textarea');
