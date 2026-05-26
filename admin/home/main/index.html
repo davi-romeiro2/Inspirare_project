@@ -331,7 +331,84 @@
                     </div>
                     <button class="btn-save-price" onclick="savePrice('plano')">Salvar alterações</button>
                 </div>
+
+                <!-- Paginação dos cards customizados -->
+                <div class="price-pagination" id="custom-price-pagination" style="display:none;">
+                    <button class="btn-page" id="btn-prev-custom-price" onclick="changeCustomPricePage(-1)"
+                        disabled="disabled">Anterior</button>
+                    <span class="page-indicator" id="custom-price-page-indicator">1 / 1</span>
+                    <button class="btn-page" id="btn-next-custom-price" onclick="changeCustomPricePage(1)">Próxima</button>
+                </div>
+
+                <!-- Adicionar Novo Plano -->
+                <div class="price-card price-card-add" onclick="openNewPlanModal()">
+                    <div class="price-card-add-content">
+                        <div class="price-add-icon">
+                            <i data-lucide="plus"></i>
+                        </div>
+                        <span>Adicionar Novo Plano</span>
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <!-- Modal: Novo Plano -->
+        <div id="new-plan-modal" class="new-plan-overlay" style="display:none;">
+            <div class="new-plan-modal">
+                <button class="modal-close" onclick="closeNewPlanModal()"><i data-lucide="x"></i></button>
+                <h3>Novo Plano</h3>
+                <p class="preview-hint">Edite o card abaixo diretamente</p>
+
+                <!-- Card editável (prévia + edição inline) -->
+                <div class="price-card price-card-preview" id="new-plan-preview-card">
+                    <div class="price-card-header">
+                        <button class="price-icon icon-picker-btn" onclick="openIconPicker(event)" title="Escolher ícone">
+                            <i data-lucide="plus" id="preview-icon"></i>
+                        </button>
+                        <h3 contenteditable="true" id="preview-nome">Novo Plano</h3>
+                    </div>
+                    <div class="price-current">
+                        <span class="price-currency">R$</span>
+                        <input type="number" class="price-value-input" id="preview-preco" value="0" min="0" step="0.01">
+                    </div>
+                    <div class="price-fields-preview">
+                        <div class="price-field">
+                            <label>Consultas por mês</label>
+                            <input type="number" id="preview-consultas" value="1" min="1" step="1">
+                        </div>
+                        <div class="price-per-session" id="preview-por-consulta">R$ 0,00 / consulta</div>
+                        <div class="discount-toggle">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="preview-desconto-ativo" onchange="togglePreviewDiscount()">
+                                <span>Aplicar desconto por tempo limitado</span>
+                            </label>
+                        </div>
+                        <div class="discount-fields" id="preview-discount-fields" style="display:none;">
+                            <div class="price-field">
+                                <label>% de desconto</label>
+                                <input type="number" id="preview-desconto" value="0" min="0" max="100" step="1">
+                            </div>
+                            <div class="price-field-row">
+                                <div class="price-field">
+                                    <label>Início</label>
+                                    <input type="date" id="preview-desconto-inicio">
+                                </div>
+                                <div class="price-field">
+                                    <label>Fim</label>
+                                    <input type="date" id="preview-desconto-fim">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-save-price" onclick="saveNewPlan()">Criar Plano</button>
+            </div>
+        </div>
+
+        <!-- Icon Picker Popup -->
+        <div id="icon-picker-popup" class="icon-picker-popup" style="display:none;">
+            <div class="icon-picker-grid" id="icon-picker-grid"></div>
         </div>
 
         <!-- Flow: Anotações do Paciente -->
@@ -1751,7 +1828,8 @@
             savePrices(data);
             updatePriceDisplay(type);
             if (type === 'avulsa') updateAvulsaPerSession();
-            if (type === 'plano') updatePlanoPerSession();
+            else if (type === 'plano') updatePlanoPerSession();
+            else updateCustomPerSession(type);
             showModal('Salvo', 'Configurações de preço atualizadas com sucesso.');
         }
 
@@ -1770,6 +1848,302 @@
             const perSession = config.consultationsPerMonth > 0 ? current / config.consultationsPerMonth : 0;
             document.getElementById('plano-por-consulta').textContent = `R$ ${formatCurrency(perSession)} / consulta`;
         }
+
+        function updateCustomPerSession(type) {
+            const data = loadPrices();
+            const config = data[type];
+            if (!config) return;
+            const current = calculatePrice(config.basePrice, config);
+            const perSession = config.consultationsPerMonth > 0 ? current / config.consultationsPerMonth : 0;
+            const el = document.getElementById(type + '-por-consulta');
+            if (el) el.textContent = `R$ ${formatCurrency(perSession)} / consulta`;
+        }
+
+        /* =========================
+           NOVO PLANO (MODAL)
+           ========================= */
+        function openNewPlanModal() {
+            document.getElementById('new-plan-modal').style.display = 'flex';
+            lucide.createIcons();
+            updatePreviewCalculations();
+        }
+
+        function closeNewPlanModal() {
+            document.getElementById('new-plan-modal').style.display = 'none';
+            closeIconPicker();
+            clearNewPlanForm();
+        }
+
+        function clearNewPlanForm() {
+            document.getElementById('preview-nome').textContent = 'Novo Plano';
+            document.getElementById('preview-icon').setAttribute('data-lucide', 'plus');
+            document.getElementById('preview-preco').value = '0';
+            document.getElementById('preview-consultas').value = '1';
+            document.getElementById('preview-desconto-ativo').checked = false;
+            document.getElementById('preview-desconto').value = '0';
+            document.getElementById('preview-desconto-inicio').value = '';
+            document.getElementById('preview-desconto-fim').value = '';
+            togglePreviewDiscount();
+            updatePreviewCalculations();
+        }
+
+        function togglePreviewDiscount() {
+            const checked = document.getElementById('preview-desconto-ativo').checked;
+            document.getElementById('preview-discount-fields').style.display = checked ? 'flex' : 'none';
+            updatePreviewCalculations();
+        }
+
+        function updatePreviewCalculations() {
+            const preco = parseFloat(document.getElementById('preview-preco').value) || 0;
+            const consultas = parseInt(document.getElementById('preview-consultas').value) || 1;
+            const descontoAtivo = document.getElementById('preview-desconto-ativo').checked;
+            const descontoPercent = parseFloat(document.getElementById('preview-desconto').value) || 0;
+            const inicio = document.getElementById('preview-desconto-inicio').value;
+            const fim = document.getElementById('preview-desconto-fim').value;
+
+            let precoFinal = preco;
+            if (descontoAtivo && descontoPercent > 0) {
+                const hoje = getTodayStr();
+                let dentroPeriodo = true;
+                if (inicio && hoje < inicio) dentroPeriodo = false;
+                if (fim && hoje > fim) dentroPeriodo = false;
+                if (dentroPeriodo) {
+                    precoFinal = preco * (1 - descontoPercent / 100);
+                }
+            }
+
+            const porConsulta = consultas > 0 ? precoFinal / consultas : 0;
+            document.getElementById('preview-por-consulta').textContent = `R$ ${formatCurrency(porConsulta)} / consulta`;
+        }
+
+        const AVAILABLE_ICONS = [
+            'calendar-days', 'puzzle', 'stethoscope', 'heart', 'heart-pulse',
+            'activity', 'flower-2', 'star', 'coffee', 'hand-heart'
+        ];
+        let selectedIcon = 'plus';
+
+        function openIconPicker(event) {
+            event.stopPropagation();
+            const popup = document.getElementById('icon-picker-popup');
+            const grid = document.getElementById('icon-picker-grid');
+            const btn = event.currentTarget;
+
+            grid.innerHTML = '';
+            AVAILABLE_ICONS.forEach(iconName => {
+                const item = document.createElement('div');
+                item.className = 'icon-picker-item';
+                item.innerHTML = `<i data-lucide="${iconName}"></i>`;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    selectIcon(iconName);
+                };
+                grid.appendChild(item);
+            });
+
+            const rect = btn.getBoundingClientRect();
+            popup.style.left = (rect.left + rect.width / 2 - 160) + 'px';
+            popup.style.top = (rect.bottom + 8) + 'px';
+            popup.style.display = 'block';
+            lucide.createIcons();
+
+            document.addEventListener('click', closeIconPickerOnClickOutside, { once: true });
+        }
+
+        function closeIconPickerOnClickOutside(e) {
+            const popup = document.getElementById('icon-picker-popup');
+            if (popup && !popup.contains(e.target)) {
+                closeIconPicker();
+            }
+        }
+
+        function closeIconPicker() {
+            const popup = document.getElementById('icon-picker-popup');
+            if (popup) popup.style.display = 'none';
+        }
+
+        function selectIcon(iconName) {
+            selectedIcon = iconName;
+            const iconEl = document.getElementById('preview-icon');
+            iconEl.setAttribute('data-lucide', iconName);
+            lucide.createIcons();
+            closeIconPicker();
+        }
+
+        function saveNewPlan() {
+            const nome = document.getElementById('preview-nome').textContent.trim();
+            if (!nome || nome === 'Novo Plano') {
+                showModal('Aviso', 'Informe o nome do plano.');
+                return;
+            }
+
+            const preco = parseFloat(document.getElementById('preview-preco').value);
+            if (isNaN(preco) || preco < 0) {
+                showModal('Aviso', 'Informe um preço válido.');
+                return;
+            }
+
+            const consultas = parseInt(document.getElementById('preview-consultas').value);
+            if (isNaN(consultas) || consultas < 1) {
+                showModal('Aviso', 'Informe uma quantidade válida de consultas por mês.');
+                return;
+            }
+
+            const descontoAtivo = document.getElementById('preview-desconto-ativo').checked;
+            const descontoPercent = parseFloat(document.getElementById('preview-desconto').value) || 0;
+            const inicio = document.getElementById('preview-desconto-inicio').value;
+            const fim = document.getElementById('preview-desconto-fim').value;
+
+            const data = loadPrices();
+            const planId = 'custom_' + Date.now();
+
+            data[planId] = {
+                basePrice: preco,
+                consultationsPerMonth: consultas,
+                discountActive: descontoAtivo,
+                discountPercent: descontoPercent,
+                discountStart: inicio,
+                discountEnd: fim,
+                name: nome,
+                icon: selectedIcon
+            };
+
+            savePrices(data);
+            customPriceCurrentPage = 0;
+            renderCustomPriceCards();
+            closeNewPlanModal();
+            showModal('Sucesso', `Plano "${nome}" criado com sucesso!`);
+        }
+
+        let customPriceCurrentPage = 0;
+        const customPricesPerPage = 2;
+
+        function renderCustomPriceCards() {
+            const data = loadPrices();
+            const grid = document.querySelector('.prices-grid');
+
+            // Remove cards customizados antigos e paginação
+            grid.querySelectorAll('.price-card-custom').forEach(c => c.remove());
+
+            const paginationEl = document.getElementById('custom-price-pagination');
+            const addCard = grid.querySelector('.price-card-add');
+
+            // Coleta apenas os planos customizados
+            const customKeys = Object.keys(data).filter(key =>
+                key !== 'v' && key !== 'avulsa' && key !== 'plano'
+            );
+
+            if (customKeys.length === 0) {
+                paginationEl.style.display = 'none';
+                return;
+            }
+
+            const totalPages = Math.ceil(customKeys.length / customPricesPerPage);
+            if (customPriceCurrentPage >= totalPages) customPriceCurrentPage = totalPages - 1;
+            if (customPriceCurrentPage < 0) customPriceCurrentPage = 0;
+
+            const start = customPriceCurrentPage * customPricesPerPage;
+            const end = start + customPricesPerPage;
+            const pageKeys = customKeys.slice(start, end);
+
+            pageKeys.forEach(key => {
+                const plan = data[key];
+                const card = createPriceCard(key, plan);
+                grid.insertBefore(card, paginationEl);
+            });
+
+            // Atualiza controles de paginação
+            if (customKeys.length > customPricesPerPage) {
+                paginationEl.style.display = 'flex';
+                document.getElementById('custom-price-page-indicator').textContent = `${customPriceCurrentPage + 1} / ${totalPages}`;
+                document.getElementById('btn-prev-custom-price').disabled = customPriceCurrentPage === 0;
+                document.getElementById('btn-next-custom-price').disabled = customPriceCurrentPage >= totalPages - 1;
+            } else {
+                paginationEl.style.display = 'none';
+            }
+
+            lucide.createIcons();
+        }
+
+        function changeCustomPricePage(direction) {
+            const data = loadPrices();
+            const customKeys = Object.keys(data).filter(key =>
+                key !== 'v' && key !== 'avulsa' && key !== 'plano'
+            );
+            const totalPages = Math.ceil(customKeys.length / customPricesPerPage);
+            const newPage = customPriceCurrentPage + direction;
+            if (newPage >= 0 && newPage < totalPages) {
+                customPriceCurrentPage = newPage;
+                renderCustomPriceCards();
+            }
+        }
+
+        function createPriceCard(key, plan) {
+            const card = document.createElement('div');
+            card.className = 'price-card price-card-custom';
+            card.dataset.planId = key;
+
+            const current = calculatePrice(plan.basePrice, plan);
+            let displayHtml = `<span class="price-currency">R$</span><span class="price-value">${formatCurrency(current)}</span>`;
+            if (isDiscountActive(plan)) {
+                displayHtml += `<span class="price-original">R$ ${formatCurrency(plan.basePrice)}</span>`;
+                displayHtml += `<span class="price-discount-tag">${plan.discountPercent}% OFF</span>`;
+            }
+
+            const perSession = plan.consultationsPerMonth > 0 ? current / plan.consultationsPerMonth : 0;
+
+            card.innerHTML = `
+                <div class="price-card-header">
+                    <div class="price-icon"><i data-lucide="${plan.icon || 'plus'}"></i></div>
+                    <h3>${plan.name || 'Plano Personalizado'}</h3>
+                </div>
+                <div class="price-current" id="${key}-display">
+                    ${displayHtml}
+                </div>
+                <div class="price-fields">
+                    <div class="price-field">
+                        <label>Preço fixo (R$)</label>
+                        <input type="number" id="${key}-preco" value="${plan.basePrice.toFixed(2)}" min="0" step="0.01">
+                    </div>
+                    <div class="price-field">
+                        <label>Consultas por mês</label>
+                        <input type="number" id="${key}-consultas" value="${plan.consultationsPerMonth}" min="1" step="1">
+                    </div>
+                    <div class="price-per-session" id="${key}-por-consulta">R$ ${formatCurrency(perSession)} / consulta</div>
+                    <div class="discount-toggle">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="${key}-desconto-ativo" onchange="toggleDiscount('${key}')" ${plan.discountActive ? 'checked' : ''}>
+                            <span>Aplicar desconto por tempo limitado</span>
+                        </label>
+                    </div>
+                    <div class="discount-fields" id="${key}-discount-fields" style="display:${plan.discountActive ? 'flex' : 'none'};">
+                        <div class="price-field">
+                            <label>% de desconto</label>
+                            <input type="number" id="${key}-desconto" value="${plan.discountPercent || 0}" min="0" max="100" step="1">
+                        </div>
+                        <div class="price-field-row">
+                            <div class="price-field">
+                                <label>Início</label>
+                                <input type="date" id="${key}-desconto-inicio" value="${plan.discountStart || ''}">
+                            </div>
+                            <div class="price-field">
+                                <label>Fim</label>
+                                <input type="date" id="${key}-desconto-fim" value="${plan.discountEnd || ''}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-save-price" onclick="savePrice('${key}')">Salvar alterações</button>
+            `;
+
+            return card;
+        }
+
+        // Atualiza cálculos do preview em tempo real
+        ['preview-preco', 'preview-consultas', 'preview-desconto', 'preview-desconto-inicio', 'preview-desconto-fim'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updatePreviewCalculations);
+        });
+        document.getElementById('preview-desconto-ativo').addEventListener('change', updatePreviewCalculations);
 
         function initPrices() {
             const data = loadPrices();
@@ -1793,6 +2167,8 @@
             toggleDiscount('plano');
             updatePriceDisplay('plano');
             updatePlanoPerSession();
+
+            renderCustomPriceCards();
         }
 
         initPrices();
