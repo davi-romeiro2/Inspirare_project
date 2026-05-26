@@ -212,6 +212,10 @@
                         <button class="sort-option" data-sort="za" onclick="setPatientsSort('za')">Z-A</button>
                         <button class="sort-option" data-sort="recent" onclick="setPatientsSort('recent')">Mais recente</button>
                         <button class="sort-option" data-sort="oldest" onclick="setPatientsSort('oldest')">Mais antigos</button>
+                        <div class="sort-menu-divider"></div>
+                        <button class="sort-option active" data-filter="all" onclick="setPatientsFilter('all')">Todos</button>
+                        <button class="sort-option" data-filter="Paciente" onclick="setPatientsFilter('Paciente')">Pacientes</button>
+                        <button class="sort-option" data-filter="Psicologo" onclick="setPatientsFilter('Psicologo')">Psicólogos</button>
                     </div>
                 </div>
             </div>
@@ -369,12 +373,22 @@
     <div id="patient-edit-modal" class="patient-edit-overlay">
         <div class="patient-edit-modal">
             <div class="patient-edit-topbar">
-                <div class="patient-edit-title"><span>Detalhes do Paciente</span></div>
+                <div class="patient-edit-title"><span id="patient-edit-title-text">Detalhes do Usuário</span></div>
                 <button class="patient-edit-close" onclick="closePatientEditModal()">
                     <i data-lucide="x"></i>
                 </button>
             </div>
             <div class="patient-edit-body">
+                <div class="patient-edit-field" id="patient-edit-photo-field" style="display:none;">
+                    <label>Foto de Perfil</label>
+                    <div class="photo-upload-wrapper">
+                        <div class="patient-photo-preview" id="patient-photo-preview" onclick="triggerPatientPhoto()"></div>
+                        <button type="button" class="photo-remove-btn" id="photo-remove-btn" onclick="removePatientPhoto(event)" title="Remover foto">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <input type="file" id="patient-edit-photo" accept="image/*" onchange="previewPatientPhoto(this)" style="display:none;">
+                </div>
                 <div class="patient-edit-field">
                     <label>Nome</label>
                     <input type="text" id="patient-edit-name">
@@ -386,6 +400,10 @@
                 <div class="patient-edit-field">
                     <label>Telefone</label>
                     <input type="text" id="patient-edit-phone">
+                </div>
+                <div class="patient-edit-field" id="patient-edit-description-field" style="display:none;">
+                    <label>Descrição</label>
+                    <textarea id="patient-edit-description" rows="3"></textarea>
                 </div>
             </div>
             <div class="patient-edit-footer">
@@ -673,14 +691,16 @@
         ];
 
         const patients = [
-            { id: 1, name: 'Ana Clara Mendes', email: 'ana.mendes@email.com', phone: '(11) 98765-4321', createdAt: '2025-12-10' },
-            { id: 2, name: 'Bruno Oliveira', email: 'bruno.oliveira@email.com', phone: '(11) 91234-5678', createdAt: '2026-01-15' },
-            { id: 3, name: 'Carla Souza', email: 'carla.souza@email.com', phone: '(11) 99876-5432', createdAt: '2025-11-20' },
-            { id: 4, name: 'Diego Ferreira', email: 'diego.ferreira@email.com', phone: '(11) 96543-2109', createdAt: '2026-03-05' },
-            { id: 5, name: 'Elisa Rocha', email: 'elisa.rocha@email.com', phone: '(11) 93456-7890', createdAt: '2026-02-18' },
-            { id: 6, name: 'Felipe Costa', email: 'felipe.costa@email.com', phone: '(11) 94567-8901', createdAt: '2025-10-08' },
-            { id: 7, name: 'Gabriela Lima', email: 'gabriela.lima@email.com', phone: '(11) 95678-9012', createdAt: '2026-04-12' },
-            { id: 8, name: 'Henrique Dias', email: 'henrique.dias@email.com', phone: '(11) 96789-0123', createdAt: '2025-09-22' }
+            { id: 1, name: 'Ana Clara Mendes', email: 'ana.mendes@email.com', phone: '(11) 98765-4321', type: 'Paciente', createdAt: '2025-12-10' },
+            { id: 2, name: 'Bruno Oliveira', email: 'bruno.oliveira@email.com', phone: '(11) 91234-5678', type: 'Paciente', createdAt: '2026-01-15' },
+            { id: 3, name: 'Carla Souza', email: 'carla.souza@email.com', phone: '(11) 99876-5432', type: 'Paciente', createdAt: '2025-11-20' },
+            { id: 4, name: 'Diego Ferreira', email: 'diego.ferreira@email.com', phone: '(11) 96543-2109', type: 'Paciente', createdAt: '2026-03-05' },
+            { id: 5, name: 'Elisa Rocha', email: 'elisa.rocha@email.com', phone: '(11) 93456-7890', type: 'Paciente', createdAt: '2026-02-18' },
+            { id: 6, name: 'Felipe Costa', email: 'felipe.costa@email.com', phone: '(11) 94567-8901', type: 'Paciente', createdAt: '2025-10-08' },
+            { id: 7, name: 'Gabriela Lima', email: 'gabriela.lima@email.com', phone: '(11) 95678-9012', type: 'Paciente', createdAt: '2026-04-12' },
+            { id: 8, name: 'Henrique Dias', email: 'henrique.dias@email.com', phone: '(11) 96789-0123', type: 'Paciente', createdAt: '2025-09-22' },
+            { id: 9, name: 'Dra. Laura Mendes', email: 'laura.mendes@inspirare.com', phone: '(11) 91111-2222', type: 'Psicologo', description: 'Psicóloga clínica especialista em terapia cognitivo-comportamental.', createdAt: '2025-08-15' },
+            { id: 10, name: 'Dr. Ricardo Souza', email: 'ricardo.souza@inspirare.com', phone: '(11) 92222-3333', type: 'Psicologo', description: 'Psicólogo organizacional e coach de desenvolvimento pessoal.', createdAt: '2025-07-10' }
         ];
 
         function formatDate(dateStr) {
@@ -713,20 +733,47 @@
         let patientsSearchTerm = '';
         let patientsPage = 0;
         let currentPatientsFiltered = [];
+        let patientsTypeFilter = 'all';
+
+        function togglePatientsFilterDropdown() {
+            document.getElementById('patients-filter-menu').classList.toggle('open');
+        }
 
         function togglePatientsSortDropdown() {
             document.getElementById('patients-sort-menu').classList.toggle('open');
         }
 
+        function updatePatientsToolbarLabel() {
+            const sortLabels = { az: 'A-Z', za: 'Z-A', recent: 'Mais recente', oldest: 'Mais antigos' };
+            const filterLabels = { all: 'Todos', Paciente: 'Pacientes', Psicologo: 'Psicólogos' };
+            const sortText = sortLabels[patientsSortOrder] || 'A-Z';
+            const filterText = filterLabels[patientsTypeFilter] || 'Todos';
+            if (patientsTypeFilter === 'all') {
+                document.getElementById('patients-sort-label').innerText = sortText;
+            } else {
+                document.getElementById('patients-sort-label').innerText = sortText + ' · ' + filterText;
+            }
+        }
+
         function setPatientsSort(order) {
             patientsSortOrder = order;
             patientsPage = 0;
-            const labels = { az: 'A-Z', za: 'Z-A', recent: 'Mais recente', oldest: 'Mais antigos' };
-            document.getElementById('patients-sort-label').innerText = labels[order] || 'A-Z';
             document.querySelectorAll('#patients-sort-menu .sort-option').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.sort === order);
+                if (btn.dataset.sort) btn.classList.toggle('active', btn.dataset.sort === order);
             });
             document.getElementById('patients-sort-menu').classList.remove('open');
+            updatePatientsToolbarLabel();
+            renderPatients();
+        }
+
+        function setPatientsFilter(type) {
+            patientsTypeFilter = type;
+            patientsPage = 0;
+            document.querySelectorAll('#patients-sort-menu .sort-option').forEach(btn => {
+                if (btn.dataset.filter) btn.classList.toggle('active', btn.dataset.filter === type);
+            });
+            document.getElementById('patients-sort-menu').classList.remove('open');
+            updatePatientsToolbarLabel();
             renderPatients();
         }
 
@@ -738,6 +785,7 @@
 
         function getSortedAndFilteredPatients() {
             let list = patients.filter(p => {
+                if (patientsTypeFilter !== 'all' && p.type !== patientsTypeFilter) return false;
                 if (!patientsSearchTerm) return true;
                 const term = patientsSearchTerm;
                 return p.name.toLowerCase().includes(term) ||
@@ -756,6 +804,7 @@
             currentPatientsFiltered = list;
             return list;
         }
+
 
         function scrollPatients(direction) {
             if (!currentPatientsFiltered.length) return;
@@ -1280,11 +1329,30 @@
             const p = patients.find(x => x.id === id);
             if (!p) return;
             currentEditPatientId = id;
-            originalPatientData = { name: p.name, email: p.email, phone: p.phone };
+            originalPatientData = { name: p.name, email: p.email, phone: p.phone, description: p.description || '', photo: p.photo || '' };
 
             document.getElementById('patient-edit-name').value = p.name;
             document.getElementById('patient-edit-email').value = p.email;
             document.getElementById('patient-edit-phone').value = p.phone;
+            document.getElementById('patient-edit-description').value = p.description || '';
+
+            const photoPreview = document.getElementById('patient-photo-preview');
+            const removeBtn = document.getElementById('photo-remove-btn');
+            if (p.photo) {
+                photoPreview.style.backgroundImage = `url(${p.photo})`;
+                photoPreview.textContent = '';
+                if (removeBtn) removeBtn.style.display = 'flex';
+            } else {
+                photoPreview.style.backgroundImage = '';
+                photoPreview.textContent = '+';
+                if (removeBtn) removeBtn.style.display = 'none';
+            }
+
+            const isPsicologo = p.type === 'Psicologo';
+            const titleMap = { Paciente: 'Detalhes do Paciente', Psicologo: 'Detalhes do Psicólogo' };
+            document.getElementById('patient-edit-title-text').textContent = titleMap[p.type] || 'Detalhes do Usuário';
+            document.getElementById('patient-edit-photo-field').style.display = isPsicologo ? 'flex' : 'none';
+            document.getElementById('patient-edit-description-field').style.display = isPsicologo ? 'flex' : 'none';
 
             setPatientInputsDisabled(true);
             document.querySelector('.btn-patient-edit-action').style.display = 'inline-flex';
@@ -1298,6 +1366,8 @@
             document.getElementById('patient-edit-name').disabled = disabled;
             document.getElementById('patient-edit-email').disabled = disabled;
             document.getElementById('patient-edit-phone').disabled = disabled;
+            document.getElementById('patient-edit-description').disabled = disabled;
+            document.getElementById('patient-edit-photo').disabled = disabled;
         }
 
         function enablePatientEditMode() {
@@ -1311,7 +1381,8 @@
             const name = document.getElementById('patient-edit-name').value.trim();
             const email = document.getElementById('patient-edit-email').value.trim();
             const phone = document.getElementById('patient-edit-phone').value.trim();
-            const hasChanges = name !== originalPatientData.name || email !== originalPatientData.email || phone !== originalPatientData.phone;
+            const description = document.getElementById('patient-edit-description').value.trim();
+            const hasChanges = name !== originalPatientData.name || email !== originalPatientData.email || phone !== originalPatientData.phone || description !== originalPatientData.description;
 
             if (!force && hasChanges && !document.getElementById('patient-edit-name').disabled) {
                 showModal(
@@ -1331,6 +1402,7 @@
             const name = document.getElementById('patient-edit-name').value.trim();
             const email = document.getElementById('patient-edit-email').value.trim();
             const phone = document.getElementById('patient-edit-phone').value.trim();
+            const description = document.getElementById('patient-edit-description').value.trim();
 
             if (!name || !email || !phone) {
                 showModal('Aviso', 'Preencha todos os campos.');
@@ -1343,6 +1415,11 @@
             p.name = name;
             p.email = email;
             p.phone = phone;
+            p.description = description;
+
+            const preview = document.getElementById('patient-photo-preview');
+            const currentPhoto = preview.style.backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+            p.photo = currentPhoto || '';
 
             renderPatients();
             closePatientEditModal(true);
@@ -1373,11 +1450,47 @@
             );
         }
 
+        function triggerPatientPhoto() {
+            const photoInput = document.getElementById('patient-edit-photo');
+            if (photoInput && !photoInput.disabled) {
+                photoInput.click();
+            }
+        }
+
+        function previewPatientPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('patient-photo-preview');
+                    preview.style.backgroundImage = `url(${e.target.result})`;
+                    preview.textContent = '';
+                    const removeBtn = document.getElementById('photo-remove-btn');
+                    if (removeBtn) removeBtn.style.display = 'flex';
+                    updatePatientSaveButton();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removePatientPhoto(event) {
+            event.stopPropagation();
+            const preview = document.getElementById('patient-photo-preview');
+            preview.style.backgroundImage = '';
+            preview.textContent = '+';
+            document.getElementById('patient-edit-photo').value = '';
+            document.getElementById('photo-remove-btn').style.display = 'none';
+            updatePatientSaveButton();
+        }
+
         function updatePatientSaveButton() {
             const name = document.getElementById('patient-edit-name').value.trim();
             const email = document.getElementById('patient-edit-email').value.trim();
             const phone = document.getElementById('patient-edit-phone').value.trim();
-            const hasChanges = name !== originalPatientData.name || email !== originalPatientData.email || phone !== originalPatientData.phone;
+            const description = document.getElementById('patient-edit-description').value.trim();
+            const preview = document.getElementById('patient-photo-preview');
+            const currentPhoto = preview.style.backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+            const photoChanged = currentPhoto !== (originalPatientData.photo || '');
+            const hasChanges = name !== originalPatientData.name || email !== originalPatientData.email || phone !== originalPatientData.phone || description !== originalPatientData.description || photoChanged;
             const allFilled = name && email && phone;
             document.querySelector('.btn-patient-save').disabled = !hasChanges || !allFilled;
         }
@@ -1385,6 +1498,7 @@
         document.getElementById('patient-edit-name').addEventListener('input', updatePatientSaveButton);
         document.getElementById('patient-edit-email').addEventListener('input', updatePatientSaveButton);
         document.getElementById('patient-edit-phone').addEventListener('input', updatePatientSaveButton);
+        document.getElementById('patient-edit-description').addEventListener('input', updatePatientSaveButton);
 
         function openRegisterUserModal() {
             document.getElementById('register-user-name').value = '';

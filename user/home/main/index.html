@@ -124,16 +124,12 @@
             <!-- Step 1: Payment Type -->
             <div id="sched-step-1" class="sched-step active">
                 <p style="margin-bottom: 20px; text-align: center;">Escolha o tipo de atendimento:</p>
-                <div class="option-grid">
-                    <div class="option-card" onclick="selectPaymentType('single', 55)">
-                        <h4>Consulta Avulsa</h4>
-                        <span class="price">R$ 55,00</span>
-                    </div>
-                    <div class="option-card" onclick="selectPaymentType('plan', 450)">
-                        <h4>Plano Mensal</h4>
-                        <span class="price">R$ 450,00</span>
-                        <p style="font-size: 0.7rem;">(4 consultas/mês)</p>
-                    </div>
+                <div id="type-grid" class="option-grid"></div>
+                <div class="pagination-controls" id="type-pagination" style="display:none;">
+                    <button class="btn-page" id="btn-prev-type" onclick="changeTypePage(-1)"
+                        disabled="disabled">Anterior</button>
+                    <span class="page-indicator" id="type-page-indicator">1 / 1</span>
+                    <button class="btn-page" id="btn-next-type" onclick="changeTypePage(1)">Próxima</button>
                 </div>
             </div>
 
@@ -399,8 +395,61 @@
         let tutorialHistory = [];
         let tutorialActiveBranch = null;
         let tutorialPsychTimeout = null; // Controla o rebuild dos clones no step de profissionais
+        let tutorialTypeTimeout = null;  // Controla o rebuild dos clones no step de tipos de agendamento
         let showTutorialReactivation = false; // Controla o balão de reativação ao final do tutorial
         let currentTutorialType = null; // 'schedule' | 'cancel' | 'view'
+
+
+        /* =========================
+           TIPOS DE AGENDAMENTO - PAGINAÇÃO
+           ========================= */
+        const scheduleTypes = [
+            { type: 'single', price: 55, title: 'Consulta Avulsa', priceLabel: 'R$ 55,00', extra: '' },
+            { type: 'plan', price: 450, title: 'Plano Mensal', priceLabel: 'R$ 450,00', extra: '(4 consultas/mês)' },
+            { type: 'package', price: 150, title: 'Pacote 3 Consultas', priceLabel: 'R$ 150,00', extra: '(válido por 3 meses)' }
+        ];
+        let typeCurrentPage = 0;
+        const typesPerPage = 2;
+
+        function renderScheduleTypesPage() {
+            const grid = document.getElementById('type-grid');
+            const start = typeCurrentPage * typesPerPage;
+            const end = start + typesPerPage;
+            const pageItems = scheduleTypes.slice(start, end);
+            const totalPages = Math.ceil(scheduleTypes.length / typesPerPage);
+
+            grid.innerHTML = '';
+            pageItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'option-card';
+                card.onclick = function () { selectPaymentType(item.type, item.price); };
+                card.innerHTML = `
+                    <h4>${item.title}</h4>
+                    <span class="price">${item.priceLabel}</span>
+                    ${item.extra ? `<p style="font-size: 0.7rem;">${item.extra}</p>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+
+            const paginationEl = document.getElementById('type-pagination');
+            if (scheduleTypes.length <= typesPerPage) {
+                paginationEl.style.display = 'none';
+            } else {
+                paginationEl.style.display = 'flex';
+                document.getElementById('type-page-indicator').textContent = `${typeCurrentPage + 1} / ${totalPages}`;
+                document.getElementById('btn-prev-type').disabled = typeCurrentPage === 0;
+                document.getElementById('btn-next-type').disabled = typeCurrentPage >= totalPages - 1;
+            }
+        }
+
+        function changeTypePage(direction) {
+            const totalPages = Math.ceil(scheduleTypes.length / typesPerPage);
+            const newPage = typeCurrentPage + direction;
+            if (newPage >= 0 && newPage < totalPages) {
+                typeCurrentPage = newPage;
+                renderScheduleTypesPage();
+            }
+        }
 
         /* =========================
            PROFISSIONAIS - PAGINAÇÃO
@@ -718,6 +767,8 @@
         function resetScheduleFlow() {
             document.querySelectorAll('.sched-step').forEach(s => s.style.display = 'none');
             currentScheduleStep = 1;
+            typeCurrentPage = 0;
+            renderScheduleTypesPage();
             document.getElementById('sched-step-1').style.display = 'block';
         }
 
@@ -1281,12 +1332,19 @@
                     beforeShow: () => { closeFlow(); }
                 },
                 {
-                    targets: [
-                        '#sched-step-1 .option-card:nth-child(1)',
-                        '#sched-step-1 .option-card:nth-child(2)'
-                    ],
-                    text: 'Agora escolha entre Consulta Avulsa ou Plano Mensal de acordo com sua preferência.',
-                    beforeShow: () => { openFlow('schedule'); resetScheduleFlow(); }
+                    targets: ['#type-grid .option-card'],
+                    visualTargets: ['#type-pagination'],
+                    text: '',
+                    beforeShow: function () {
+                        openFlow('schedule');
+                        resetScheduleFlow();
+                        const totalPages = Math.ceil(scheduleTypes.length / typesPerPage);
+                        let text = 'Agora escolha o tipo de atendimento de acordo com sua preferência.';
+                        if (totalPages > 1) {
+                            text += ' Use Anterior / Próxima para navegar.';
+                        }
+                        this.text = text;
+                    }
                 },
                 {
                     targets: [
@@ -2019,6 +2077,7 @@
 
                     // Flag para evitar duplicação de clones no step de profissionais
                     const hasPsychCards = targets.some(t => t.classList && t.classList.contains('psych-card'));
+                    const hasTypeCards = targets.some(t => t.classList && t.classList.contains('option-card')) && stepIndex === 1;
 
                     if (hasPsychCards) {
                         // Função dedicada para recriar todos os clones do step de profissionais
@@ -2090,6 +2149,75 @@
                         }
 
                         setupPsychTutorialClones();
+                    } else if (hasTypeCards) {
+                        // Função dedicada para recriar todos os clones do step de tipos de agendamento
+                        function setupTypeTutorialClones(skipScroll) {
+                            if (balloon) balloon.classList.add('no-arrow');
+                            if (tutorialTypeTimeout) {
+                                clearTimeout(tutorialTypeTimeout);
+                                tutorialTypeTimeout = null;
+                            }
+                            document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                            const cards = document.querySelectorAll('#type-grid .option-card');
+                            const pagination = document.getElementById('type-pagination');
+
+                            cards.forEach(card => makeClone(card, true, () => {
+                                closeTutorialVisuals();
+                                card.click();
+                                tutorialHistory.push(stepIndex);
+                                tutorialCurrentStep = stepIndex + 1;
+                                setTimeout(() => nextTutorialStep(), 300);
+                            }));
+
+                            if (pagination && pagination.style.display !== 'none') {
+                                makeClone(pagination, false);
+                                pagination.querySelectorAll('.btn-page').forEach(btn => {
+                                    const dir = btn.id === 'btn-next-type' ? 1 : -1;
+                                    if (btn.disabled) {
+                                        makeClone(btn, false);
+                                    } else {
+                                        makeClone(btn, true, () => {
+                                            document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                                            const grid = document.getElementById('type-grid');
+                                            if (grid) grid.style.opacity = '0';
+                                            changeTypePage(dir);
+                                            if (tutorialTypeTimeout) clearTimeout(tutorialTypeTimeout);
+                                            tutorialTypeTimeout = setTimeout(() => {
+                                                tutorialTypeTimeout = null;
+                                                requestAnimationFrame(() => requestAnimationFrame(() => {
+                                                    const newCards = document.querySelectorAll('#type-grid .option-card');
+                                                    const newPagination = document.getElementById('type-pagination');
+                                                    const newTargets = [...newCards, newPagination].filter(Boolean);
+                                                    if (newTargets.length) scrollTargetsIntoView(newTargets);
+                                                    requestAnimationFrame(() => {
+                                                        setupTypeTutorialClones(true);
+                                                        if (grid) grid.style.opacity = '';
+                                                    });
+                                                }));
+                                            }, 300);
+                                        });
+                                    }
+                                });
+                            }
+
+                            const visiblePagination = pagination && pagination.style.display !== 'none' ? pagination : null;
+                            const allTargets = [...cards, visiblePagination].filter(Boolean);
+                            if (allTargets.length) {
+                                positionBalloonCenterTop(balloon, allTargets);
+                            }
+
+                            if (!skipScroll && visiblePagination) {
+                                const paginationRect = pagination.getBoundingClientRect();
+                                const balloonRect = balloon.getBoundingClientRect();
+                                const bottommost = Math.max(paginationRect.bottom, balloonRect.bottom);
+                                if (bottommost > window.innerHeight - 10) {
+                                    const scrollNeeded = bottommost - window.innerHeight + 30;
+                                    window.scrollBy({ top: scrollNeeded, behavior: 'smooth' });
+                                }
+                            }
+                        }
+
+                        setupTypeTutorialClones();
                     } else {
                         // No tutorial de visualização, espera o reflow completar
                         // antes de criar clones (evita posicionamento errado no mobile)
