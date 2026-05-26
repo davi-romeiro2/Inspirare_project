@@ -235,9 +235,98 @@
                 </button>
                 <h2>Controle de Preços</h2>
             </div>
-            <div class="empty-state">
-                <i data-lucide="dollar-sign"></i>
-                <p>Funcionalidade em desenvolvimento.</p>
+            <div class="prices-grid">
+                <!-- Consulta Avulsa -->
+                <div class="price-card">
+                    <div class="price-card-header">
+                        <div class="price-icon"><i data-lucide="stethoscope"></i></div>
+                        <h3>Consulta Avulsa</h3>
+                    </div>
+                    <div class="price-current" id="avulsa-display">
+                        <span class="price-currency">R$</span>
+                        <span class="price-value">55,00</span>
+                    </div>
+                    <div class="price-fields">
+                        <div class="price-field">
+                            <label>Preço fixo (R$)</label>
+                            <input type="number" id="avulsa-preco" value="55" min="0" step="0.01">
+                        </div>
+                        <div class="price-field">
+                            <label>Consultas por mês</label>
+                            <input type="number" id="avulsa-consultas" value="1" min="1" step="1">
+                        </div>
+                        <div class="price-per-session" id="avulsa-por-consulta">R$ 55,00 / consulta</div>
+                        <div class="discount-toggle">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="avulsa-desconto-ativo" onchange="toggleDiscount('avulsa')">
+                                <span>Aplicar desconto por tempo limitado</span>
+                            </label>
+                        </div>
+                        <div class="discount-fields" id="avulsa-discount-fields" style="display:none;">
+                            <div class="price-field">
+                                <label>% de desconto</label>
+                                <input type="number" id="avulsa-desconto" value="0" min="0" max="100" step="1">
+                            </div>
+                            <div class="price-field-row">
+                                <div class="price-field">
+                                    <label>Início</label>
+                                    <input type="date" id="avulsa-desconto-inicio">
+                                </div>
+                                <div class="price-field">
+                                    <label>Fim</label>
+                                    <input type="date" id="avulsa-desconto-fim">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-save-price" onclick="savePrice('avulsa')">Salvar alterações</button>
+                </div>
+
+                <!-- Plano Mensal -->
+                <div class="price-card">
+                    <div class="price-card-header">
+                        <div class="price-icon"><i data-lucide="calendar-days"></i></div>
+                        <h3>Plano Mensal</h3>
+                    </div>
+                    <div class="price-current" id="plano-display">
+                        <span class="price-currency">R$</span>
+                        <span class="price-value">450,00</span>
+                    </div>
+                    <div class="price-fields">
+                        <div class="price-field">
+                            <label>Preço fixo (R$)</label>
+                            <input type="number" id="plano-preco" value="450" min="0" step="0.01">
+                        </div>
+                        <div class="price-field">
+                            <label>Consultas por mês</label>
+                            <input type="number" id="plano-consultas" value="4" min="1" step="1">
+                        </div>
+                        <div class="price-per-session" id="plano-por-consulta">R$ 112,50 / consulta</div>
+                        <div class="discount-toggle">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="plano-desconto-ativo" onchange="toggleDiscount('plano')">
+                                <span>Aplicar desconto por tempo limitado</span>
+                            </label>
+                        </div>
+                        <div class="discount-fields" id="plano-discount-fields" style="display:none;">
+                            <div class="price-field">
+                                <label>% de desconto</label>
+                                <input type="number" id="plano-desconto" value="0" min="0" max="100" step="1">
+                            </div>
+                            <div class="price-field-row">
+                                <div class="price-field">
+                                    <label>Início</label>
+                                    <input type="date" id="plano-desconto-inicio">
+                                </div>
+                                <div class="price-field">
+                                    <label>Fim</label>
+                                    <input type="date" id="plano-desconto-fim">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-save-price" onclick="savePrice('plano')">Salvar alterações</button>
+                </div>
             </div>
         </div>
 
@@ -468,6 +557,10 @@
                 patientsPage = 0;
                 renderPatients();
             }
+            if (flow === 'precos') {
+                initPrices();
+            }
+            lucide.createIcons();
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
@@ -1429,6 +1522,166 @@
             }
         }
 
+        /* =========================
+           CONTROLE DE PREÇOS
+           ========================= */
+        const PRICE_STORAGE_KEY = 'inspirare_price_settings';
+
+        const PRICE_STORAGE_VERSION = 2;
+
+        function getDefaultPrices() {
+            return {
+                v: PRICE_STORAGE_VERSION,
+                avulsa: {
+                    basePrice: 55,
+                    consultationsPerMonth: 1,
+                    discountActive: false,
+                    discountPercent: 0,
+                    discountStart: '',
+                    discountEnd: ''
+                },
+                plano: {
+                    basePrice: 450,
+                    consultationsPerMonth: 4,
+                    discountActive: false,
+                    discountPercent: 0,
+                    discountStart: '',
+                    discountEnd: ''
+                }
+            };
+        }
+
+        function loadPrices() {
+            const defaults = getDefaultPrices();
+            try {
+                const raw = localStorage.getItem(PRICE_STORAGE_KEY);
+                if (raw) {
+                    const saved = JSON.parse(raw);
+                    if (saved.v === PRICE_STORAGE_VERSION) {
+                        return {
+                            avulsa: { ...defaults.avulsa, ...saved.avulsa },
+                            plano: { ...defaults.plano, ...saved.plano }
+                        };
+                    }
+                }
+            } catch (e) {}
+            return defaults;
+        }
+
+        function savePrices(data) {
+            localStorage.setItem(PRICE_STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function formatCurrency(value) {
+            return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function getTodayStr() {
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        function isDiscountActive(discount) {
+            if (!discount.discountActive || discount.discountPercent <= 0) return false;
+            const today = getTodayStr();
+            if (discount.discountStart && today < discount.discountStart) return false;
+            if (discount.discountEnd && today > discount.discountEnd) return false;
+            return true;
+        }
+
+        function calculatePrice(base, discount) {
+            if (isDiscountActive(discount)) {
+                return base * (1 - discount.discountPercent / 100);
+            }
+            return base;
+        }
+
+        function updatePriceDisplay(type) {
+            const data = loadPrices();
+            const config = data[type];
+            const display = document.getElementById(type + '-display');
+            const current = calculatePrice(config.basePrice, config);
+            let html = `<span class="price-currency">R$</span><span class="price-value">${formatCurrency(current)}</span>`;
+            if (isDiscountActive(config)) {
+                html += `<span class="price-original">R$ ${formatCurrency(config.basePrice)}</span>`;
+                html += `<span class="price-discount-tag">${config.discountPercent}% OFF</span>`;
+            }
+            display.innerHTML = html;
+        }
+
+        function toggleDiscount(type) {
+            const checked = document.getElementById(type + '-desconto-ativo').checked;
+            document.getElementById(type + '-discount-fields').style.display = checked ? 'flex' : 'none';
+        }
+
+        function savePrice(type) {
+            const data = loadPrices();
+            const basePrice = parseFloat(document.getElementById(type + '-preco').value);
+            if (isNaN(basePrice) || basePrice < 0) {
+                showModal('Aviso', 'Informe um preço válido.');
+                return;
+            }
+
+            data[type].basePrice = basePrice;
+            data[type].discountActive = document.getElementById(type + '-desconto-ativo').checked;
+            data[type].discountPercent = parseFloat(document.getElementById(type + '-desconto').value) || 0;
+            data[type].discountStart = document.getElementById(type + '-desconto-inicio').value;
+            data[type].discountEnd = document.getElementById(type + '-desconto-fim').value;
+
+            const consultas = parseInt(document.getElementById(type + '-consultas').value);
+            if (isNaN(consultas) || consultas < 1) {
+                showModal('Aviso', 'Informe uma quantidade válida de consultas por mês.');
+                return;
+            }
+            data[type].consultationsPerMonth = consultas;
+
+            savePrices(data);
+            updatePriceDisplay(type);
+            if (type === 'avulsa') updateAvulsaPerSession();
+            if (type === 'plano') updatePlanoPerSession();
+            showModal('Salvo', 'Configurações de preço atualizadas com sucesso.');
+        }
+
+        function updateAvulsaPerSession() {
+            const data = loadPrices();
+            const config = data.avulsa;
+            const current = calculatePrice(config.basePrice, config);
+            const perSession = config.consultationsPerMonth > 0 ? current / config.consultationsPerMonth : 0;
+            document.getElementById('avulsa-por-consulta').textContent = `R$ ${formatCurrency(perSession)} / consulta`;
+        }
+
+        function updatePlanoPerSession() {
+            const data = loadPrices();
+            const config = data.plano;
+            const current = calculatePrice(config.basePrice, config);
+            const perSession = config.consultationsPerMonth > 0 ? current / config.consultationsPerMonth : 0;
+            document.getElementById('plano-por-consulta').textContent = `R$ ${formatCurrency(perSession)} / consulta`;
+        }
+
+        function initPrices() {
+            const data = loadPrices();
+
+            document.getElementById('avulsa-preco').value = data.avulsa.basePrice.toFixed(2);
+            document.getElementById('avulsa-consultas').value = data.avulsa.consultationsPerMonth;
+            document.getElementById('avulsa-desconto-ativo').checked = data.avulsa.discountActive || false;
+            document.getElementById('avulsa-desconto').value = data.avulsa.discountPercent || 0;
+            document.getElementById('avulsa-desconto-inicio').value = data.avulsa.discountStart || '';
+            document.getElementById('avulsa-desconto-fim').value = data.avulsa.discountEnd || '';
+            toggleDiscount('avulsa');
+            updatePriceDisplay('avulsa');
+            updateAvulsaPerSession();
+
+            document.getElementById('plano-preco').value = data.plano.basePrice.toFixed(2);
+            document.getElementById('plano-consultas').value = data.plano.consultationsPerMonth;
+            document.getElementById('plano-desconto-ativo').checked = data.plano.discountActive || false;
+            document.getElementById('plano-desconto').value = data.plano.discountPercent || 0;
+            document.getElementById('plano-desconto-inicio').value = data.plano.discountStart || '';
+            document.getElementById('plano-desconto-fim').value = data.plano.discountEnd || '';
+            toggleDiscount('plano');
+            updatePriceDisplay('plano');
+            updatePlanoPerSession();
+        }
+
+        initPrices();
         updateAppointmentBadge();
     </script>
 </body>
