@@ -404,9 +404,9 @@
            TIPOS DE AGENDAMENTO - PAGINAÇÃO
            ========================= */
         const scheduleTypes = [
-            { type: 'single', price: 55, title: 'Consulta Avulsa', priceLabel: 'R$ 55,00', extra: '' },
-            { type: 'plan', price: 450, title: 'Plano Mensal', priceLabel: 'R$ 450,00', extra: '(4 consultas/mês)' },
-            { type: 'package', price: 150, title: 'Pacote 3 Consultas', priceLabel: 'R$ 150,00', extra: '(válido por 3 meses)' }
+            { type: 'single', price: 55, title: 'Consulta Avulsa', priceLabel: 'R$ 55,00', extra: '', icon: 'stethoscope' },
+            { type: 'plan', price: 450, title: 'Plano Mensal', priceLabel: 'R$ 450,00', extra: '(4 consultas/mês)', icon: 'calendar-days' },
+            { type: 'package', price: 150, title: 'Pacote 3 Consultas', priceLabel: 'R$ 150,00', extra: '(válido por 3 meses)', icon: 'package' }
         ];
         let typeCurrentPage = 0;
         const typesPerPage = 2;
@@ -419,17 +419,20 @@
             const totalPages = Math.ceil(scheduleTypes.length / typesPerPage);
 
             grid.innerHTML = '';
+            grid.classList.toggle('single-card', pageItems.length === 1);
             pageItems.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'option-card';
                 card.onclick = function () { selectPaymentType(item.type, item.price); };
                 card.innerHTML = `
+                    <i data-lucide="${item.icon || 'circle'}" style="width:32px;height:32px;margin-bottom:8px;color:var(--secondary-color);"></i>
                     <h4>${item.title}</h4>
                     <span class="price">${item.priceLabel}</span>
                     ${item.extra ? `<p style="font-size: 0.7rem;">${item.extra}</p>` : ''}
                 `;
                 grid.appendChild(card);
             });
+            lucide.createIcons();
 
             const paginationEl = document.getElementById('type-pagination');
             if (scheduleTypes.length <= typesPerPage) {

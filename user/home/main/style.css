@@ -510,6 +510,14 @@ body.tutorial-view-mode .tutorial-clone.appts-page-btn {
     margin-bottom: 25px;
 }
 
+.option-grid.single-card {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .option-card {
     border: 2px solid var(--neutral-color);
     padding: 20px;
