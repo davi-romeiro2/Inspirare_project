@@ -238,10 +238,13 @@
                     <i data-lucide="arrow-left"></i> Voltar
                 </button>
                 <h2>Controle de Preços</h2>
+                <button type="button" class="btn-add-plan-header" onclick="openNewPlanModal()">
+                    <i data-lucide="plus"></i> Novo Plano
+                </button>
             </div>
             <div class="prices-grid">
                 <!-- Consulta Avulsa -->
-                <div class="price-card">
+                <div class="price-card" id="card-avulsa">
                     <div class="price-card-header">
                         <div class="price-icon"><i data-lucide="stethoscope"></i></div>
                         <h3>Consulta Avulsa</h3>
@@ -287,7 +290,7 @@
                 </div>
 
                 <!-- Plano Mensal -->
-                <div class="price-card">
+                <div class="price-card" id="card-plano">
                     <div class="price-card-header">
                         <div class="price-icon"><i data-lucide="calendar-days"></i></div>
                         <h3>Plano Mensal</h3>
@@ -340,15 +343,6 @@
                     <button class="btn-page" id="btn-next-custom-price" onclick="changeCustomPricePage(1)">Próxima</button>
                 </div>
 
-                <!-- Adicionar Novo Plano -->
-                <div class="price-card price-card-add" onclick="openNewPlanModal()">
-                    <div class="price-card-add-content">
-                        <div class="price-add-icon">
-                            <i data-lucide="plus"></i>
-                        </div>
-                        <span>Adicionar Novo Plano</span>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -356,53 +350,55 @@
         <div id="new-plan-modal" class="new-plan-overlay" style="display:none;">
             <div class="new-plan-modal">
                 <button class="modal-close" onclick="closeNewPlanModal()"><i data-lucide="x"></i></button>
-                <h3>Novo Plano</h3>
-                <p class="preview-hint">Edite o card abaixo diretamente</p>
+                <div class="new-plan-scroll">
+                    <h3>Novo Plano</h3>
+                    <p class="preview-hint">Edite o card abaixo diretamente</p>
 
-                <!-- Card editável (prévia + edição inline) -->
-                <div class="price-card price-card-preview" id="new-plan-preview-card">
-                    <div class="price-card-header">
-                        <button class="price-icon icon-picker-btn" onclick="openIconPicker(event)" title="Escolher ícone">
-                            <i data-lucide="plus" id="preview-icon"></i>
-                        </button>
-                        <h3 contenteditable="true" id="preview-nome">Novo Plano</h3>
-                    </div>
-                    <div class="price-current">
-                        <span class="price-currency">R$</span>
-                        <input type="number" class="price-value-input" id="preview-preco" value="0" min="0" step="0.01">
-                    </div>
-                    <div class="price-fields-preview">
-                        <div class="price-field">
-                            <label>Consultas por mês</label>
-                            <input type="number" id="preview-consultas" value="1" min="1" step="1">
+                    <!-- Card editável (prévia + edição inline) -->
+                    <div class="price-card price-card-preview" id="new-plan-preview-card">
+                        <div class="price-card-header">
+                            <button class="price-icon icon-picker-btn" onclick="openIconPicker(event)" title="Escolher ícone">
+                                <i data-lucide="plus" id="preview-icon"></i>
+                            </button>
+                            <h3 contenteditable="true" id="preview-nome">Nome do plano</h3>
                         </div>
-                        <div class="price-per-session" id="preview-por-consulta">R$ 0,00 / consulta</div>
-                        <div class="discount-toggle">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="preview-desconto-ativo" onchange="togglePreviewDiscount()">
-                                <span>Aplicar desconto por tempo limitado</span>
-                            </label>
+                        <div class="price-current">
+                            <span class="price-currency">R$</span>
+                            <input type="number" class="price-value-input" id="preview-preco" value="0" min="0" step="0.01">
                         </div>
-                        <div class="discount-fields" id="preview-discount-fields" style="display:none;">
+                        <div class="price-fields-preview">
                             <div class="price-field">
-                                <label>% de desconto</label>
-                                <input type="number" id="preview-desconto" value="0" min="0" max="100" step="1">
+                                <label>Consultas por mês</label>
+                                <input type="number" id="preview-consultas" value="1" min="1" step="1">
                             </div>
-                            <div class="price-field-row">
+                            <div class="price-per-session" id="preview-por-consulta">R$ 0,00 / consulta</div>
+                            <div class="discount-toggle">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="preview-desconto-ativo" onchange="togglePreviewDiscount()">
+                                    <span>Aplicar desconto por tempo limitado</span>
+                                </label>
+                            </div>
+                            <div class="discount-fields" id="preview-discount-fields" style="display:none;">
                                 <div class="price-field">
-                                    <label>Início</label>
-                                    <input type="date" id="preview-desconto-inicio">
+                                    <label>% de desconto</label>
+                                    <input type="number" id="preview-desconto" value="0" min="0" max="100" step="1">
                                 </div>
-                                <div class="price-field">
-                                    <label>Fim</label>
-                                    <input type="date" id="preview-desconto-fim">
+                                <div class="price-field-row">
+                                    <div class="price-field">
+                                        <label>Início</label>
+                                        <input type="date" id="preview-desconto-inicio">
+                                    </div>
+                                    <div class="price-field">
+                                        <label>Fim</label>
+                                        <input type="date" id="preview-desconto-fim">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <button class="btn-save-price" onclick="saveNewPlan()">Criar Plano</button>
+                    <button class="btn-save-price" onclick="saveNewPlan()">Criar Plano</button>
+                </div>
             </div>
         </div>
 
@@ -619,9 +615,9 @@
             const btnNo = document.getElementById('modal-btn-no');
 
             if (onNo) {
-                btnYes.innerText = 'Sair';
+                btnYes.innerText = 'Sim';
                 btnNo.style.display = 'inline-block';
-                btnNo.innerText = 'Não sair';
+                btnNo.innerText = 'Não';
             } else {
                 btnYes.innerText = 'Ok';
                 btnNo.style.display = 'none';
@@ -1750,6 +1746,8 @@
                     const saved = JSON.parse(raw);
                     if (saved.v === PRICE_STORAGE_VERSION) {
                         return {
+                            ...defaults,
+                            ...saved,
                             avulsa: { ...defaults.avulsa, ...saved.avulsa },
                             plano: { ...defaults.plano, ...saved.plano }
                         };
@@ -2014,6 +2012,37 @@
             showModal('Sucesso', `Plano "${nome}" criado com sucesso!`);
         }
 
+        function deletePlan(key) {
+            const data = loadPrices();
+            const plan = data[key];
+            if (!plan) return;
+
+            showModal(
+                'Confirmar exclusão',
+                `Tem certeza que deseja deletar o plano "${plan.name || 'Plano Personalizado'}"?`,
+                () => {
+                    delete data[key];
+                    savePrices(data);
+                    renderCustomPriceCards();
+                    showModal('Deletado', 'Plano removido com sucesso.');
+                },
+                () => {}
+            );
+        }
+
+        function togglePlanStatus(key, enable) {
+            const data = loadPrices();
+            const plan = data[key];
+            if (!plan) return;
+
+            plan.disabled = !enable;
+            savePrices(data);
+            renderCustomPriceCards();
+
+            const msg = enable ? 'Plano ativado com sucesso.' : 'Plano desativado com sucesso.';
+            showModal(enable ? 'Ativado' : 'Desativado', msg);
+        }
+
         let customPriceCurrentPage = 0;
         const customPricesPerPage = 2;
 
@@ -2021,38 +2050,45 @@
             const data = loadPrices();
             const grid = document.querySelector('.prices-grid');
 
-            // Remove cards customizados antigos e paginação
+            // Remove cards customizados antigos
             grid.querySelectorAll('.price-card-custom').forEach(c => c.remove());
 
             const paginationEl = document.getElementById('custom-price-pagination');
-            const addCard = grid.querySelector('.price-card-add');
+            const cardAvulsa = document.getElementById('card-avulsa');
+            const cardPlano = document.getElementById('card-plano');
 
             // Coleta apenas os planos customizados
             const customKeys = Object.keys(data).filter(key =>
                 key !== 'v' && key !== 'avulsa' && key !== 'plano'
             );
 
-            if (customKeys.length === 0) {
-                paginationEl.style.display = 'none';
-                return;
-            }
-
-            const totalPages = Math.ceil(customKeys.length / customPricesPerPage);
+            // Cards padrão ocupam a página 0, customizados começam da página 1
+            const totalPages = 1 + Math.ceil(customKeys.length / customPricesPerPage);
             if (customPriceCurrentPage >= totalPages) customPriceCurrentPage = totalPages - 1;
             if (customPriceCurrentPage < 0) customPriceCurrentPage = 0;
 
-            const start = customPriceCurrentPage * customPricesPerPage;
-            const end = start + customPricesPerPage;
-            const pageKeys = customKeys.slice(start, end);
+            if (customPriceCurrentPage === 0) {
+                // Página 0: mostra os cards padrão
+                if (cardAvulsa) cardAvulsa.style.display = '';
+                if (cardPlano) cardPlano.style.display = '';
+            } else {
+                // Páginas 1+: esconde os cards padrão
+                if (cardAvulsa) cardAvulsa.style.display = 'none';
+                if (cardPlano) cardPlano.style.display = 'none';
 
-            pageKeys.forEach(key => {
-                const plan = data[key];
-                const card = createPriceCard(key, plan);
-                grid.insertBefore(card, paginationEl);
-            });
+                const start = (customPriceCurrentPage - 1) * customPricesPerPage;
+                const end = start + customPricesPerPage;
+                const pageKeys = customKeys.slice(start, end);
+
+                pageKeys.forEach(key => {
+                    const plan = data[key];
+                    const card = createPriceCard(key, plan);
+                    grid.insertBefore(card, paginationEl);
+                });
+            }
 
             // Atualiza controles de paginação
-            if (customKeys.length > customPricesPerPage) {
+            if (totalPages > 1) {
                 paginationEl.style.display = 'flex';
                 document.getElementById('custom-price-page-indicator').textContent = `${customPriceCurrentPage + 1} / ${totalPages}`;
                 document.getElementById('btn-prev-custom-price').disabled = customPriceCurrentPage === 0;
@@ -2069,7 +2105,7 @@
             const customKeys = Object.keys(data).filter(key =>
                 key !== 'v' && key !== 'avulsa' && key !== 'plano'
             );
-            const totalPages = Math.ceil(customKeys.length / customPricesPerPage);
+            const totalPages = 1 + Math.ceil(customKeys.length / customPricesPerPage);
             const newPage = customPriceCurrentPage + direction;
             if (newPage >= 0 && newPage < totalPages) {
                 customPriceCurrentPage = newPage;
@@ -2079,7 +2115,8 @@
 
         function createPriceCard(key, plan) {
             const card = document.createElement('div');
-            card.className = 'price-card price-card-custom';
+            const isDisabled = plan.disabled === true;
+            card.className = 'price-card price-card-custom' + (isDisabled ? ' disabled' : '');
             card.dataset.planId = key;
 
             const current = calculatePrice(plan.basePrice, plan);
@@ -2090,6 +2127,10 @@
             }
 
             const perSession = plan.consultationsPerMonth > 0 ? current / plan.consultationsPerMonth : 0;
+
+            const actionBtnClass = isDisabled ? 'btn-enable-plan' : 'btn-disable-plan';
+            const actionBtnText = isDisabled ? 'Ativar' : 'Desativar';
+            const actionBtnOnClick = isDisabled ? `togglePlanStatus('${key}', true)` : `togglePlanStatus('${key}', false)`;
 
             card.innerHTML = `
                 <div class="price-card-header">
@@ -2102,37 +2143,41 @@
                 <div class="price-fields">
                     <div class="price-field">
                         <label>Preço fixo (R$)</label>
-                        <input type="number" id="${key}-preco" value="${plan.basePrice.toFixed(2)}" min="0" step="0.01">
+                        <input type="number" id="${key}-preco" value="${plan.basePrice.toFixed(2)}" min="0" step="0.01" ${isDisabled ? 'disabled' : ''}>
                     </div>
                     <div class="price-field">
                         <label>Consultas por mês</label>
-                        <input type="number" id="${key}-consultas" value="${plan.consultationsPerMonth}" min="1" step="1">
+                        <input type="number" id="${key}-consultas" value="${plan.consultationsPerMonth}" min="1" step="1" ${isDisabled ? 'disabled' : ''}>
                     </div>
                     <div class="price-per-session" id="${key}-por-consulta">R$ ${formatCurrency(perSession)} / consulta</div>
                     <div class="discount-toggle">
                         <label class="checkbox-label">
-                            <input type="checkbox" id="${key}-desconto-ativo" onchange="toggleDiscount('${key}')" ${plan.discountActive ? 'checked' : ''}>
+                            <input type="checkbox" id="${key}-desconto-ativo" onchange="toggleDiscount('${key}')" ${plan.discountActive ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
                             <span>Aplicar desconto por tempo limitado</span>
                         </label>
                     </div>
                     <div class="discount-fields" id="${key}-discount-fields" style="display:${plan.discountActive ? 'flex' : 'none'};">
                         <div class="price-field">
                             <label>% de desconto</label>
-                            <input type="number" id="${key}-desconto" value="${plan.discountPercent || 0}" min="0" max="100" step="1">
+                            <input type="number" id="${key}-desconto" value="${plan.discountPercent || 0}" min="0" max="100" step="1" ${isDisabled ? 'disabled' : ''}>
                         </div>
                         <div class="price-field-row">
                             <div class="price-field">
                                 <label>Início</label>
-                                <input type="date" id="${key}-desconto-inicio" value="${plan.discountStart || ''}">
+                                <input type="date" id="${key}-desconto-inicio" value="${plan.discountStart || ''}" ${isDisabled ? 'disabled' : ''}>
                             </div>
                             <div class="price-field">
                                 <label>Fim</label>
-                                <input type="date" id="${key}-desconto-fim" value="${plan.discountEnd || ''}">
+                                <input type="date" id="${key}-desconto-fim" value="${plan.discountEnd || ''}" ${isDisabled ? 'disabled' : ''}>
                             </div>
                         </div>
                     </div>
                 </div>
-                <button class="btn-save-price" onclick="savePrice('${key}')">Salvar alterações</button>
+                <button class="btn-save-price" onclick="savePrice('${key}')" ${isDisabled ? 'disabled' : ''}>Salvar alterações</button>
+                <div class="price-card-actions">
+                    <button class="${actionBtnClass}" onclick="${actionBtnOnClick}">${actionBtnText}</button>
+                    <button class="btn-delete-plan" onclick="deletePlan('${key}')">Deletar</button>
+                </div>
             `;
 
             return card;
