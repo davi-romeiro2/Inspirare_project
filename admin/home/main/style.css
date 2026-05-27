@@ -398,6 +398,26 @@ body {
     }
 }
 
+@media (max-width: 768px) {
+    #flow-precos .appointments-header {
+        position: relative;
+        padding-top: 48px;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+    #flow-precos .btn-back-small {
+        top: 0;
+        left: 0;
+        transform: translateY(0);
+    }
+    #flow-precos .btn-add-plan-header {
+        top: 0;
+        right: 0;
+        left: auto;
+        transform: translateY(0);
+    }
+}
+
 @media (max-width: 500px) {
     .flow-header {
         flex-direction: column;
@@ -914,6 +934,10 @@ body {
     margin-bottom: 30px;
     position: relative;
     min-height: 60px;
+}
+
+#flow-precos .appointments-header {
+    margin-bottom: 8px;
 }
 
 .appointments-header h2 {
@@ -3012,7 +3036,19 @@ body {
 .price-field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 6px;
+}
+
+.price-field-row .price-field {
+    min-width: 0;
+}
+
+.price-field-row .price-field input[type="date"] {
+    width: 100%;
+    min-width: 0;
+    padding: 6px 2px 6px 8px;
+    font-size: 0.75rem;
+    box-sizing: border-box;
 }
 
 .discount-toggle {
@@ -3278,9 +3314,9 @@ body {
     background: white;
     border-radius: 24px;
     width: 100%;
-    max-width: 420px;
+    max-width: 480px;
     max-height: 90vh;
-    padding: 28px;
+    padding: 20px;
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     animation: modalPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -3345,15 +3381,15 @@ body {
 .price-card-preview .price-field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 6px;
 }
 
 .price-card-preview .price-field-row .price-field input[type="date"] {
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
-    padding: 6px 8px;
-    font-size: 0.8rem;
+    padding: 6px 4px 6px 8px;
+    font-size: 0.75rem;
 }
 
 .price-card-preview .price-fields-preview {
@@ -3474,6 +3510,23 @@ body {
 .icon-picker-item i {
     width: 20px;
     height: 20px;
+}
+
+@media (max-width: 500px) {
+    .icon-picker-popup {
+        max-width: 280px;
+        max-height: 260px;
+        padding: 12px;
+    }
+
+    .icon-picker-grid {
+        gap: 6px;
+    }
+
+    .icon-picker-item {
+        width: 40px;
+        height: 40px;
+    }
 }
     text-align: center;
 }

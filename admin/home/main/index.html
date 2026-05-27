@@ -1986,9 +1986,18 @@
                 grid.appendChild(item);
             });
 
-            const rect = btn.getBoundingClientRect();
-            popup.style.left = (rect.left + rect.width / 2 - 160) + 'px';
-            popup.style.top = (rect.bottom + 8) + 'px';
+            if (window.innerWidth <= 500) {
+                popup.style.left = '50%';
+                popup.style.top = '50%';
+                popup.style.transform = 'translate(-50%, -50%)';
+                popup.style.animation = 'none';
+            } else {
+                const rect = btn.getBoundingClientRect();
+                popup.style.left = (rect.left + rect.width / 2 - 160) + 'px';
+                popup.style.top = (rect.bottom + 8) + 'px';
+                popup.style.transform = 'none';
+                popup.style.animation = '';
+            }
             popup.style.display = 'block';
             lucide.createIcons();
 
