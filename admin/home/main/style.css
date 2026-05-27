@@ -3633,11 +3633,3 @@ body {
     }
 }
 
-/* =========================================================
-   RESPONSIVIDADE DO MENU/SIDEBAR (mobile)
-   ========================================================= */
-@media (max-width: 768px) {
-    .sidebar:not(.open) {
-        display: none;
-    }
-}
