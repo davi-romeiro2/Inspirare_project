@@ -418,6 +418,25 @@ body {
     }
 }
 
+@media (max-width: 768px) {
+    #flow-pacientes .appointments-header {
+        position: relative;
+        padding-top: 48px;
+        margin-bottom: 20px;
+        min-height: auto;
+    }
+    #flow-pacientes .btn-back-small {
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    #flow-pacientes .btn-send-global {
+        top: 0;
+        right: 0;
+        transform: translateY(0);
+    }
+}
+
 @media (max-width: 500px) {
     .flow-header {
         flex-direction: column;
@@ -1421,8 +1440,69 @@ body {
         top: auto;
         right: auto;
         transform: none;
-        align-self: flex-end;
+        align-self: stretch;
         order: 1;
+        width: 100%;
+    }
+
+    .patients-toolbar .sort-dropdown-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .patients-toolbar .sort-dropdown-btn span {
+        display: inline;
+    }
+
+    .patients-list {
+        height: auto;
+        max-height: 340px;
+        overflow-y: auto;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .patients-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .patient-row {
+        padding: 14px 16px;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .patient-meta {
+        display: none !important;
+    }
+
+    .patient-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 0.75rem;
+    }
+
+    .patient-info h4 {
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 180px;
+    }
+
+    .patient-more {
+        width: 32px;
+        height: 32px;
+    }
+
+    .patient-more i {
+        width: 14px;
+        height: 14px;
+    }
+
+    .scroll-arrows {
+        margin-bottom: 12px;
+        margin-top: 4px;
     }
 }
 
@@ -1539,6 +1619,10 @@ body {
     gap: 4px;
     font-size: 0.8rem;
     color: var(--accent-color);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .patient-meta i {
@@ -2852,11 +2936,6 @@ body {
         padding: 14px 16px 18px;
     }
 
-    .patient-meta {
-        flex-direction: column;
-        gap: 8px;
-    }
-
     .btn-send-global {
         padding: 8px;
         font-size: 0.75rem;
@@ -2892,6 +2971,22 @@ body {
 
     .patients-list {
         height: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    #flow-pacientes .appointments-header h2 {
+        font-size: 1.25rem;
+    }
+
+    #flow-pacientes .btn-send-global {
+        padding: 6px 8px;
+        font-size: 0.7rem;
+    }
+
+    #flow-pacientes .btn-send-global i {
+        width: 14px;
+        height: 14px;
     }
 }
 
