@@ -426,7 +426,7 @@ body {
         min-height: auto;
     }
     #flow-pacientes .btn-back-small {
-        top: 0;
+        top: -5px;
         left: 50%;
         transform: translateX(-50%);
     }
@@ -1822,12 +1822,17 @@ body {
     font-size: 0.95rem;
 }
 
+#appointments-scroll-arrows {
+    display: none;
+}
+
 /* Desktop - mais horizontal */
 @media (min-width: 1024px) {
     .appointments-list {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 16px;
+        align-items: stretch;
     }
 
     .appointment-row {
@@ -1835,6 +1840,7 @@ body {
         align-items: flex-start;
         gap: 14px;
         padding: 20px;
+        height: 100%;
     }
 
     .appointment-main {
@@ -1853,6 +1859,19 @@ body {
 
 /* Responsive Appointments */
 @media (max-width: 768px) {
+    #flow-consultas .appointments-header {
+        position: relative;
+        padding-top: 48px;
+        margin-bottom: 20px;
+        min-height: auto;
+    }
+
+    #flow-consultas .btn-back-small {
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
     .stats-bar {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
@@ -1861,15 +1880,57 @@ body {
     .appointment-row {
         flex-direction: column;
         align-items: flex-start;
+        min-height: 140px;
+    }
+
+    .appointment-avatar {
+        display: none !important;
     }
 
     .appointment-actions {
         width: 100%;
         justify-content: flex-end;
     }
+
+    #flow-consultas .filter-bar {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    #flow-consultas .filter-btn {
+        width: 100%;
+        box-sizing: border-box;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #flow-consultas .appointments-list {
+        min-height: 300px;
+    }
+
+    #appointments-scroll-arrows {
+        display: flex !important;
+        margin-bottom: 12px;
+    }
 }
 
 @media (max-width: 480px) {
+    #flow-consultas .btn-back-small {
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    #flow-pacientes .btn-back-small {
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
     .stats-bar {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -3535,6 +3596,7 @@ body {
     outline: none;
     transition: border-color 0.2s ease;
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .price-value-input:hover,
@@ -3622,8 +3684,6 @@ body {
         width: 40px;
         height: 40px;
     }
-}
-    text-align: center;
 }
 
 .price-card-preview {

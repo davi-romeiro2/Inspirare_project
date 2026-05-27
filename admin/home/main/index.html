@@ -183,6 +183,15 @@
 
             <div class="appointments-list" id="appointments-list">
             </div>
+
+            <div class="scroll-arrows" id="appointments-scroll-arrows" style="display:none;">
+                <button class="scroll-arrow-btn" id="appointments-scroll-up-btn" onclick="scrollAppointments('up')" title="Ver anteriores">
+                    <i data-lucide="chevron-up"></i>
+                </button>
+                <button class="scroll-arrow-btn" id="appointments-scroll-down-btn" onclick="scrollAppointments('down')" title="Ver próximos">
+                    <i data-lucide="chevron-down"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Flow: Lista de Pacientes -->
@@ -687,6 +696,7 @@
             const container = document.getElementById('flow-' + flow);
             if (container) container.classList.add('active');
             if (flow === 'consultas') {
+                appointmentsPage = 0;
                 renderAppointments(appointments);
             }
             if (flow === 'pacientes') {
@@ -989,6 +999,8 @@
 
         function renderAppointments(list) {
             const container = document.getElementById('appointments-list');
+            currentAppointmentsFiltered = list;
+
             if (list.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
@@ -997,12 +1009,15 @@
                     </div>
                 `;
                 lucide.createIcons();
+                updateAppointmentsScrollArrows();
                 return;
             }
 
             const todayStr = new Date().toISOString().slice(0, 10);
+            const startIndex = appointmentsPage * 2;
+            const pageItems = list.slice(startIndex, startIndex + 2);
 
-            container.innerHTML = list.map(a => `
+            container.innerHTML = pageItems.map(a => `
                 <div class="appointment-row ${a.status}">
                     <div class="appointment-main">
                         <div class="appointment-avatar">${a.photo}</div>
@@ -1027,6 +1042,7 @@
             `).join('');
 
             lucide.createIcons();
+            updateAppointmentsScrollArrows();
         }
 
         function filterAppointments(filter) {
@@ -1042,7 +1058,32 @@
                 filtered = appointments.filter(a => a.status === 'cancelled');
             }
 
+            appointmentsPage = 0;
             renderAppointments(filtered);
+        }
+
+        let appointmentsPage = 0;
+        let currentAppointmentsFiltered = [];
+
+        function scrollAppointments(direction) {
+            if (!currentAppointmentsFiltered.length) return;
+            const totalPages = Math.ceil(currentAppointmentsFiltered.length / 2);
+            if (direction === 'up') {
+                appointmentsPage = Math.max(0, appointmentsPage - 1);
+            } else {
+                appointmentsPage = Math.min(totalPages - 1, appointmentsPage + 1);
+            }
+            renderAppointments(currentAppointmentsFiltered);
+        }
+
+        function updateAppointmentsScrollArrows() {
+            const upBtn = document.getElementById('appointments-scroll-up-btn');
+            const downBtn = document.getElementById('appointments-scroll-down-btn');
+            if (!upBtn || !downBtn) return;
+
+            const totalPages = Math.ceil(currentAppointmentsFiltered.length / 2);
+            upBtn.disabled = appointmentsPage <= 0;
+            downBtn.disabled = appointmentsPage >= totalPages - 1 || totalPages <= 1;
         }
 
         function cancelAppointment(id) {
