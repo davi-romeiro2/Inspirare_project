@@ -15,6 +15,10 @@
     padding: 0;
 }
 
+html, body {
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Poppins', sans-serif;
     background-color: var(--bg-color);
@@ -22,6 +26,12 @@ body {
     min-height: 100vh;
     color: var(--secondary-color);
     padding: 20px;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
 }
 
 .container {
@@ -59,6 +69,14 @@ body {
     top: 10px;
 }
 
+.nav-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    border: 2px solid var(--primary-color);
+}
+
 @media (max-width: 768px) {
     .main-header {
         flex-direction: column;
@@ -70,8 +88,8 @@ body {
     }
     .user-profile-nav {
         position: absolute !important;
-        right: -10px !important;
-        top: -50px !important;
+        right: 10px !important;
+        top: 10px !important;
     }
 }
 
@@ -198,7 +216,14 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 15px;
+    max-width: 100%;
     position: relative;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .menu-card:hover {
@@ -3605,5 +3630,14 @@ body {
         width: 100px;
         height: 100px;
         font-size: 1.8rem;
+    }
+}
+
+/* =========================================================
+   RESPONSIVIDADE DO MENU/SIDEBAR (mobile)
+   ========================================================= */
+@media (max-width: 768px) {
+    .sidebar:not(.open) {
+        display: none;
     }
 }
