@@ -160,7 +160,7 @@
                 <div class="icon-box"><i data-lucide="dollar-sign"></i></div>
                 <h3>Controle de preços</h3>
             </div>
-            <div class="menu-card" onclick="alert('Em desenvolvimento: Meu perfil')">
+            <div class="menu-card" onclick="openFlow('perfil')">
                 <div class="icon-box"><i data-lucide="user"></i></div>
                 <h3>Meu perfil</h3>
             </div>
@@ -440,6 +440,51 @@
 
             <button class="btn-new-note" onclick="openNewNoteModal()">Nova anotação +</button>
         </div>
+
+        <!-- Flow: Meu Perfil -->
+        <div id="flow-perfil" class="flow-container">
+            <div class="appointments-header">
+                <button type="button" class="btn-back-small" onclick="closeFlow()">
+                    <i data-lucide="arrow-left"></i> Voltar
+                </button>
+                <h2>Meu Perfil</h2>
+            </div>
+
+            <div class="profile-container">
+                <div class="profile-field">
+                    <label>Foto de Perfil</label>
+                    <div class="profile-photo-wrapper">
+                        <div class="profile-photo-preview" id="profile-photo-preview" onclick="triggerProfilePhoto()">+</div>
+                        <button type="button" class="profile-photo-remove" id="profile-photo-remove" onclick="removeProfilePhoto(event)" title="Remover foto">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <input type="file" id="profile-photo-input" accept="image/*" onchange="previewProfilePhoto(this)" style="display:none;">
+                </div>
+
+                <div class="profile-field">
+                    <label>Nome</label>
+                    <input type="text" id="profile-name" placeholder="Seu nome">
+                </div>
+
+                <div class="profile-field">
+                    <label>Telefone</label>
+                    <input type="text" id="profile-phone" placeholder="(00) 00000-0000">
+                </div>
+
+                <div class="profile-field">
+                    <label>Email</label>
+                    <input type="email" id="profile-email" placeholder="seu@email.com">
+                </div>
+
+                <div class="profile-field">
+                    <label>Descrição</label>
+                    <textarea id="profile-description" rows="4" placeholder="Fale um pouco sobre você..."></textarea>
+                </div>
+
+                <button class="btn-save-profile" onclick="saveProfile()">Salvar alterações</button>
+            </div>
+        </div>
     </div>
 
     <!-- Modal: Editar Paciente -->
@@ -650,6 +695,9 @@
             }
             if (flow === 'precos') {
                 initPrices();
+            }
+            if (flow === 'perfil') {
+                initProfile();
             }
             lucide.createIcons();
             window.scrollTo({ top: 0, behavior: 'instant' });
@@ -2218,6 +2266,111 @@
 
         initPrices();
         updateAppointmentBadge();
+
+        /* =========================
+           MEU PERFIL
+           ========================= */
+        const PROFILE_STORAGE_KEY = 'inspirare_admin_profile';
+
+        function getDefaultProfile() {
+            return {
+                name: 'Administrador',
+                phone: '(11) 98765-4321',
+                email: 'admin@inspirare.com',
+                description: 'Administrador da plataforma Inspirare.',
+                photo: ''
+            };
+        }
+
+        function loadProfile() {
+            try {
+                const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+                if (raw) return { ...getDefaultProfile(), ...JSON.parse(raw) };
+            } catch (e) {}
+            return getDefaultProfile();
+        }
+
+        function saveProfileData(data) {
+            localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function initProfile() {
+            const data = loadProfile();
+            document.getElementById('profile-name').value = data.name;
+            document.getElementById('profile-phone').value = data.phone;
+            document.getElementById('profile-email').value = data.email;
+            document.getElementById('profile-description').value = data.description;
+
+            const preview = document.getElementById('profile-photo-preview');
+            const removeBtn = document.getElementById('profile-photo-remove');
+            if (data.photo) {
+                preview.style.backgroundImage = `url(${data.photo})`;
+                preview.textContent = '';
+                if (removeBtn) removeBtn.style.display = 'flex';
+            } else {
+                preview.style.backgroundImage = '';
+                preview.textContent = '+';
+                if (removeBtn) removeBtn.style.display = 'none';
+            }
+        }
+
+        function triggerProfilePhoto() {
+            const input = document.getElementById('profile-photo-input');
+            if (input) input.click();
+        }
+
+        function previewProfilePhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('profile-photo-preview');
+                    preview.style.backgroundImage = `url(${e.target.result})`;
+                    preview.textContent = '';
+                    document.getElementById('profile-photo-remove').style.display = 'flex';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeProfilePhoto(event) {
+            event.stopPropagation();
+            const preview = document.getElementById('profile-photo-preview');
+            preview.style.backgroundImage = '';
+            preview.textContent = '+';
+            document.getElementById('profile-photo-input').value = '';
+            document.getElementById('profile-photo-remove').style.display = 'none';
+        }
+
+        function saveProfile() {
+            const name = document.getElementById('profile-name').value.trim();
+            const phone = document.getElementById('profile-phone').value.trim();
+            const email = document.getElementById('profile-email').value.trim();
+            const description = document.getElementById('profile-description').value.trim();
+
+            if (!name || !email) {
+                showModal('Aviso', 'Preencha pelo menos nome e email.');
+                return;
+            }
+
+            const preview = document.getElementById('profile-photo-preview');
+            const currentPhoto = preview.style.backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+
+            const data = {
+                name,
+                phone,
+                email,
+                description,
+                photo: currentPhoto || ''
+            };
+
+            saveProfileData(data);
+
+            // Atualiza o nome no header
+            const navName = document.querySelector('.user-profile-nav span');
+            if (navName) navName.textContent = `Olá, ${name}`;
+
+            showModal('Salvo', 'Perfil atualizado com sucesso!');
+        }
     </script>
 </body>
 
