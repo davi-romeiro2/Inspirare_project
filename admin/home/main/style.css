@@ -1963,6 +1963,22 @@ body {
     padding: 40px;
 }
 
+#anotacoes-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 1.3rem;
+    line-height: 1.3;
+    gap: 2px;
+}
+
+#anotacoes-patient-name {
+    font-size: 0.9rem;
+    color: var(--accent-color);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+}
+
 .annotations-history {
     display: flex;
     flex-direction: column;
@@ -2402,6 +2418,7 @@ body {
     justify-content: center;
     gap: 12px;
     margin-bottom: 16px;
+    margin-top: 10px;
 }
 
 .scroll-arrow-btn {
@@ -2622,6 +2639,16 @@ body {
 .btn-cancel-action:hover {
     background: #fce8e6;
     box-shadow: 0 4px 12px rgba(231, 76, 60, 0.1);
+}
+
+.btn-reason-action {
+    border-color: var(--neutral-color);
+    color: var(--accent-color);
+}
+
+.btn-reason-action:hover {
+    background: var(--bg-color);
+    box-shadow: 0 4px 12px rgba(58, 80, 61, 0.1);
 }
 
 /* Responsive Modal */
@@ -2962,12 +2989,86 @@ body {
 @media (max-width: 768px) {
     #flow-anotacoes.active {
         padding: 24px;
+        padding-top: 56px;
+    }
+
+    #flow-anotacoes .appointments-header {
+        margin-bottom: 12px;
+        flex-direction: column;
+        gap: 8px;
+        overflow: visible;
+    }
+
+    #flow-anotacoes .btn-back-small {
+        top: -38px;
+    }
+
+    #flow-anotacoes .sort-dropdown {
+        position: relative;
+        top: auto;
+        right: auto;
+        transform: none;
+        align-self: stretch;
+        width: 100%;
+    }
+
+    #flow-anotacoes .sort-dropdown-btn {
+        width: 100%;
+        justify-content: center;
+        position: relative;
+        z-index: 10;
+    }
+
+    #flow-anotacoes .sort-dropdown-btn span {
+        display: inline;
+    }
+
+    #flow-anotacoes .sort-dropdown-btn i {
+        pointer-events: none;
+    }
+
+    #flow-anotacoes .sort-dropdown-menu {
+        left: 0;
+        right: auto;
+        min-width: auto;
+        width: 100%;
+        z-index: 100;
+        top: calc(100% + 4px);
     }
 
     .annotations-history {
-        height: 280px;
-        overflow: hidden;
+        height: auto;
+        max-height: 380px;
+        overflow-y: auto;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
+
+    .annotations-history::-webkit-scrollbar {
+        display: none;
+    }
+
+    .annotation-card {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    #anotacoes-title {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 1.1rem;
+        line-height: 1.3;
+        gap: 2px;
+    }
+
+    #anotacoes-patient-name {
+        font-size: 0.85rem;
+        color: var(--accent-color);
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+    }
+
 
     .annotation-expand-modal {
         max-height: 85vh;

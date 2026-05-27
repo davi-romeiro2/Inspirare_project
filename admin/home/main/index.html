@@ -97,12 +97,15 @@
                     </div>
                 </div>
 
-                <div class="modal-actions-bar">
+                <div class="modal-actions-bar" id="modal-actions-bar">
                     <button class="btn-modal-action btn-notes-action" onclick="modalOpenAnnotations()">
                         <i data-lucide="notebook-pen"></i> Anotações
                     </button>
                     <button class="btn-modal-action btn-cancel-action" id="modal-cancel-btn" onclick="modalCancelAppointment()">
                         <i data-lucide="x"></i> Cancelar consulta
+                    </button>
+                    <button class="btn-modal-action btn-reason-action" id="modal-reason-btn" onclick="modalViewCancelReason()" style="display:none;">
+                        <i data-lucide="file-text"></i> Ver motivo
                     </button>
                 </div>
             </div>
@@ -177,7 +180,7 @@
 
             <div class="filter-bar">
                 <button class="filter-btn active" data-filter="all" onclick="filterAppointments('all')">Marcadas</button>
-                <button class="filter-btn" data-filter="completed" onclick="filterAppointments('completed')">Realizadas</button>
+                <button class="filter-btn" data-filter="completed" onclick="filterAppointments('completed')">Concluídas</button>
                 <button class="filter-btn" data-filter="cancelled" onclick="filterAppointments('cancelled')">Canceladas</button>
             </div>
 
@@ -422,7 +425,7 @@
                 <button type="button" class="btn-back-small" onclick="closeAnnotations()">
                     <i data-lucide="arrow-left"></i> Voltar
                 </button>
-                <h2 id="anotacoes-title">Anotações</h2>
+                <h2 id="anotacoes-title">Anotações<span id="anotacoes-patient-name"></span></h2>
                 <div class="sort-dropdown">
                     <button class="sort-dropdown-btn" onclick="toggleSortDropdown()" id="sort-dropdown-btn">
                         <i data-lucide="arrow-down-up"></i>
@@ -697,7 +700,7 @@
             if (container) container.classList.add('active');
             if (flow === 'consultas') {
                 appointmentsPage = 0;
-                renderAppointments(appointments);
+                filterAppointments('all');
             }
             if (flow === 'pacientes') {
                 patientsPage = 0;
@@ -817,7 +820,9 @@
                 type: 'Individual',
                 status: 'cancelled',
                 modality: 'Online',
-                annotations: []
+                annotations: [],
+                cancelReason: 'Paciente solicitou adiamento para a próxima semana devido a compromisso inadiável.',
+                cancelReasonAuthor: 'Paciente'
             }
         ];
 
@@ -1051,7 +1056,7 @@
 
             let filtered = appointments;
             if (filter === 'all') {
-                filtered = appointments.filter(a => a.status !== 'completed' && a.status !== 'cancelled');
+                filtered = appointments.filter(a => a.status === 'confirmed');
             } else if (filter === 'completed') {
                 filtered = appointments.filter(a => a.status === 'completed');
             } else if (filter === 'cancelled') {
@@ -1120,10 +1125,17 @@
             document.getElementById('modal-type').textContent = a.type;
 
             const cancelBtn = document.getElementById('modal-cancel-btn');
+            const reasonBtn = document.getElementById('modal-reason-btn');
             if (a.status === 'confirmed' || a.status === 'pending') {
                 cancelBtn.style.display = 'inline-flex';
+                reasonBtn.style.display = 'none';
             } else {
                 cancelBtn.style.display = 'none';
+                if (a.status === 'cancelled' && a.cancelReason) {
+                    reasonBtn.style.display = 'inline-flex';
+                } else {
+                    reasonBtn.style.display = 'none';
+                }
             }
 
             const overlay = document.getElementById('appointment-modal');
@@ -1140,6 +1152,14 @@
             const id = currentModalId;
             closeAppointmentModal();
             openAnnotations(id);
+        }
+
+        function modalViewCancelReason() {
+            const a = appointments.find(x => x.id === currentModalId);
+            if (!a || !a.cancelReason) return;
+            const author = a.cancelReasonAuthor || 'Não informado';
+            const text = `Escrito por: ${author}\n\n${a.cancelReason}`;
+            showModal('Motivo do cancelamento', text);
         }
 
         function modalCancelAppointment() {
@@ -1174,6 +1194,8 @@
                 return;
             }
 
+            a.cancelReason = checkbox.checked ? reasonText : '';
+            a.cancelReasonAuthor = checkbox.checked ? 'Psicólogo' : '';
             closeCancelModal();
             closeAppointmentModal();
             cancelAppointment(currentModalId);
@@ -1199,8 +1221,8 @@
             document.getElementById('view-home').style.display = 'none';
             document.querySelectorAll('.flow-container').forEach(f => f.classList.remove('active'));
             document.getElementById('flow-anotacoes').classList.add('active');
-            document.getElementById('anotacoes-title').innerText = `Anotações - ${a.patient}`;
-            document.getElementById('annotation-text').value = '';
+            document.getElementById('anotacoes-title').childNodes[0].textContent = 'Anotações';
+            document.getElementById('anotacoes-patient-name').textContent = a.patient;
             annotationPage = 0;
 
             renderAnnotations(a.annotations);
@@ -1226,8 +1248,8 @@
         }
 
         document.addEventListener('click', function(e) {
-            const dropdown = document.querySelector('.sort-dropdown');
-            if (dropdown && !dropdown.contains(e.target)) {
+            const annotationsDropdown = document.querySelector('#flow-anotacoes .sort-dropdown');
+            if (annotationsDropdown && !annotationsDropdown.contains(e.target)) {
                 const menu = document.getElementById('sort-dropdown-menu');
                 if (menu) menu.classList.remove('open');
             }
@@ -1790,7 +1812,7 @@
         }
 
         function updateAppointmentBadge() {
-            const count = appointments.filter(a => a.status !== 'completed' && a.status !== 'cancelled').length;
+            const count = appointments.filter(a => a.status === 'confirmed').length;
             const badge = document.getElementById('badge-consultas');
             if (badge) {
                 badge.textContent = count;
