@@ -3787,12 +3787,6 @@ body {
     }
 }
 
-.price-card-preview {
-    pointer-events: none;
-    opacity: 0.9;
-    transform: scale(0.98);
-}
-
 @media (max-width: 768px) {
     .prices-grid {
         grid-template-columns: 1fr;
