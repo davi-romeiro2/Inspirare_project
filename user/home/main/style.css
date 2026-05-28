@@ -1425,6 +1425,127 @@ body.tutorial-view-mode .tutorial-clone.appts-page-btn {
 }
 
 /* =========================================================
+   MODAL DE CANCELAMENTO COM MOTIVO
+   ========================================================= */
+.cancel-reason-modal {
+    max-width: 420px;
+    padding: 24px;
+}
+
+.cancel-reason-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 15px 0;
+    text-align: left;
+}
+
+.cancel-reason-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.cancel-reason-option:hover {
+    background: #fdf6f7;
+}
+
+.cancel-reason-option input.custom-check {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    cursor: pointer;
+}
+
+.cancel-reason-option .check-box {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--neutral-color);
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.cancel-reason-option input.custom-check:checked + .check-box {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.cancel-reason-option .check-box::after {
+    content: '';
+    width: 5px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform 0.15s ease;
+    margin-bottom: 2px;
+}
+
+.cancel-reason-option input.custom-check:checked + .check-box::after {
+    transform: rotate(45deg) scale(1);
+}
+
+.cancel-textarea-group {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.cancel-textarea-group textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--neutral-color);
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.cancel-textarea-group textarea:focus {
+    border-color: var(--primary-color);
+}
+
+.char-counter {
+    display: block;
+    text-align: right;
+    font-size: 0.7rem;
+    color: var(--accent-color);
+    margin-top: 4px;
+}
+
+.cancel-reason-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.cancel-reason-actions .btn-modal {
+    flex: 1 1 0;
+    max-width: none;
+    min-width: 0;
+    font-size: 0.85rem;
+    padding: 12px 10px;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* =========================================================
    RESPONSIVIDADE
    ========================================================= */
 @media (max-width: 768px) {
