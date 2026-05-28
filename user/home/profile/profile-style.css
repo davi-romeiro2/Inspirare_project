@@ -76,14 +76,17 @@
     .form-grid {
         grid-template-columns: 1fr;
     }
+
     .profile-card {
         padding: 20px;
     }
 }
+
 /* Form positioning for edit button removed */
 .edit-btn-wrapper {
     margin-bottom: 10px;
 }
+
 .edit-btn-wrapper button {
     background: var(--primary-color);
     color: white;
@@ -98,18 +101,22 @@
     gap: 6px;
     transition: all 0.3s;
 }
+
 .edit-btn-wrapper button:hover {
     background: #a6757d;
 }
+
 .edit-btn-wrapper button.active {
     background: transparent;
     color: var(--primary-color);
     border: 1px solid var(--primary-color);
 }
+
 .edit-btn-wrapper button.active:hover {
     background: rgba(187, 137, 145, 0.1);
     border-color: var(--primary-color);
 }
+
 .edit-btn-wrapper button i {
     font-size: 1rem;
 }
@@ -126,16 +133,19 @@
     outline: none;
     transition: border-color 0.3s;
 }
+
 .password-input:focus {
     border-color: var(--accent-color);
     box-shadow: 0 0 0 4px rgba(145, 166, 151, 0.2);
 }
+
 .modal-buttons {
     display: flex;
     justify-content: center;
     gap: 60px;
     margin-top: 15px;
 }
+
 .modal-buttons .btn-modal {
     padding: 10px 16px;
     font-size: 0.9rem;
@@ -144,17 +154,127 @@
     border: none;
     transition: background 0.3s;
 }
+
 .modal-buttons #password-cancel {
     background: var(--neutral-color);
     color: var(--secondary-color);
 }
+
 .modal-buttons #password-cancel:hover {
     background: #bdbdbd;
 }
+
 .modal-buttons #password-confirm {
     background: var(--primary-color);
     color: white;
 }
+
 .modal-buttons #password-confirm:hover {
     background: #a6757d;
+}
+
+/* Delete profile section */
+.delete-profile-section {
+    width: 100%;
+    margin-top: 5px;
+    padding-top: 20px;
+    border-top: 1px solid var(--neutral-color);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-delete-profile {
+    background: transparent;
+    color: #c0392b;
+    border: 1.5px solid #c0392b;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+}
+
+.btn-delete-profile:hover {
+    background: #c0392b;
+    color: white;
+}
+
+.btn-delete-profile i {
+    font-size: 1rem;
+}
+
+/* Delete modal specific styles */
+.delete-modal-content {
+    text-align: center;
+    max-width: 420px;
+}
+
+.delete-modal-icon {
+    color: #c0392b;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+.delete-modal-icon i {
+    width: 48px;
+    height: 48px;
+    stroke-width: 1.5;
+}
+
+#delete-modal-title {
+    color: var(--secondary-color);
+    margin-bottom: 8px;
+}
+
+#delete-modal-text {
+    color: var(--text-muted, #666);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.delete-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 0;
+}
+
+.delete-modal-buttons .btn-modal {
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    cursor: pointer;
+    border: none;
+    transition: background 0.3s, transform 0.2s;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+.delete-modal-buttons .btn-modal:active {
+    transform: scale(0.98);
+}
+
+#delete-cancel {
+    background: var(--neutral-color);
+    color: var(--secondary-color);
+}
+
+#delete-cancel:hover {
+    background: #bdbdbd;
+}
+
+.btn-delete-confirm {
+    background: #c0392b;
+    color: white;
+}
+
+.btn-delete-confirm:hover {
+    background: #a93226;
 }

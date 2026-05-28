@@ -101,6 +101,27 @@
                     </div>
                     <button type="submit" class="btn-save-profile" disabled>Salvar Alterações</button>
                   </form>
+
+                  <div class="delete-profile-section">
+                    <button type="button" class="btn-delete-profile" id="btn-delete-profile">
+                      <i data-lucide="trash-2"></i> Deletar perfil
+                    </button>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Delete Profile Confirmation Modal -->
+          <div id="delete-modal" class="custom-modal-overlay">
+              <div class="custom-modal delete-modal-content">
+                  <div class="delete-modal-icon">
+                      <i data-lucide="alert-triangle"></i>
+                  </div>
+                  <h3 id="delete-modal-title">Deletar perfil</h3>
+                  <p id="delete-modal-text">Tem certeza? Essa ação é irreversível e todos os seus dados serão permanentemente removidos.</p>
+                  <div class="modal-buttons delete-modal-buttons">
+                      <button class="btn-modal" id="delete-cancel">Cancelar</button>
+                      <button class="btn-modal btn-delete-confirm" id="delete-confirm">Sim, deletar</button>
+                  </div>
               </div>
           </div>
       </div>

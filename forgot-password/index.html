@@ -78,12 +78,13 @@
     <script>
         lucide.createIcons();
 
+        const headerDesc = document.getElementById('header-desc');
+
         const steps = {
             1: document.getElementById('step-1'),
             2: document.getElementById('step-2'),
             3: document.getElementById('step-3')
         };
-        const headerDesc = document.getElementById('header-desc');
 
         function goToStep(stepNum) {
             Object.values(steps).forEach(step => step.classList.remove('active'));
@@ -91,6 +92,20 @@
 
             if(stepNum === 2) headerDesc.innerText = 'Validação de Identidade';
             if(stepNum === 3) headerDesc.innerText = 'Crie sua nova senha';
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const userParam = urlParams.get('user');
+        const createMode = urlParams.get('create') === 'true';
+
+        if (userParam) {
+            document.getElementById('identifier').value = decodeURIComponent(userParam);
+        }
+
+        if (createMode && userParam) {
+            document.querySelector('h1').innerText = 'Inspirare';
+            headerDesc.innerText = 'Crie sua senha de acesso';
+            goToStep(3);
         }
 
         // Step 1 -> Step 2

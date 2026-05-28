@@ -96,6 +96,49 @@
             </div>
         </div>
 
+        <!-- Cancel Reason Modal -->
+        <div id="cancel-reason-modal" class="custom-modal-overlay" style="z-index: 1001;">
+            <div class="custom-modal cancel-reason-modal">
+                <h3>Motivo do Cancelamento</h3>
+                <p style="font-size: 0.85rem; margin-bottom: 10px;">Você pode informar o motivo do cancelamento (opcional).</p>
+                <div class="cancel-reason-options">
+                    <label class="cancel-reason-option">
+                        <input type="checkbox" class="custom-check" value="Mudança de planos" onchange="toggleCancelCheckbox(this)">
+                        <span class="check-box"></span>
+                        <span>Mudança de planos</span>
+                    </label>
+                    <label class="cancel-reason-option">
+                        <input type="checkbox" class="custom-check" value="Já me sinto melhor" onchange="toggleCancelCheckbox(this)">
+                        <span class="check-box"></span>
+                        <span>Já me sinto melhor</span>
+                    </label>
+                    <label class="cancel-reason-option">
+                        <input type="checkbox" class="custom-check" value="Preferi remarcar para outro dia" onchange="toggleCancelCheckbox(this)">
+                        <span class="check-box"></span>
+                        <span>Preferi remarcar para outro dia</span>
+                    </label>
+                    <label class="cancel-reason-option">
+                        <input type="checkbox" class="custom-check" value="Prefiro não dizer" onchange="toggleCancelCheckbox(this)">
+                        <span class="check-box"></span>
+                        <span>Prefiro não dizer</span>
+                    </label>
+                    <label class="cancel-reason-option">
+                        <input type="checkbox" class="custom-check" value="Escrever motivo" onchange="toggleCancelCheckbox(this)">
+                        <span class="check-box"></span>
+                        <span>Escrever motivo</span>
+                    </label>
+                </div>
+                <div class="cancel-textarea-group" id="cancel-textarea-wrapper" style="display:none;">
+                    <textarea id="cancel-reason-text" maxlength="200" placeholder="Descreva o motivo..." oninput="updateCancelCharCount()"></textarea>
+                    <span class="char-counter" id="cancel-char-counter">0 / 200</span>
+                </div>
+                <div class="cancel-reason-actions">
+                    <button class="btn-modal btn-modal-secondary" onclick="abortCancelReason()">Voltar</button>
+                    <button class="btn-modal btn-modal-primary btn-confirm-cancel" onclick="submitCancelReason()">Confirmar Cancelamento</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Dashboard -->
         <div id="view-home" class="dashboard-grid">
             <div class="menu-card" onclick="openFlow('schedule')">
@@ -124,16 +167,12 @@
             <!-- Step 1: Payment Type -->
             <div id="sched-step-1" class="sched-step active">
                 <p style="margin-bottom: 20px; text-align: center;">Escolha o tipo de atendimento:</p>
-                <div class="option-grid">
-                    <div class="option-card" onclick="selectPaymentType('single', 55)">
-                        <h4>Consulta Avulsa</h4>
-                        <span class="price">R$ 55,00</span>
-                    </div>
-                    <div class="option-card" onclick="selectPaymentType('plan', 450)">
-                        <h4>Plano Mensal</h4>
-                        <span class="price">R$ 450,00</span>
-                        <p style="font-size: 0.7rem;">(4 consultas/mês)</p>
-                    </div>
+                <div id="type-grid" class="option-grid"></div>
+                <div class="pagination-controls" id="type-pagination" style="display:none;">
+                    <button class="btn-page" id="btn-prev-type" onclick="changeTypePage(-1)"
+                        disabled="disabled">Anterior</button>
+                    <span class="page-indicator" id="type-page-indicator">1 / 1</span>
+                    <button class="btn-page" id="btn-next-type" onclick="changeTypePage(1)">Próxima</button>
                 </div>
             </div>
 
@@ -399,8 +438,64 @@
         let tutorialHistory = [];
         let tutorialActiveBranch = null;
         let tutorialPsychTimeout = null; // Controla o rebuild dos clones no step de profissionais
+        let tutorialTypeTimeout = null;  // Controla o rebuild dos clones no step de tipos de agendamento
         let showTutorialReactivation = false; // Controla o balão de reativação ao final do tutorial
         let currentTutorialType = null; // 'schedule' | 'cancel' | 'view'
+
+
+        /* =========================
+           TIPOS DE AGENDAMENTO - PAGINAÇÃO
+           ========================= */
+        const scheduleTypes = [
+            { type: 'single', price: 55, title: 'Consulta Avulsa', priceLabel: 'R$ 55,00', extra: '', icon: 'stethoscope' },
+            { type: 'plan', price: 450, title: 'Plano Mensal', priceLabel: 'R$ 450,00', extra: '(4 consultas/mês)', icon: 'calendar-days' },
+            { type: 'package', price: 150, title: 'Pacote 3 Consultas', priceLabel: 'R$ 150,00', extra: '(válido por 3 meses)', icon: 'package' }
+        ];
+        let typeCurrentPage = 0;
+        const typesPerPage = 2;
+
+        function renderScheduleTypesPage() {
+            const grid = document.getElementById('type-grid');
+            const start = typeCurrentPage * typesPerPage;
+            const end = start + typesPerPage;
+            const pageItems = scheduleTypes.slice(start, end);
+            const totalPages = Math.ceil(scheduleTypes.length / typesPerPage);
+
+            grid.innerHTML = '';
+            grid.classList.toggle('single-card', pageItems.length === 1);
+            pageItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'option-card';
+                card.onclick = function () { selectPaymentType(item.type, item.price); };
+                card.innerHTML = `
+                    <i data-lucide="${item.icon || 'circle'}" style="width:32px;height:32px;margin-bottom:8px;color:var(--secondary-color);"></i>
+                    <h4>${item.title}</h4>
+                    <span class="price">${item.priceLabel}</span>
+                    ${item.extra ? `<p style="font-size: 0.7rem;">${item.extra}</p>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+
+            const paginationEl = document.getElementById('type-pagination');
+            if (scheduleTypes.length <= typesPerPage) {
+                paginationEl.style.display = 'none';
+            } else {
+                paginationEl.style.display = 'flex';
+                document.getElementById('type-page-indicator').textContent = `${typeCurrentPage + 1} / ${totalPages}`;
+                document.getElementById('btn-prev-type').disabled = typeCurrentPage === 0;
+                document.getElementById('btn-next-type').disabled = typeCurrentPage >= totalPages - 1;
+            }
+        }
+
+        function changeTypePage(direction) {
+            const totalPages = Math.ceil(scheduleTypes.length / typesPerPage);
+            const newPage = typeCurrentPage + direction;
+            if (newPage >= 0 && newPage < totalPages) {
+                typeCurrentPage = newPage;
+                renderScheduleTypesPage();
+            }
+        }
 
         /* =========================
            PROFISSIONAIS - PAGINAÇÃO
@@ -718,6 +813,8 @@
         function resetScheduleFlow() {
             document.querySelectorAll('.sched-step').forEach(s => s.style.display = 'none');
             currentScheduleStep = 1;
+            typeCurrentPage = 0;
+            renderScheduleTypesPage();
             document.getElementById('sched-step-1').style.display = 'block';
         }
 
@@ -1056,24 +1153,11 @@
                         blocker.classList.add('tutorial-cancel-btn');
                     } else {
                         makeClone(btn, true, () => {
-                            closeTutorial();
-                            // Abre o modal de confirmação manualmente para interceptar o fechamento
-                            showModal(
-                                'Confirmar Cancelamento',
-                                'Deseja realmente cancelar esta consulta?',
-                                () => { // Sim
-                                    const item = btn.closest('.appointment-item');
-                                    item.dataset.status = 'cancelled';
-                                    item.querySelector('.btn-cancel').style.display = 'none';
-                                    const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
-                                    apptsPageState.scheduled = 0;
-                                    filterAppts('scheduled', activeBtn);
-                                    setTimeout(() => showReactivationHint(), 400);
-                                },
-                                () => { // Não
-                                    setTimeout(() => showReactivationHint(), 400);
-                                }
-                            );
+                            closeTutorialVisuals();
+                            btn.click();
+                            tutorialHistory.push(tutorialCurrentStep);
+                            tutorialCurrentStep++;
+                            setTimeout(() => nextTutorialStep(), 300);
                         });
                     }
                 }
@@ -1191,20 +1275,129 @@
             }
         }
 
+        let cancelReasonTargetBtn = null;
+        let pendingTutorialReactivation = false;
+
+        function openCancelReasonModal(btn) {
+            cancelReasonTargetBtn = btn;
+            document.querySelectorAll('#cancel-reason-modal input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('cancel-reason-text').value = '';
+            updateCancelCharCount();
+            const modal = document.getElementById('cancel-reason-modal');
+            modal.style.display = 'flex';
+            modal.style.zIndex = '3000';
+            const inner = modal.querySelector('.cancel-reason-modal');
+            if (inner) inner.style.zIndex = '3001';
+        }
+
+        function resetCancelModalZIndex() {
+            const modal = document.getElementById('cancel-reason-modal');
+            if (modal) {
+                modal.style.zIndex = '';
+                const inner = modal.querySelector('.cancel-reason-modal');
+                if (inner) inner.style.zIndex = '';
+            }
+        }
+
+        function abortCancelReason() {
+            document.getElementById('cancel-reason-modal').style.display = 'none';
+            cancelReasonTargetBtn = null;
+            pendingTutorialReactivation = false;
+            resetCancelModalZIndex();
+            // Restaura botão Voltar
+            const backBtn = document.querySelector('#cancel-reason-modal .cancel-reason-actions .btn-modal-secondary');
+            if (backBtn) backBtn.style.display = '';
+        }
+
+        function closeCancelReasonModal() {
+            document.getElementById('cancel-reason-modal').style.display = 'none';
+            cancelReasonTargetBtn = null;
+            if (pendingTutorialReactivation) {
+                pendingTutorialReactivation = false;
+                setTimeout(() => showReactivationHint(), 400);
+            }
+            resetCancelModalZIndex();
+            // Restaura botão Voltar
+            const backBtn = document.querySelector('#cancel-reason-modal .cancel-reason-actions .btn-modal-secondary');
+            if (backBtn) backBtn.style.display = '';
+        }
+
+        function updateCancelCharCount() {
+            const text = document.getElementById('cancel-reason-text').value;
+            document.getElementById('cancel-char-counter').innerText = `${text.length} / 200`;
+        }
+
+        function toggleCancelCheckbox(el) {
+            if (el.checked) {
+                document.querySelectorAll('#cancel-reason-modal input[type="checkbox"]').forEach(cb => {
+                    if (cb !== el) cb.checked = false;
+                });
+            }
+            const isWriteReason = el.value === 'Escrever motivo';
+            const textareaWrapper = document.getElementById('cancel-textarea-wrapper');
+            if (textareaWrapper) {
+                textareaWrapper.style.display = (isWriteReason && el.checked) ? 'block' : 'none';
+            }
+
+            // Reposiciona o balão do tutorial após o layout do modal mudar
+            if (currentTutorialType === 'cancel' && document.getElementById('tutorial-balloon').style.display !== 'none') {
+                const currentStep = tutorialSteps[tutorialCurrentStep];
+                if (currentStep && currentStep.cancelModalStep) {
+                    setTimeout(() => {
+                        const balloon = document.getElementById('tutorial-balloon');
+                        const targets = [];
+                        currentStep.targets.forEach(s => {
+                            document.querySelectorAll(s).forEach(el => targets.push(el));
+                        });
+                        const visibleTargets = targets.filter(t => {
+                            const rect = t.getBoundingClientRect();
+                            return rect.top < window.innerHeight && rect.bottom > 0;
+                        });
+                        const positioningTargets = visibleTargets.length > 0 ? visibleTargets : targets;
+                        if (balloon) positionBalloonCenterTop(balloon, positioningTargets);
+                    }, 150);
+                }
+            }
+        }
+
+        function getCancelReason() {
+            const checked = document.querySelector('#cancel-reason-modal input[type="checkbox"]:checked');
+            const text = document.getElementById('cancel-reason-text').value.trim();
+            if (!checked) return '';
+            const value = checked.value;
+            if (value === 'Escrever motivo') {
+                return text || value;
+            }
+            if (value === 'Prefiro não dizer') {
+                return '';
+            }
+            return value;
+        }
+
+        function submitCancelReason() {
+            if (!cancelReasonTargetBtn) return;
+            const item = cancelReasonTargetBtn.closest('.appointment-item');
+            const reason = getCancelReason();
+            if (reason) {
+                item.dataset.cancelReason = reason;
+                item.dataset.cancelAuthor = 'Paciente';
+            } else {
+                delete item.dataset.cancelReason;
+                delete item.dataset.cancelAuthor;
+            }
+            item.dataset.status = 'cancelled';
+            const btnCancel = item.querySelector('.btn-cancel');
+            if (btnCancel) btnCancel.style.display = 'none';
+            const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
+            apptsPageState.scheduled = 0;
+            filterAppts('scheduled', activeBtn);
+            closeCancelReasonModal();
+            // Mostra modal de sucesso
+            showModal('Sucesso', 'Consulta cancelada com sucesso!', () => {});
+        }
+
         function cancelAppt(btn) {
-            showModal(
-                'Confirmar Cancelamento',
-                'Deseja realmente cancelar esta consulta?',
-                () => { // Sim
-                    const item = btn.closest('.appointment-item');
-                    item.dataset.status = 'cancelled';
-                    item.querySelector('.btn-cancel').style.display = 'none';
-                    const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
-                    apptsPageState.scheduled = 0;
-                    filterAppts('scheduled', activeBtn);
-                },
-                () => { } // Não: apenas fecha o modal
-            );
+            openCancelReasonModal(btn);
         }
 
         /* =========================
@@ -1233,6 +1426,13 @@
         // Limpa apenas os visuais (clones, classes) sem fechar o overlay
         function closeTutorialVisuals() {
             const overlay = document.getElementById('tutorial-overlay');
+            const balloon = document.getElementById('tutorial-balloon');
+
+            // Devolve o balão para dentro do overlay se foi movido para o body (modal steps)
+            if (balloon && balloon.parentElement === document.body) {
+                overlay.appendChild(balloon);
+                balloon.style.zIndex = '';
+            }
 
             document.querySelectorAll('.tutorial-clone').forEach(el => el.remove());
 
@@ -1270,6 +1470,29 @@
             overlay.style.pointerEvents = '';
             overlay.style.background = '';
 
+            // Reseta z-index dos elementos interativos do modal de cancelamento
+            const cancelModal = document.getElementById('cancel-reason-modal');
+            if (cancelModal) {
+                cancelModal.querySelectorAll('input, textarea, button, label').forEach(el => {
+                    if (el.dataset.tutorialOriginalZIndex !== undefined) {
+                        el.style.zIndex = el.dataset.tutorialOriginalZIndex;
+                        delete el.dataset.tutorialOriginalZIndex;
+                    } else {
+                        el.style.zIndex = '';
+                    }
+                    el.style.position = '';
+                });
+                cancelModal.style.pointerEvents = '';
+            }
+
+            resetCancelModalZIndex();
+
+            overlay.style.zIndex = '';
+
+            // Restaura botão Voltar do modal caso tenha sido escondido pelo tutorial
+            const backBtn = document.querySelector('#cancel-reason-modal .cancel-reason-actions .btn-modal-secondary');
+            if (backBtn) backBtn.style.display = '';
+
             document.getElementById('tutorial-balloon').style.display = 'none';
         }
 
@@ -1281,12 +1504,19 @@
                     beforeShow: () => { closeFlow(); }
                 },
                 {
-                    targets: [
-                        '#sched-step-1 .option-card:nth-child(1)',
-                        '#sched-step-1 .option-card:nth-child(2)'
-                    ],
-                    text: 'Agora escolha entre Consulta Avulsa ou Plano Mensal de acordo com sua preferência.',
-                    beforeShow: () => { openFlow('schedule'); resetScheduleFlow(); }
+                    targets: ['#type-grid .option-card'],
+                    visualTargets: ['#type-pagination'],
+                    text: '',
+                    beforeShow: function () {
+                        openFlow('schedule');
+                        resetScheduleFlow();
+                        const totalPages = Math.ceil(scheduleTypes.length / typesPerPage);
+                        let text = 'Agora escolha o tipo de atendimento de acordo com sua preferência.';
+                        if (totalPages > 1) {
+                            text += ' Use Anterior / Próxima para navegar.';
+                        }
+                        this.text = text;
+                    }
                 },
                 {
                     targets: [
@@ -1456,8 +1686,7 @@
                 {
                     targets: ['.appointment-item[data-status="scheduled"] .btn-cancel'],
                     visualTargets: ['.appointment-item[data-status="scheduled"]'],
-                    text: 'Clique em "Cancelar" ao lado da consulta desejada. Você também pode usar "Anterior" e "Próximo" para navegar entre as páginas de consultas.',
-                    endOnClick: true,
+                    text: 'Clique em "Cancelar" ao lado da consulta desejada.',
                     alignTop: true,
                     centerAbove: true,
                     enablePagination: true,
@@ -1475,16 +1704,35 @@
                         filterAppts('scheduled', btn);
                         ensureScheduledAppointment();
 
-                        // Verifica se há paginação visível
                         const paginationEl = document.getElementById('appts-pagination');
                         const hasPagination = paginationEl && paginationEl.style.display !== 'none';
                         if (!hasPagination) {
-                            this.text = 'Clique em "Cancelar" ao lado da consulta desejada.';
                             this.scrollToBottom = true;
                         } else {
-                            this.text = 'Clique em "Cancelar" ao lado da consulta desejada. Você também pode usar "Anterior" e "Próximo" para navegar entre as páginas de consultas.';
                             this.scrollToBottom = false;
                         }
+                    }
+                },
+                {
+                    targets: [
+                        '#cancel-reason-modal .cancel-reason-option:nth-child(1)',
+                        '#cancel-reason-modal .cancel-reason-option:nth-child(2)',
+                        '#cancel-reason-modal .cancel-reason-option:nth-child(3)',
+                        '#cancel-reason-modal .cancel-reason-option:nth-child(4)',
+                        '#cancel-reason-modal .cancel-reason-option:nth-child(5)',
+                        '#cancel-reason-modal .btn-confirm-cancel'
+                    ],
+                    visualTargets: ['#cancel-reason-modal .cancel-reason-options', '#cancel-reason-modal .cancel-textarea-group', '#cancel-reason-modal .cancel-reason-actions'],
+                    text: 'Escolha um motivo pronto, marque "Escrever motivo" para digitar livremente, e quando estiver pronto, confirme o cancelamento.',
+                    cancelModalStep: true,
+                    endOnClick: true,
+                    beforeShow: function () {
+                        ensureCancelModalOpen();
+                        document.querySelectorAll('#cancel-reason-modal input[type="checkbox"]').forEach(cb => cb.checked = false);
+                        document.getElementById('cancel-textarea-wrapper').style.display = 'none';
+                        // Esconde o botão "Voltar" durante o tutorial para forçar o fluxo de cancelamento
+                        const backBtn = document.querySelector('#cancel-reason-modal .cancel-reason-actions .btn-modal-secondary');
+                        if (backBtn) backBtn.style.display = 'none';
                     }
                 }
             ];
@@ -1918,9 +2166,33 @@
                     clone.addEventListener('focus', doReposition);
                 }
             } else {
-                clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;` +
-                    `width:${rect.width}px;height:${rect.height}px;margin:0;z-index:${baseZIndex};` +
-                    `pointer-events:${clickable ? 'auto' : 'none'};cursor:${clickable ? 'pointer' : 'default'};`;
+                const computed = window.getComputedStyle(originalEl);
+                clone.style.cssText = `
+                    position: fixed;
+                    top: ${rect.top}px;
+                    left: ${rect.left}px;
+                    width: ${rect.width}px;
+                    height: ${rect.height}px;
+                    margin: 0;
+                    z-index: ${baseZIndex};
+                    pointer-events: ${clickable ? 'auto' : 'none'};
+                    cursor: ${clickable ? 'pointer' : 'default'};
+                    padding: ${computed.padding};
+                    border: ${computed.border};
+                    border-radius: ${computed.borderRadius};
+                    background: ${computed.background};
+                    color: ${computed.color};
+                    font: ${computed.font};
+                    box-sizing: ${computed.boxSizing};
+                    display: ${computed.display};
+                    align-items: ${computed.alignItems};
+                    justify-content: ${computed.justifyContent};
+                    text-align: ${computed.textAlign};
+                    white-space: ${computed.whiteSpace};
+                    gap: ${computed.gap};
+                    flex-direction: ${computed.flexDirection};
+                    outline: ${computed.outline};
+                `;
             }
 
             if (clickable && onClickFn) {
@@ -2019,6 +2291,7 @@
 
                     // Flag para evitar duplicação de clones no step de profissionais
                     const hasPsychCards = targets.some(t => t.classList && t.classList.contains('psych-card'));
+                    const hasTypeCards = targets.some(t => t.classList && t.classList.contains('option-card')) && stepIndex === 1;
 
                     if (hasPsychCards) {
                         // Função dedicada para recriar todos os clones do step de profissionais
@@ -2090,6 +2363,88 @@
                         }
 
                         setupPsychTutorialClones();
+                    } else if (hasTypeCards) {
+                        // Função dedicada para recriar todos os clones do step de tipos de agendamento
+                        function setupTypeTutorialClones(skipScroll) {
+                            if (balloon) balloon.classList.add('no-arrow');
+                            if (tutorialTypeTimeout) {
+                                clearTimeout(tutorialTypeTimeout);
+                                tutorialTypeTimeout = null;
+                            }
+                            document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                            const cards = document.querySelectorAll('#type-grid .option-card');
+                            const pagination = document.getElementById('type-pagination');
+
+                            cards.forEach(card => makeClone(card, true, () => {
+                                closeTutorialVisuals();
+                                card.click();
+                                tutorialHistory.push(stepIndex);
+                                tutorialCurrentStep = stepIndex + 1;
+                                setTimeout(() => nextTutorialStep(), 300);
+                            }));
+
+                            if (pagination && pagination.style.display !== 'none') {
+                                makeClone(pagination, false);
+                                pagination.querySelectorAll('.btn-page').forEach(btn => {
+                                    const dir = btn.id === 'btn-next-type' ? 1 : -1;
+                                    if (btn.disabled) {
+                                        makeClone(btn, false);
+                                    } else {
+                                        makeClone(btn, true, () => {
+                                            document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
+                                            const grid = document.getElementById('type-grid');
+                                            if (grid) grid.style.opacity = '0';
+                                            changeTypePage(dir);
+                                            if (tutorialTypeTimeout) clearTimeout(tutorialTypeTimeout);
+                                            tutorialTypeTimeout = setTimeout(() => {
+                                                tutorialTypeTimeout = null;
+                                                requestAnimationFrame(() => requestAnimationFrame(() => {
+                                                    const newCards = document.querySelectorAll('#type-grid .option-card');
+                                                    const newPagination = document.getElementById('type-pagination');
+                                                    const newTargets = [...newCards, newPagination].filter(Boolean);
+                                                    if (newTargets.length) scrollTargetsIntoView(newTargets);
+                                                    requestAnimationFrame(() => {
+                                                        setupTypeTutorialClones(true);
+                                                        if (grid) grid.style.opacity = '';
+                                                    });
+                                                }));
+                                            }, 300);
+                                        });
+                                    }
+                                });
+                            }
+
+                            const visiblePagination = pagination && pagination.style.display !== 'none' ? pagination : null;
+                            const allTargets = [...cards, visiblePagination].filter(Boolean);
+                            if (allTargets.length) {
+                                positionBalloonCenterTop(balloon, allTargets);
+                            }
+
+                            if (!skipScroll && visiblePagination) {
+                                const paginationRect = pagination.getBoundingClientRect();
+                                const balloonRect = balloon.getBoundingClientRect();
+                                const bottommost = Math.max(paginationRect.bottom, balloonRect.bottom);
+                                if (bottommost > window.innerHeight - 10) {
+                                    const scrollNeeded = bottommost - window.innerHeight + 30;
+                                    window.scrollBy({ top: scrollNeeded, behavior: 'smooth' });
+                                }
+                            }
+                        }
+
+                        setupTypeTutorialClones();
+                    } else if (step.cancelModalStep) {
+                        // Overlay permanece ativo e escuro; o modal ficará acima dele
+                        overlay.style.pointerEvents = 'none';
+                        overlay.style.zIndex = '';
+
+                        // Move balão para o body para escapar do stacking context do overlay
+                        // e ficar visível por cima do modal
+                        if (balloon && balloon.parentElement === overlay) {
+                            document.body.appendChild(balloon);
+                            balloon.style.zIndex = '9999';
+                        }
+
+                        setupCancelModalTutorialClones(step, stepIndex, targets, balloon);
                     } else {
                         // No tutorial de visualização, espera o reflow completar
                         // antes de criar clones (evita posicionamento errado no mobile)
@@ -2130,6 +2485,68 @@
             }, initialDelay);
         }
 
+        function ensureCancelModalOpen() {
+            const modal = document.getElementById('cancel-reason-modal');
+            if (modal && modal.style.display !== 'flex') {
+                modal.style.display = 'flex';
+            }
+            if (modal) {
+                modal.style.zIndex = '3000';
+                const inner = modal.querySelector('.cancel-reason-modal');
+                if (inner) inner.style.zIndex = '3001';
+            }
+        }
+
+        function setupCancelModalTutorialClones(step, stepIndex, targets, balloon) {
+            const btnStop = document.getElementById('btn-tutorial-stop');
+            const btnNext = document.getElementById('btn-tutorial-next');
+            const btnFinish = document.getElementById('btn-tutorial-finish');
+            if (btnStop) btnStop.style.display = step.finishButton ? 'none' : 'inline-block';
+            if (btnNext) btnNext.style.display = step.advanceButton ? 'inline-block' : 'none';
+            if (btnFinish) btnFinish.style.display = step.finishButton ? 'inline-block' : 'none';
+
+            // Durante o tutorial do modal, nao cria clones.
+            // Em vez disso, eleva o z-index do modal e seus filhos interativos
+            // para ficarem acima do overlay (2000) e permite interacao nativa.
+            const modal = document.getElementById('cancel-reason-modal');
+            if (modal) {
+                modal.style.zIndex = '3000';
+                modal.style.pointerEvents = 'auto';
+                const inner = modal.querySelector('.cancel-reason-modal');
+                if (inner) inner.style.zIndex = '3001';
+
+                // Eleva todos os elementos interativos internos
+                modal.querySelectorAll('input, textarea, button, label').forEach(el => {
+                    el.dataset.tutorialOriginalZIndex = el.style.zIndex || '';
+                    el.style.position = 'relative';
+                    el.style.zIndex = '3002';
+                });
+
+                // Adiciona listener temporario ao botao Confirmar para fechar o tutorial
+                const confirmBtn = modal.querySelector('.btn-confirm-cancel');
+                if (confirmBtn && !confirmBtn.dataset.tutorialListener) {
+                    const onConfirm = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        confirmBtn.removeEventListener('click', onConfirm);
+                        delete confirmBtn.dataset.tutorialListener;
+                        submitCancelReason();
+                        closeTutorial();
+                    };
+                    confirmBtn.addEventListener('click', onConfirm);
+                    confirmBtn.dataset.tutorialListener = 'true';
+                }
+            }
+
+            // Posiciona o balao sobre os targets
+            const visibleTargets = targets.filter(t => {
+                const rect = t.getBoundingClientRect();
+                return rect.top < window.innerHeight && rect.bottom > 0;
+            });
+            const positioningTargets = visibleTargets.length > 0 ? visibleTargets : targets;
+            positionBalloonCenterTop(balloon, positioningTargets);
+        }
+
         function setupViewTutorialClones(step, stepIndex, targets, balloon) {
             // Configura botões do balão com base no tipo de step
             const btnStop = document.getElementById('btn-tutorial-stop');
@@ -2162,8 +2579,8 @@
                 } else {
                     makeClone(originalEl, true, () => {
                         if (step.endOnClick) {
-                            closeTutorial();
                             originalEl.click();
+                            closeTutorial();
                             return;
                         }
 
@@ -2484,6 +2901,9 @@
 
             document.body.style.overflow = '';
             document.body.style.touchAction = '';
+
+            const modal = document.getElementById('cancel-reason-modal');
+            if (modal) modal.style.display = 'none';
 
             tutorialCurrentStep = 0;
             tutorialHistory = [];

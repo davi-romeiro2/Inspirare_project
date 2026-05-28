@@ -139,4 +139,45 @@ document.addEventListener('DOMContentLoaded', () => {
         isEditing = false;
         editBtn.innerHTML = '<i data-lucide="edit"></i> Editar';
     }
+
+    // Delete profile functionality
+    const deleteBtn = document.getElementById('btn-delete-profile');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            showDeleteModal();
+        });
+    }
 });
+
+// Delete modal functions
+function showDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    const confirmBtn = document.getElementById('delete-confirm');
+    const cancelBtn = document.getElementById('delete-cancel');
+
+    // Reset handlers to avoid duplicates
+    const newConfirm = confirmBtn.cloneNode(true);
+    const newCancel = cancelBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    newConfirm.addEventListener('click', () => {
+        hideDeleteModal();
+        // Simulate deletion — redirect after short delay
+        showModal('Perfil Deletado', 'Seu perfil foi removido com sucesso. Você será redirecionado...', () => {
+            window.location.href = '/login/index.html';
+        });
+    });
+
+    newCancel.addEventListener('click', () => {
+        hideDeleteModal();
+    });
+}
+
+function hideDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    if (modal) modal.style.display = 'none';
+}

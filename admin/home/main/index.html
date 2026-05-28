@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Home</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="../../../user/menu/style.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -88,7 +88,7 @@
                         <span class="detail-value" id="modal-time"></span>
                     </div>
                     <div class="modal-detail-item">
-                        <span class="detail-label"><i data-lucide="video"></i> Modalidade</span>
+                        <span class="detail-label"><i data-lucide="video" id="modal-modality-icon"></i> Modalidade</span>
                         <span class="detail-value" id="modal-modality"></span>
                     </div>
                     <div class="modal-detail-item">
@@ -97,13 +97,32 @@
                     </div>
                 </div>
 
-                <div class="modal-actions-bar">
+                <div class="modal-actions-bar" id="modal-actions-bar">
                     <button class="btn-modal-action btn-notes-action" onclick="modalOpenAnnotations()">
                         <i data-lucide="notebook-pen"></i> Anotações
                     </button>
                     <button class="btn-modal-action btn-cancel-action" id="modal-cancel-btn" onclick="modalCancelAppointment()">
                         <i data-lucide="x"></i> Cancelar consulta
                     </button>
+                    <button class="btn-modal-action btn-reason-action" id="modal-reason-btn" onclick="modalViewCancelReason()" style="display:none;">
+                        <i data-lucide="file-text"></i> Ver motivo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancel Confirmation Modal -->
+        <div id="cancel-modal" class="cancel-modal-overlay">
+            <div class="cancel-modal">
+                <h3>Quer mesmo cancelar a consulta?</h3>
+                <div class="cancel-checkbox-row">
+                    <input type="checkbox" id="cancel-reason-check" onchange="toggleCancelReason()">
+                    <label for="cancel-reason-check">Escrever motivo do cancelamento</label>
+                </div>
+                <textarea id="cancel-reason-text" class="cancel-reason-text" placeholder="Escreva o motivo do cancelamento..." style="display:none;"></textarea>
+                <div class="cancel-actions-row">
+                    <button class="btn-cancel-modal btn-cancel-no" onclick="closeCancelModal()">Não</button>
+                    <button class="btn-cancel-modal btn-cancel-yes" onclick="confirmCancelAppointment()">Sim</button>
                 </div>
             </div>
         </div>
@@ -119,6 +138,12 @@
                 </div>
                 <div class="annotation-expand-body">
                     <div id="expand-text"></div>
+                    <textarea id="expand-textarea" class="expand-textarea" placeholder="Escreva aqui..."></textarea>
+                </div>
+                <div class="annotation-expand-footer">
+                    <button class="btn-expand-action btn-expand-delete" onclick="deleteAnnotation()">Deletar</button>
+                    <button class="btn-expand-action btn-expand-edit" onclick="enableAnnotationEdit()">Editar</button>
+                    <button class="btn-expand-action btn-expand-save" onclick="saveAnnotationEdit()" disabled>Salvar</button>
                 </div>
             </div>
         </div>
@@ -128,12 +153,17 @@
             <div class="menu-card" onclick="openFlow('consultas')">
                 <div class="icon-box"><i data-lucide="calendar-check"></i></div>
                 <h3>Consultas marcadas</h3>
+                <span class="card-badge" id="badge-consultas">0</span>
             </div>
-            <div class="menu-card" onclick="alert('Em desenvolvimento: Lista de pacientes')">
+            <div class="menu-card" onclick="openFlow('pacientes')">
                 <div class="icon-box"><i data-lucide="users"></i></div>
                 <h3>Lista de pacientes</h3>
             </div>
-            <div class="menu-card" onclick="alert('Em desenvolvimento: Meu perfil')">
+            <div class="menu-card" onclick="openFlow('precos')">
+                <div class="icon-box"><i data-lucide="dollar-sign"></i></div>
+                <h3>Controle de preços</h3>
+            </div>
+            <div class="menu-card" onclick="openFlow('perfil')">
                 <div class="icon-box"><i data-lucide="user"></i></div>
                 <h3>Meu perfil</h3>
             </div>
@@ -150,12 +180,243 @@
 
             <div class="filter-bar">
                 <button class="filter-btn active" data-filter="all" onclick="filterAppointments('all')">Marcadas</button>
-                <button class="filter-btn" data-filter="completed" onclick="filterAppointments('completed')">Realizadas</button>
+                <button class="filter-btn" data-filter="completed" onclick="filterAppointments('completed')">Concluídas</button>
                 <button class="filter-btn" data-filter="cancelled" onclick="filterAppointments('cancelled')">Canceladas</button>
             </div>
 
             <div class="appointments-list" id="appointments-list">
             </div>
+
+            <div class="scroll-arrows" id="appointments-scroll-arrows" style="display:none;">
+                <button class="scroll-arrow-btn" id="appointments-scroll-up-btn" onclick="scrollAppointments('up')" title="Ver anteriores">
+                    <i data-lucide="chevron-up"></i>
+                </button>
+                <button class="scroll-arrow-btn" id="appointments-scroll-down-btn" onclick="scrollAppointments('down')" title="Ver próximos">
+                    <i data-lucide="chevron-down"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Flow: Lista de Pacientes -->
+        <div id="flow-pacientes" class="flow-container">
+            <div class="appointments-header">
+                <button type="button" class="btn-back-small" onclick="closeFlow()">
+                    <i data-lucide="arrow-left"></i> Voltar
+                </button>
+                <h2>Lista de Pacientes</h2>
+                <button type="button" class="btn-send-global" onclick="openSendMessageModal()">
+                    <i data-lucide="send"></i>
+                    <span>Enviar</span>
+                </button>
+            </div>
+            <div class="patients-toolbar">
+                <div class="patients-search-wrapper">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="patients-search" class="patients-search" placeholder="Buscar por nome, telefone ou email..." oninput="filterPatients()">
+                </div>
+                <div class="sort-dropdown">
+                    <button class="sort-dropdown-btn" onclick="togglePatientsSortDropdown()" id="patients-sort-btn">
+                        <i data-lucide="arrow-down-up"></i>
+                        <span id="patients-sort-label">A-Z</span>
+                    </button>
+                    <div class="sort-dropdown-menu" id="patients-sort-menu">
+                        <button class="sort-option active" data-sort="az" onclick="setPatientsSort('az')">A-Z</button>
+                        <button class="sort-option" data-sort="za" onclick="setPatientsSort('za')">Z-A</button>
+                        <button class="sort-option" data-sort="recent" onclick="setPatientsSort('recent')">Mais recente</button>
+                        <button class="sort-option" data-sort="oldest" onclick="setPatientsSort('oldest')">Mais antigos</button>
+                        <div class="sort-menu-divider"></div>
+                        <button class="sort-option active" data-filter="all" onclick="setPatientsFilter('all')">Todos</button>
+                        <button class="sort-option" data-filter="Paciente" onclick="setPatientsFilter('Paciente')">Pacientes</button>
+                        <button class="sort-option" data-filter="Psicologo" onclick="setPatientsFilter('Psicologo')">Psicólogos</button>
+                    </div>
+                </div>
+            </div>
+            <div class="patients-list" id="patients-list"></div>
+            <div class="scroll-arrows" id="patients-scroll-arrows">
+                <button class="scroll-arrow-btn" id="patients-scroll-up-btn" onclick="scrollPatients('up')" title="Ver anteriores">
+                    <i data-lucide="chevron-up"></i>
+                </button>
+                <button class="scroll-arrow-btn" id="patients-scroll-down-btn" onclick="scrollPatients('down')" title="Ver próximos">
+                    <i data-lucide="chevron-down"></i>
+                </button>
+            </div>
+            <button class="btn-new-note" onclick="openRegisterUserModal()">Cadastrar usuario +</button>
+        </div>
+
+        <!-- Flow: Controle de Preços -->
+        <div id="flow-precos" class="flow-container">
+            <div class="appointments-header">
+                <button type="button" class="btn-back-small" onclick="closeFlow()">
+                    <i data-lucide="arrow-left"></i> Voltar
+                </button>
+                <h2>Controle de Preços</h2>
+                <button type="button" class="btn-add-plan-header" onclick="openNewPlanModal()">
+                    <i data-lucide="plus"></i> Novo Plano
+                </button>
+            </div>
+            <div class="prices-grid">
+                <!-- Consulta Avulsa -->
+                <div class="price-card" id="card-avulsa">
+                    <div class="price-card-header">
+                        <div class="price-icon"><i data-lucide="stethoscope"></i></div>
+                        <h3>Consulta Avulsa</h3>
+                    </div>
+                    <div class="price-current" id="avulsa-display">
+                        <span class="price-currency">R$</span>
+                        <span class="price-value">55,00</span>
+                    </div>
+                    <div class="price-fields">
+                        <div class="price-field">
+                            <label>Preço fixo (R$)</label>
+                            <input type="number" id="avulsa-preco" value="55" min="0" step="0.01">
+                        </div>
+                        <div class="price-field">
+                            <label>Consultas por mês</label>
+                            <input type="number" id="avulsa-consultas" value="1" min="1" step="1">
+                        </div>
+                        <div class="price-per-session" id="avulsa-por-consulta">R$ 55,00 / consulta</div>
+                        <div class="discount-toggle">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="avulsa-desconto-ativo" onchange="toggleDiscount('avulsa')">
+                                <span>Aplicar desconto por tempo limitado</span>
+                            </label>
+                        </div>
+                        <div class="discount-fields" id="avulsa-discount-fields" style="display:none;">
+                            <div class="price-field">
+                                <label>% de desconto</label>
+                                <input type="number" id="avulsa-desconto" value="0" min="0" max="100" step="1">
+                            </div>
+                            <div class="price-field-row">
+                                <div class="price-field">
+                                    <label>Início</label>
+                                    <input type="date" id="avulsa-desconto-inicio">
+                                </div>
+                                <div class="price-field">
+                                    <label>Fim</label>
+                                    <input type="date" id="avulsa-desconto-fim">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-save-price" onclick="savePrice('avulsa')">Salvar alterações</button>
+                </div>
+
+                <!-- Plano Mensal -->
+                <div class="price-card" id="card-plano">
+                    <div class="price-card-header">
+                        <div class="price-icon"><i data-lucide="calendar-days"></i></div>
+                        <h3>Plano Mensal</h3>
+                    </div>
+                    <div class="price-current" id="plano-display">
+                        <span class="price-currency">R$</span>
+                        <span class="price-value">450,00</span>
+                    </div>
+                    <div class="price-fields">
+                        <div class="price-field">
+                            <label>Preço fixo (R$)</label>
+                            <input type="number" id="plano-preco" value="450" min="0" step="0.01">
+                        </div>
+                        <div class="price-field">
+                            <label>Consultas por mês</label>
+                            <input type="number" id="plano-consultas" value="4" min="1" step="1">
+                        </div>
+                        <div class="price-per-session" id="plano-por-consulta">R$ 112,50 / consulta</div>
+                        <div class="discount-toggle">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="plano-desconto-ativo" onchange="toggleDiscount('plano')">
+                                <span>Aplicar desconto por tempo limitado</span>
+                            </label>
+                        </div>
+                        <div class="discount-fields" id="plano-discount-fields" style="display:none;">
+                            <div class="price-field">
+                                <label>% de desconto</label>
+                                <input type="number" id="plano-desconto" value="0" min="0" max="100" step="1">
+                            </div>
+                            <div class="price-field-row">
+                                <div class="price-field">
+                                    <label>Início</label>
+                                    <input type="date" id="plano-desconto-inicio">
+                                </div>
+                                <div class="price-field">
+                                    <label>Fim</label>
+                                    <input type="date" id="plano-desconto-fim">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-save-price" onclick="savePrice('plano')">Salvar alterações</button>
+                </div>
+
+                <!-- Paginação dos cards customizados -->
+                <div class="price-pagination" id="custom-price-pagination" style="display:none;">
+                    <button class="btn-page" id="btn-prev-custom-price" onclick="changeCustomPricePage(-1)"
+                        disabled="disabled">Anterior</button>
+                    <span class="page-indicator" id="custom-price-page-indicator">1 / 1</span>
+                    <button class="btn-page" id="btn-next-custom-price" onclick="changeCustomPricePage(1)">Próxima</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Modal: Novo Plano -->
+        <div id="new-plan-modal" class="new-plan-overlay" style="display:none;">
+            <div class="new-plan-modal">
+                <button class="modal-close" onclick="closeNewPlanModal()"><i data-lucide="x"></i></button>
+                <div class="new-plan-scroll">
+                    <h3>Novo Plano</h3>
+                    <p class="preview-hint">Edite o card abaixo diretamente</p>
+
+                    <!-- Card editável (prévia + edição inline) -->
+                    <div class="price-card price-card-preview" id="new-plan-preview-card">
+                        <div class="price-card-header">
+                            <button class="price-icon icon-picker-btn" onclick="openIconPicker(event)" title="Escolher ícone">
+                                <i data-lucide="plus" id="preview-icon"></i>
+                            </button>
+                            <h3 contenteditable="true" id="preview-nome">Nome do plano</h3>
+                        </div>
+                        <div class="price-current">
+                            <span class="price-currency">R$</span>
+                            <input type="number" class="price-value-input" id="preview-preco" value="0" min="0" step="0.01">
+                        </div>
+                        <div class="price-fields-preview">
+                            <div class="price-field">
+                                <label>Consultas por mês</label>
+                                <input type="number" id="preview-consultas" value="1" min="1" step="1">
+                            </div>
+                            <div class="price-per-session" id="preview-por-consulta">R$ 0,00 / consulta</div>
+                            <div class="discount-toggle">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="preview-desconto-ativo" onchange="togglePreviewDiscount()">
+                                    <span>Aplicar desconto por tempo limitado</span>
+                                </label>
+                            </div>
+                            <div class="discount-fields" id="preview-discount-fields" style="display:none;">
+                                <div class="price-field">
+                                    <label>% de desconto</label>
+                                    <input type="number" id="preview-desconto" value="0" min="0" max="100" step="1">
+                                </div>
+                                <div class="price-field-row">
+                                    <div class="price-field">
+                                        <label>Início</label>
+                                        <input type="date" id="preview-desconto-inicio">
+                                    </div>
+                                    <div class="price-field">
+                                        <label>Fim</label>
+                                        <input type="date" id="preview-desconto-fim">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-save-price" onclick="saveNewPlan()">Criar Plano</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Icon Picker Popup -->
+        <div id="icon-picker-popup" class="icon-picker-popup" style="display:none;">
+            <div class="icon-picker-grid" id="icon-picker-grid"></div>
         </div>
 
         <!-- Flow: Anotações do Paciente -->
@@ -164,13 +425,193 @@
                 <button type="button" class="btn-back-small" onclick="closeAnnotations()">
                     <i data-lucide="arrow-left"></i> Voltar
                 </button>
-                <h2 id="anotacoes-title">Anotações</h2>
+                <h2 id="anotacoes-title">Anotações<span id="anotacoes-patient-name"></span></h2>
+                <div class="sort-dropdown">
+                    <button class="sort-dropdown-btn" onclick="toggleSortDropdown()" id="sort-dropdown-btn">
+                        <i data-lucide="arrow-down-up"></i>
+                        <span id="sort-label">Mais recente</span>
+                    </button>
+                    <div class="sort-dropdown-menu" id="sort-dropdown-menu">
+                        <button class="sort-option active" data-sort="desc" onclick="setAnnotationSort('desc')">Mais recente</button>
+                        <button class="sort-option" data-sort="asc" onclick="setAnnotationSort('asc')">Mais antigo</button>
+                    </div>
+                </div>
             </div>
 
             <div class="annotations-history" id="annotations-history">
             </div>
 
+            <div class="scroll-arrows" id="scroll-arrows">
+                <button class="scroll-arrow-btn" id="scroll-up-btn" onclick="scrollAnnotations('up')" title="Ver anteriores">
+                    <i data-lucide="chevron-up"></i>
+                </button>
+                <button class="scroll-arrow-btn" id="scroll-down-btn" onclick="scrollAnnotations('down')" title="Ver próximos">
+                    <i data-lucide="chevron-down"></i>
+                </button>
+            </div>
+
             <button class="btn-new-note" onclick="openNewNoteModal()">Nova anotação +</button>
+        </div>
+
+        <!-- Flow: Meu Perfil -->
+        <div id="flow-perfil" class="flow-container">
+            <div class="appointments-header">
+                <button type="button" class="btn-back-small" onclick="closeFlow()">
+                    <i data-lucide="arrow-left"></i> Voltar
+                </button>
+                <h2>Meu Perfil</h2>
+            </div>
+
+            <div class="profile-container">
+                <div class="profile-field">
+                    <label>Foto de Perfil</label>
+                    <div class="profile-photo-wrapper">
+                        <div class="profile-photo-preview" id="profile-photo-preview" onclick="triggerProfilePhoto()">+</div>
+                        <button type="button" class="profile-photo-remove" id="profile-photo-remove" onclick="removeProfilePhoto(event)" title="Remover foto">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <input type="file" id="profile-photo-input" accept="image/*" onchange="previewProfilePhoto(this)" style="display:none;">
+                </div>
+
+                <div class="profile-field">
+                    <label>Nome</label>
+                    <input type="text" id="profile-name" placeholder="Seu nome">
+                </div>
+
+                <div class="profile-field">
+                    <label>Telefone</label>
+                    <input type="text" id="profile-phone" placeholder="(00) 00000-0000">
+                </div>
+
+                <div class="profile-field">
+                    <label>Email</label>
+                    <input type="email" id="profile-email" placeholder="seu@email.com">
+                </div>
+
+                <div class="profile-field">
+                    <label>Descrição</label>
+                    <textarea id="profile-description" rows="4" placeholder="Fale um pouco sobre você..."></textarea>
+                </div>
+
+                <button class="btn-save-profile" onclick="saveProfile()">Salvar alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Paciente -->
+    <div id="patient-edit-modal" class="patient-edit-overlay">
+        <div class="patient-edit-modal">
+            <div class="patient-edit-topbar">
+                <div class="patient-edit-title"><span id="patient-edit-title-text">Detalhes do Usuário</span></div>
+                <button class="patient-edit-close" onclick="closePatientEditModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="patient-edit-body">
+                <div class="patient-edit-field" id="patient-edit-photo-field" style="display:none;">
+                    <label>Foto de Perfil</label>
+                    <div class="photo-upload-wrapper">
+                        <div class="patient-photo-preview" id="patient-photo-preview" onclick="triggerPatientPhoto()"></div>
+                        <button type="button" class="photo-remove-btn" id="photo-remove-btn" onclick="removePatientPhoto(event)" title="Remover foto">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <input type="file" id="patient-edit-photo" accept="image/*" onchange="previewPatientPhoto(this)" style="display:none;">
+                </div>
+                <div class="patient-edit-field">
+                    <label>Nome</label>
+                    <input type="text" id="patient-edit-name">
+                </div>
+                <div class="patient-edit-field">
+                    <label>Email</label>
+                    <input type="email" id="patient-edit-email">
+                </div>
+                <div class="patient-edit-field">
+                    <label>Telefone</label>
+                    <input type="text" id="patient-edit-phone">
+                </div>
+                <div class="patient-edit-field" id="patient-edit-description-field" style="display:none;">
+                    <label>Descrição</label>
+                    <textarea id="patient-edit-description" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="patient-edit-footer">
+                <button class="btn-patient-edit btn-patient-delete" onclick="deletePatient()">Deletar</button>
+                <button class="btn-patient-edit btn-patient-edit-action" onclick="enablePatientEditMode()">Editar</button>
+                <button class="btn-patient-edit btn-patient-save" onclick="savePatientEdit()" disabled>Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Cadastrar Usuario -->
+    <div id="register-user-modal" class="register-user-overlay">
+        <div class="register-user-modal">
+            <div class="register-user-topbar">
+                <div class="register-user-title"><span>Cadastrar Usuario</span></div>
+                <button class="register-user-close" onclick="closeRegisterUserModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="register-user-body">
+                <div class="register-user-field">
+                    <label>Nome</label>
+                    <input type="text" id="register-user-name">
+                </div>
+                <div class="register-user-field">
+                    <label>Email</label>
+                    <input type="email" id="register-user-email">
+                </div>
+                <div class="register-user-field">
+                    <label>Telefone</label>
+                    <input type="text" id="register-user-phone">
+                </div>
+                <div class="register-user-field">
+                    <label>Tipo</label>
+                    <select id="register-user-type">
+                        <option value="Paciente">Paciente</option>
+                        <option value="Psicologo">Psicologo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="register-user-footer">
+                <button class="btn-register-user btn-register-save" onclick="saveNewUser()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Enviar Mensagem -->
+    <div id="send-message-modal" class="send-message-overlay">
+        <div class="send-message-modal">
+            <div class="send-message-topbar">
+                <div class="send-message-title">
+                    <i data-lucide="send"></i>
+                    <span>Enviar mensagem</span>
+                </div>
+                <button class="send-message-close" onclick="closeSendMessageModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="send-message-body">
+                <div class="send-message-channels">
+                    <label class="channel-checkbox">
+                        <input type="checkbox" id="channel-whatsapp">
+                        <span class="checkmark"></span>
+                        <span>WhatsApp</span>
+                    </label>
+                    <label class="channel-checkbox">
+                        <input type="checkbox" id="channel-email">
+                        <span class="checkmark"></span>
+                        <span>Email</span>
+                    </label>
+                </div>
+                <textarea id="send-message-text" class="send-message-textarea" placeholder="Escreva sua mensagem aqui..."></textarea>
+            </div>
+
+            <div class="send-message-footer">
+                <button class="send-message-btn" onclick="sendGlobalMessage()">Enviar mensagem</button>
+            </div>
         </div>
     </div>
 
@@ -231,9 +672,9 @@
             const btnNo = document.getElementById('modal-btn-no');
 
             if (onNo) {
-                btnYes.innerText = 'Sair';
+                btnYes.innerText = 'Sim';
                 btnNo.style.display = 'inline-block';
-                btnNo.innerText = 'Não sair';
+                btnNo.innerText = 'Não';
             } else {
                 btnYes.innerText = 'Ok';
                 btnNo.style.display = 'none';
@@ -254,11 +695,25 @@
            ========================= */
         function openFlow(flow) {
             document.getElementById('view-home').style.display = 'none';
+            document.querySelectorAll('.flow-container').forEach(f => f.classList.remove('active'));
             const container = document.getElementById('flow-' + flow);
             if (container) container.classList.add('active');
             if (flow === 'consultas') {
-                renderAppointments(appointments);
+                appointmentsPage = 0;
+                filterAppointments('all');
             }
+            if (flow === 'pacientes') {
+                patientsPage = 0;
+                renderPatients();
+            }
+            if (flow === 'precos') {
+                initPrices();
+            }
+            if (flow === 'perfil') {
+                initProfile();
+            }
+            lucide.createIcons();
+            window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
         function closeFlow() {
@@ -365,8 +820,23 @@
                 type: 'Individual',
                 status: 'cancelled',
                 modality: 'Online',
-                annotations: []
+                annotations: [],
+                cancelReason: 'Paciente solicitou adiamento para a próxima semana devido a compromisso inadiável.',
+                cancelReasonAuthor: 'Paciente'
             }
+        ];
+
+        const patients = [
+            { id: 1, name: 'Ana Clara Mendes', email: 'ana.mendes@email.com', phone: '(11) 98765-4321', type: 'Paciente', createdAt: '2025-12-10' },
+            { id: 2, name: 'Bruno Oliveira', email: 'bruno.oliveira@email.com', phone: '(11) 91234-5678', type: 'Paciente', createdAt: '2026-01-15' },
+            { id: 3, name: 'Carla Souza', email: 'carla.souza@email.com', phone: '(11) 99876-5432', type: 'Paciente', createdAt: '2025-11-20' },
+            { id: 4, name: 'Diego Ferreira', email: 'diego.ferreira@email.com', phone: '(11) 96543-2109', type: 'Paciente', createdAt: '2026-03-05' },
+            { id: 5, name: 'Elisa Rocha', email: 'elisa.rocha@email.com', phone: '(11) 93456-7890', type: 'Paciente', createdAt: '2026-02-18' },
+            { id: 6, name: 'Felipe Costa', email: 'felipe.costa@email.com', phone: '(11) 94567-8901', type: 'Paciente', createdAt: '2025-10-08' },
+            { id: 7, name: 'Gabriela Lima', email: 'gabriela.lima@email.com', phone: '(11) 95678-9012', type: 'Paciente', createdAt: '2026-04-12' },
+            { id: 8, name: 'Henrique Dias', email: 'henrique.dias@email.com', phone: '(11) 96789-0123', type: 'Paciente', createdAt: '2025-09-22' },
+            { id: 9, name: 'Dra. Laura Mendes', email: 'laura.mendes@inspirare.com', phone: '(11) 91111-2222', type: 'Psicologo', description: 'Psicóloga clínica especialista em terapia cognitivo-comportamental.', createdAt: '2025-08-15' },
+            { id: 10, name: 'Dr. Ricardo Souza', email: 'ricardo.souza@inspirare.com', phone: '(11) 92222-3333', type: 'Psicologo', description: 'Psicólogo organizacional e coach de desenvolvimento pessoal.', createdAt: '2025-07-10' }
         ];
 
         function formatDate(dateStr) {
@@ -395,8 +865,147 @@
             return 'status-' + status;
         }
 
+        let patientsSortOrder = 'az';
+        let patientsSearchTerm = '';
+        let patientsPage = 0;
+        let currentPatientsFiltered = [];
+        let patientsTypeFilter = 'all';
+
+        function togglePatientsFilterDropdown() {
+            document.getElementById('patients-filter-menu').classList.toggle('open');
+        }
+
+        function togglePatientsSortDropdown() {
+            document.getElementById('patients-sort-menu').classList.toggle('open');
+        }
+
+        function updatePatientsToolbarLabel() {
+            const sortLabels = { az: 'A-Z', za: 'Z-A', recent: 'Mais recente', oldest: 'Mais antigos' };
+            const filterLabels = { all: 'Todos', Paciente: 'Pacientes', Psicologo: 'Psicólogos' };
+            const sortText = sortLabels[patientsSortOrder] || 'A-Z';
+            const filterText = filterLabels[patientsTypeFilter] || 'Todos';
+            if (patientsTypeFilter === 'all') {
+                document.getElementById('patients-sort-label').innerText = sortText;
+            } else {
+                document.getElementById('patients-sort-label').innerText = sortText + ' · ' + filterText;
+            }
+        }
+
+        function setPatientsSort(order) {
+            patientsSortOrder = order;
+            patientsPage = 0;
+            document.querySelectorAll('#patients-sort-menu .sort-option').forEach(btn => {
+                if (btn.dataset.sort) btn.classList.toggle('active', btn.dataset.sort === order);
+            });
+            document.getElementById('patients-sort-menu').classList.remove('open');
+            updatePatientsToolbarLabel();
+            renderPatients();
+        }
+
+        function setPatientsFilter(type) {
+            patientsTypeFilter = type;
+            patientsPage = 0;
+            document.querySelectorAll('#patients-sort-menu .sort-option').forEach(btn => {
+                if (btn.dataset.filter) btn.classList.toggle('active', btn.dataset.filter === type);
+            });
+            document.getElementById('patients-sort-menu').classList.remove('open');
+            updatePatientsToolbarLabel();
+            renderPatients();
+        }
+
+        function filterPatients() {
+            patientsSearchTerm = document.getElementById('patients-search').value.trim().toLowerCase();
+            patientsPage = 0;
+            renderPatients();
+        }
+
+        function getSortedAndFilteredPatients() {
+            let list = patients.filter(p => {
+                if (patientsTypeFilter !== 'all' && p.type !== patientsTypeFilter) return false;
+                if (!patientsSearchTerm) return true;
+                const term = patientsSearchTerm;
+                return p.name.toLowerCase().includes(term) ||
+                       p.email.toLowerCase().includes(term) ||
+                       p.phone.toLowerCase().includes(term);
+            });
+
+            list.sort((a, b) => {
+                if (patientsSortOrder === 'az') return a.name.localeCompare(b.name);
+                if (patientsSortOrder === 'za') return b.name.localeCompare(a.name);
+                if (patientsSortOrder === 'recent') return new Date(b.createdAt) - new Date(a.createdAt);
+                if (patientsSortOrder === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+                return 0;
+            });
+
+            currentPatientsFiltered = list;
+            return list;
+        }
+
+
+        function scrollPatients(direction) {
+            if (!currentPatientsFiltered.length) return;
+            const totalPages = Math.ceil(currentPatientsFiltered.length / 3);
+            if (direction === 'up') {
+                patientsPage = Math.max(0, patientsPage - 1);
+            } else {
+                patientsPage = Math.min(totalPages - 1, patientsPage + 1);
+            }
+            renderPatients();
+        }
+
+        function updatePatientsScrollArrows() {
+            const upBtn = document.getElementById('patients-scroll-up-btn');
+            const downBtn = document.getElementById('patients-scroll-down-btn');
+            if (!upBtn || !downBtn) return;
+
+            const totalPages = Math.ceil(currentPatientsFiltered.length / 3);
+            upBtn.disabled = patientsPage <= 0;
+            downBtn.disabled = patientsPage >= totalPages - 1 || totalPages <= 1;
+        }
+
+        function renderPatients() {
+            const container = document.getElementById('patients-list');
+            const list = getSortedAndFilteredPatients();
+
+            if (!list || list.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i data-lucide="users"></i>
+                        <p>Nenhum paciente encontrado.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                updatePatientsScrollArrows();
+                return;
+            }
+
+            const startIndex = patientsPage * 3;
+            const pageItems = list.slice(startIndex, startIndex + 3);
+
+            container.innerHTML = pageItems.map((p) => `
+                <div class="patient-row">
+                    <div class="patient-avatar">${p.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}</div>
+                    <div class="patient-info">
+                        <h4>${p.name}</h4>
+                        <div class="patient-meta">
+                            <span><i data-lucide="mail"></i> ${p.email}</span>
+                            <span><i data-lucide="phone"></i> ${p.phone}</span>
+                        </div>
+                    </div>
+                    <button class="patient-more" onclick="openPatientEditModal(${p.id})" title="Mais opções">
+                        <i data-lucide="more-vertical"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+            updatePatientsScrollArrows();
+        }
+
         function renderAppointments(list) {
             const container = document.getElementById('appointments-list');
+            currentAppointmentsFiltered = list;
+
             if (list.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
@@ -405,12 +1014,15 @@
                     </div>
                 `;
                 lucide.createIcons();
+                updateAppointmentsScrollArrows();
                 return;
             }
 
             const todayStr = new Date().toISOString().slice(0, 10);
+            const startIndex = appointmentsPage * 2;
+            const pageItems = list.slice(startIndex, startIndex + 2);
 
-            container.innerHTML = list.map(a => `
+            container.innerHTML = pageItems.map(a => `
                 <div class="appointment-row ${a.status}">
                     <div class="appointment-main">
                         <div class="appointment-avatar">${a.photo}</div>
@@ -419,7 +1031,7 @@
                             <div class="appointment-meta">
                                 <span><i data-lucide="calendar"></i> ${formatDate(a.date)}</span>
                                 <span><i data-lucide="clock"></i> ${a.time}</span>
-                                <span><i data-lucide="video"></i> ${a.modality}</span>
+                                <span><i data-lucide="${a.modality === 'Presencial' ? 'user' : 'video'}"></i> ${a.modality}</span>
                             </div>
                             <div class="appointment-tags">
                                 <span class="tag-status ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
@@ -435,6 +1047,7 @@
             `).join('');
 
             lucide.createIcons();
+            updateAppointmentsScrollArrows();
         }
 
         function filterAppointments(filter) {
@@ -443,14 +1056,39 @@
 
             let filtered = appointments;
             if (filter === 'all') {
-                filtered = appointments.filter(a => a.status !== 'completed' && a.status !== 'cancelled');
+                filtered = appointments.filter(a => a.status === 'confirmed');
             } else if (filter === 'completed') {
                 filtered = appointments.filter(a => a.status === 'completed');
             } else if (filter === 'cancelled') {
                 filtered = appointments.filter(a => a.status === 'cancelled');
             }
 
+            appointmentsPage = 0;
             renderAppointments(filtered);
+        }
+
+        let appointmentsPage = 0;
+        let currentAppointmentsFiltered = [];
+
+        function scrollAppointments(direction) {
+            if (!currentAppointmentsFiltered.length) return;
+            const totalPages = Math.ceil(currentAppointmentsFiltered.length / 2);
+            if (direction === 'up') {
+                appointmentsPage = Math.max(0, appointmentsPage - 1);
+            } else {
+                appointmentsPage = Math.min(totalPages - 1, appointmentsPage + 1);
+            }
+            renderAppointments(currentAppointmentsFiltered);
+        }
+
+        function updateAppointmentsScrollArrows() {
+            const upBtn = document.getElementById('appointments-scroll-up-btn');
+            const downBtn = document.getElementById('appointments-scroll-down-btn');
+            if (!upBtn || !downBtn) return;
+
+            const totalPages = Math.ceil(currentAppointmentsFiltered.length / 2);
+            upBtn.disabled = appointmentsPage <= 0;
+            downBtn.disabled = appointmentsPage >= totalPages - 1 || totalPages <= 1;
         }
 
         function cancelAppointment(id) {
@@ -459,6 +1097,7 @@
                 a.status = 'cancelled';
                 showModal('Cancelado', `Consulta de ${a.patient} foi cancelada.`);
                 filterAppointments(document.querySelector('.filter-btn.active').dataset.filter);
+                updateAppointmentBadge();
             }
         }
 
@@ -479,13 +1118,24 @@
             document.getElementById('modal-date').textContent = formatDate(a.date);
             document.getElementById('modal-time').textContent = a.time;
             document.getElementById('modal-modality').textContent = a.modality;
+            const modalityIcon = document.getElementById('modal-modality-icon');
+            if (modalityIcon) {
+                modalityIcon.setAttribute('data-lucide', a.modality === 'Presencial' ? 'user' : 'video');
+            }
             document.getElementById('modal-type').textContent = a.type;
 
             const cancelBtn = document.getElementById('modal-cancel-btn');
+            const reasonBtn = document.getElementById('modal-reason-btn');
             if (a.status === 'confirmed' || a.status === 'pending') {
                 cancelBtn.style.display = 'inline-flex';
+                reasonBtn.style.display = 'none';
             } else {
                 cancelBtn.style.display = 'none';
+                if (a.status === 'cancelled' && a.cancelReason) {
+                    reasonBtn.style.display = 'inline-flex';
+                } else {
+                    reasonBtn.style.display = 'none';
+                }
             }
 
             const overlay = document.getElementById('appointment-modal');
@@ -504,9 +1154,49 @@
             openAnnotations(id);
         }
 
+        function modalViewCancelReason() {
+            const a = appointments.find(x => x.id === currentModalId);
+            if (!a || !a.cancelReason) return;
+            const author = a.cancelReasonAuthor || 'Não informado';
+            const text = `Escrito por: ${author}\n\n${a.cancelReason}`;
+            showModal('Motivo do cancelamento', text);
+        }
+
         function modalCancelAppointment() {
+            document.getElementById('cancel-modal').style.display = 'flex';
+            document.getElementById('cancel-reason-check').checked = false;
+            document.getElementById('cancel-reason-text').style.display = 'none';
+            document.getElementById('cancel-reason-text').value = '';
+        }
+
+        function toggleCancelReason() {
+            const checkbox = document.getElementById('cancel-reason-check');
+            const textarea = document.getElementById('cancel-reason-text');
+            textarea.style.display = checkbox.checked ? 'block' : 'none';
+            if (checkbox.checked) {
+                textarea.focus();
+            }
+        }
+
+        function closeCancelModal() {
+            document.getElementById('cancel-modal').style.display = 'none';
+        }
+
+        function confirmCancelAppointment() {
             const a = appointments.find(x => x.id === currentModalId);
             if (!a) return;
+
+            const checkbox = document.getElementById('cancel-reason-check');
+            const reasonText = document.getElementById('cancel-reason-text').value.trim();
+
+            if (checkbox.checked && !reasonText) {
+                showModal('Aviso', 'Por favor, escreva o motivo do cancelamento.');
+                return;
+            }
+
+            a.cancelReason = checkbox.checked ? reasonText : '';
+            a.cancelReasonAuthor = checkbox.checked ? 'Psicólogo' : '';
+            closeCancelModal();
             closeAppointmentModal();
             cancelAppointment(currentModalId);
         }
@@ -514,6 +1204,11 @@
         let currentAnnotationId = null;
         let previousFlowId = null;
         let currentAnnotationsSorted = [];
+        let currentExpandAnnotationIndex = null;
+        let originalAnnotationText = '';
+        let annotationEditDirty = false;
+        let annotationSortOrder = 'desc';
+        let annotationPage = 0;
 
         function openAnnotations(id) {
             const a = appointments.find(x => x.id === id);
@@ -526,11 +1221,44 @@
             document.getElementById('view-home').style.display = 'none';
             document.querySelectorAll('.flow-container').forEach(f => f.classList.remove('active'));
             document.getElementById('flow-anotacoes').classList.add('active');
-            document.getElementById('anotacoes-title').innerText = `Anotações - ${a.patient}`;
-            document.getElementById('annotation-text').value = '';
+            document.getElementById('anotacoes-title').childNodes[0].textContent = 'Anotações';
+            document.getElementById('anotacoes-patient-name').textContent = a.patient;
+            annotationPage = 0;
 
             renderAnnotations(a.annotations);
+            window.scrollTo({ top: 0, behavior: 'instant' });
         }
+
+        function toggleSortDropdown() {
+            document.getElementById('sort-dropdown-menu').classList.toggle('open');
+        }
+
+        function setAnnotationSort(order) {
+            annotationSortOrder = order;
+            document.getElementById('sort-label').innerText = order === 'desc' ? 'Mais recente' : 'Mais antigo';
+            document.querySelectorAll('.sort-option').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.sort === order);
+            });
+            document.getElementById('sort-dropdown-menu').classList.remove('open');
+
+            const a = appointments.find(x => x.id === currentAnnotationId);
+            if (a) {
+                renderAnnotations(a.annotations);
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const annotationsDropdown = document.querySelector('#flow-anotacoes .sort-dropdown');
+            if (annotationsDropdown && !annotationsDropdown.contains(e.target)) {
+                const menu = document.getElementById('sort-dropdown-menu');
+                if (menu) menu.classList.remove('open');
+            }
+            const patientsDropdown = document.querySelector('#flow-pacientes .sort-dropdown');
+            if (patientsDropdown && !patientsDropdown.contains(e.target)) {
+                const menu = document.getElementById('patients-sort-menu');
+                if (menu) menu.classList.remove('open');
+            }
+        });
 
         function closeAnnotations() {
             document.getElementById('flow-anotacoes').classList.remove('active');
@@ -543,6 +1271,44 @@
             previousFlowId = null;
         }
 
+        function truncateAnnotationText(text, maxChars = 100) {
+            const lines = text.split('\n');
+            let firstLine = '';
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed) {
+                    firstLine = trimmed;
+                    break;
+                }
+            }
+            if (!firstLine) return text;
+            if (firstLine.length > maxChars) {
+                return firstLine.substring(0, maxChars) + '...';
+            }
+            return firstLine;
+        }
+
+        function scrollAnnotations(direction) {
+            if (!currentAnnotationsSorted.length) return;
+            const totalPages = Math.ceil(currentAnnotationsSorted.length / 3);
+            if (direction === 'up') {
+                annotationPage = Math.max(0, annotationPage - 1);
+            } else {
+                annotationPage = Math.min(totalPages - 1, annotationPage + 1);
+            }
+            renderAnnotations(currentAnnotationsSorted);
+        }
+
+        function updateScrollArrows() {
+            const upBtn = document.getElementById('scroll-up-btn');
+            const downBtn = document.getElementById('scroll-down-btn');
+            if (!upBtn || !downBtn) return;
+
+            const totalPages = Math.ceil(currentAnnotationsSorted.length / 3);
+            upBtn.disabled = annotationPage <= 0;
+            downBtn.disabled = annotationPage >= totalPages - 1 || totalPages <= 1;
+        }
+
         function renderAnnotations(list) {
             const container = document.getElementById('annotations-history');
             if (!list || list.length === 0) {
@@ -553,27 +1319,36 @@
                     </div>
                 `;
                 lucide.createIcons();
+                updateScrollArrows();
                 return;
             }
 
-            currentAnnotationsSorted = [...list].sort((a, b) => new Date(b.date) - new Date(a.date));
+            currentAnnotationsSorted = [...list].sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return annotationSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            });
 
-            container.innerHTML = currentAnnotationsSorted.map((note, index) => `
+            const startIndex = annotationPage * 3;
+            const pageItems = currentAnnotationsSorted.slice(startIndex, startIndex + 3);
+
+            container.innerHTML = pageItems.map((note, index) => `
                 <div class="annotation-card">
                     <div class="annotation-card-content">
                         <div class="annotation-date">
                             <i data-lucide="calendar"></i>
                             ${new Date(note.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </div>
-                        <div class="annotation-text">${note.text}</div>
+                        <div class="annotation-text">${truncateAnnotationText(note.text)}</div>
                     </div>
-                    <button class="annotation-more" onclick="openAnnotationExpand(${index})" title="Expandir">
+                    <button class="annotation-more" onclick="openAnnotationExpand(${startIndex + index})" title="Expandir">
                         <i data-lucide="more-vertical"></i>
                     </button>
                 </div>
             `).join('');
 
             lucide.createIcons();
+            updateScrollArrows();
         }
 
         function openNewNoteModal() {
@@ -612,6 +1387,7 @@
 
             const date = document.getElementById('new-note-date').value;
             a.annotations.push({ date, text });
+            annotationPage = 0;
 
             renderAnnotations(a.annotations);
             document.getElementById('new-note-modal').style.display = 'none';
@@ -623,18 +1399,406 @@
             const note = currentAnnotationsSorted[index];
             if (!note) return;
 
+            currentExpandAnnotationIndex = index;
+            originalAnnotationText = note.text;
+            annotationEditDirty = false;
+
             document.getElementById('expand-date').innerHTML = `
                 <i data-lucide="calendar"></i>
                 ${new Date(note.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
             `;
-            document.getElementById('expand-text').textContent = note.text;
+
+            const textDiv = document.getElementById('expand-text');
+            const textarea = document.getElementById('expand-textarea');
+            const editBtn = document.querySelector('.btn-expand-edit');
+            const saveBtn = document.querySelector('.btn-expand-save');
+
+            textDiv.textContent = note.text;
+            textDiv.style.display = 'block';
+            textarea.style.display = 'none';
+            textarea.value = note.text;
+            editBtn.style.display = 'inline-flex';
+            saveBtn.disabled = true;
 
             const overlay = document.getElementById('annotation-expand');
             overlay.style.display = 'flex';
             lucide.createIcons();
         }
 
-        function closeAnnotationExpand() {
+        function enableAnnotationEdit() {
+            const textDiv = document.getElementById('expand-text');
+            const textarea = document.getElementById('expand-textarea');
+            const editBtn = document.querySelector('.btn-expand-edit');
+            const saveBtn = document.querySelector('.btn-expand-save');
+
+            textDiv.style.display = 'none';
+            textarea.style.display = 'block';
+            editBtn.style.display = 'none';
+            saveBtn.disabled = true;
+            annotationEditDirty = false;
+            textarea.focus();
+        }
+
+        function saveAnnotationEdit() {
+            const textarea = document.getElementById('expand-textarea');
+            const newText = textarea.value.trim();
+
+            if (!newText) {
+                showModal('Aviso', 'A anotação não pode ficar vazia.');
+                return;
+            }
+
+            if (newText === originalAnnotationText.trim()) {
+                annotationEditDirty = false;
+                closeAnnotationExpand(true);
+                showModal('Aviso', 'Nenhuma alteração detectada.');
+                return;
+            }
+
+            const note = currentAnnotationsSorted[currentExpandAnnotationIndex];
+            if (!note) return;
+
+            note.text = newText;
+
+            const a = appointments.find(x => x.id === currentAnnotationId);
+            if (a) {
+                renderAnnotations(a.annotations);
+            }
+
+            annotationEditDirty = false;
+            closeAnnotationExpand(true);
+            showModal('Salvo', 'Anotação atualizada com sucesso.');
+        }
+
+        function deleteAnnotation() {
+            const note = currentAnnotationsSorted[currentExpandAnnotationIndex];
+            if (!note) return;
+
+            showModal(
+                'Confirmar exclusão',
+                'Tem certeza que deseja deletar esta anotação?',
+                () => {
+                    const a = appointments.find(x => x.id === currentAnnotationId);
+                    if (!a) return;
+
+                    a.annotations = a.annotations.filter(n => n !== note);
+                    const totalPagesAfter = Math.ceil(a.annotations.length / 3);
+                    if (annotationPage >= totalPagesAfter && totalPagesAfter > 0) {
+                        annotationPage = totalPagesAfter - 1;
+                    }
+                    renderAnnotations(a.annotations);
+                    annotationEditDirty = false;
+                    closeAnnotationExpand(true);
+                    showModal('Deletado', 'Anotação removida com sucesso.');
+                },
+                () => {}
+            );
+        }
+
+        function updateSaveButtonState() {
+            const textarea = document.getElementById('expand-textarea');
+            const saveBtn = document.querySelector('.btn-expand-save');
+            const val = textarea.value.trim();
+            const hasChanges = val !== originalAnnotationText.trim();
+            annotationEditDirty = hasChanges;
+            saveBtn.disabled = !val || !hasChanges;
+        }
+
+        document.getElementById('expand-textarea').addEventListener('input', updateSaveButtonState);
+
+        let currentEditPatientId = null;
+        let originalPatientData = {};
+
+        function openPatientEditModal(id) {
+            const p = patients.find(x => x.id === id);
+            if (!p) return;
+            currentEditPatientId = id;
+            originalPatientData = { name: p.name, email: p.email, phone: p.phone, description: p.description || '', photo: p.photo || '' };
+
+            document.getElementById('patient-edit-name').value = p.name;
+            document.getElementById('patient-edit-email').value = p.email;
+            document.getElementById('patient-edit-phone').value = p.phone;
+            document.getElementById('patient-edit-description').value = p.description || '';
+
+            const photoPreview = document.getElementById('patient-photo-preview');
+            const removeBtn = document.getElementById('photo-remove-btn');
+            if (p.photo) {
+                photoPreview.style.backgroundImage = `url(${p.photo})`;
+                photoPreview.textContent = '';
+                if (removeBtn) removeBtn.style.display = 'flex';
+            } else {
+                photoPreview.style.backgroundImage = '';
+                photoPreview.textContent = '+';
+                if (removeBtn) removeBtn.style.display = 'none';
+            }
+
+            const isPsicologo = p.type === 'Psicologo';
+            const titleMap = { Paciente: 'Detalhes do Paciente', Psicologo: 'Detalhes do Psicólogo' };
+            document.getElementById('patient-edit-title-text').textContent = titleMap[p.type] || 'Detalhes do Usuário';
+            document.getElementById('patient-edit-photo-field').style.display = isPsicologo ? 'flex' : 'none';
+            document.getElementById('patient-edit-description-field').style.display = isPsicologo ? 'flex' : 'none';
+
+            setPatientInputsDisabled(true);
+            document.querySelector('.btn-patient-edit-action').style.display = 'inline-flex';
+            document.querySelector('.btn-patient-save').disabled = true;
+
+            document.getElementById('patient-edit-modal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function setPatientInputsDisabled(disabled) {
+            document.getElementById('patient-edit-name').disabled = disabled;
+            document.getElementById('patient-edit-email').disabled = disabled;
+            document.getElementById('patient-edit-phone').disabled = disabled;
+            document.getElementById('patient-edit-description').disabled = disabled;
+            document.getElementById('patient-edit-photo').disabled = disabled;
+        }
+
+        function enablePatientEditMode() {
+            setPatientInputsDisabled(false);
+            document.querySelector('.btn-patient-edit-action').style.display = 'none';
+            document.querySelector('.btn-patient-save').disabled = true;
+            document.getElementById('patient-edit-name').focus();
+        }
+
+        function closePatientEditModal(force = false) {
+            const name = document.getElementById('patient-edit-name').value.trim();
+            const email = document.getElementById('patient-edit-email').value.trim();
+            const phone = document.getElementById('patient-edit-phone').value.trim();
+            const description = document.getElementById('patient-edit-description').value.trim();
+            const hasChanges = name !== originalPatientData.name || email !== originalPatientData.email || phone !== originalPatientData.phone || description !== originalPatientData.description;
+
+            if (!force && hasChanges && !document.getElementById('patient-edit-name').disabled) {
+                showModal(
+                    'Sair sem salvar?',
+                    'Você tem alterações não salvas. Deseja sair mesmo assim?',
+                    () => {
+                        document.getElementById('patient-edit-modal').style.display = 'none';
+                    },
+                    () => {}
+                );
+                return;
+            }
+            document.getElementById('patient-edit-modal').style.display = 'none';
+        }
+
+        function savePatientEdit() {
+            const name = document.getElementById('patient-edit-name').value.trim();
+            const email = document.getElementById('patient-edit-email').value.trim();
+            const phone = document.getElementById('patient-edit-phone').value.trim();
+            const description = document.getElementById('patient-edit-description').value.trim();
+
+            if (!name || !email || !phone) {
+                showModal('Aviso', 'Preencha todos os campos.');
+                return;
+            }
+
+            const p = patients.find(x => x.id === currentEditPatientId);
+            if (!p) return;
+
+            p.name = name;
+            p.email = email;
+            p.phone = phone;
+            p.description = description;
+
+            const preview = document.getElementById('patient-photo-preview');
+            const currentPhoto = preview.style.backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+            p.photo = currentPhoto || '';
+
+            renderPatients();
+            closePatientEditModal(true);
+            showModal('Salvo', 'Dados do paciente atualizados com sucesso.');
+        }
+
+        function deletePatient() {
+            const p = patients.find(x => x.id === currentEditPatientId);
+            if (!p) return;
+
+            showModal(
+                'Confirmar exclusão',
+                `Tem certeza que deseja deletar ${p.name}?`,
+                () => {
+                    const index = patients.findIndex(x => x.id === currentEditPatientId);
+                    if (index > -1) {
+                        patients.splice(index, 1);
+                        const totalPagesAfter = Math.ceil(currentPatientsFiltered.length / 3);
+                        if (patientsPage >= totalPagesAfter && totalPagesAfter > 0) {
+                            patientsPage = totalPagesAfter - 1;
+                        }
+                        renderPatients();
+                    }
+                    closePatientEditModal(true);
+                    showModal('Deletado', 'Paciente removido com sucesso.');
+                },
+                () => {}
+            );
+        }
+
+        function triggerPatientPhoto() {
+            const photoInput = document.getElementById('patient-edit-photo');
+            if (photoInput && !photoInput.disabled) {
+                photoInput.click();
+            }
+        }
+
+        function previewPatientPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('patient-photo-preview');
+                    preview.style.backgroundImage = `url(${e.target.result})`;
+                    preview.textContent = '';
+                    const removeBtn = document.getElementById('photo-remove-btn');
+                    if (removeBtn) removeBtn.style.display = 'flex';
+                    updatePatientSaveButton();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removePatientPhoto(event) {
+            event.stopPropagation();
+            const preview = document.getElementById('patient-photo-preview');
+            preview.style.backgroundImage = '';
+            preview.textContent = '+';
+            document.getElementById('patient-edit-photo').value = '';
+            document.getElementById('photo-remove-btn').style.display = 'none';
+            updatePatientSaveButton();
+        }
+
+        function updatePatientSaveButton() {
+            const name = document.getElementById('patient-edit-name').value.trim();
+            const email = document.getElementById('patient-edit-email').value.trim();
+            const phone = document.getElementById('patient-edit-phone').value.trim();
+            const description = document.getElementById('patient-edit-description').value.trim();
+            const preview = document.getElementById('patient-photo-preview');
+            const currentPhoto = preview.style.backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+            const photoChanged = currentPhoto !== (originalPatientData.photo || '');
+            const hasChanges = name !== originalPatientData.name || email !== originalPatientData.email || phone !== originalPatientData.phone || description !== originalPatientData.description || photoChanged;
+            const allFilled = name && email && phone;
+            document.querySelector('.btn-patient-save').disabled = !hasChanges || !allFilled;
+        }
+
+        document.getElementById('patient-edit-name').addEventListener('input', updatePatientSaveButton);
+        document.getElementById('patient-edit-email').addEventListener('input', updatePatientSaveButton);
+        document.getElementById('patient-edit-phone').addEventListener('input', updatePatientSaveButton);
+        document.getElementById('patient-edit-description').addEventListener('input', updatePatientSaveButton);
+
+        function openRegisterUserModal() {
+            document.getElementById('register-user-name').value = '';
+            document.getElementById('register-user-email').value = '';
+            document.getElementById('register-user-phone').value = '';
+            document.getElementById('register-user-modal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeRegisterUserModal() {
+            document.getElementById('register-user-modal').style.display = 'none';
+        }
+
+        function saveNewUser() {
+            const name = document.getElementById('register-user-name').value.trim();
+            const email = document.getElementById('register-user-email').value.trim();
+            const phone = document.getElementById('register-user-phone').value.trim();
+            const type = document.getElementById('register-user-type').value;
+
+            if (!name || !email || !phone) {
+                showModal('Aviso', 'Preencha todos os campos.');
+                return;
+            }
+
+            const newId = Math.max(...patients.map(p => p.id), 0) + 1;
+            patients.push({
+                id: newId,
+                name,
+                email,
+                phone,
+                type,
+                createdAt: new Date().toISOString().split('T')[0]
+            });
+
+            renderPatients();
+            closeRegisterUserModal();
+            showModal('Sucesso', 'Usuario cadastrado. Redirecionando para criacao de senha...', () => {
+                window.location.href = '../../../forgot-password/index.html?user=' + encodeURIComponent(email) + '&create=true';
+            });
+        }
+
+        let sendMessageDirty = false;
+
+        function openSendMessageModal() {
+            document.getElementById('send-message-modal').style.display = 'flex';
+            document.getElementById('channel-whatsapp').checked = false;
+            document.getElementById('channel-email').checked = false;
+            document.getElementById('send-message-text').value = '';
+            sendMessageDirty = false;
+            lucide.createIcons();
+        }
+
+        function closeSendMessageModal(force = false) {
+            const textarea = document.getElementById('send-message-text');
+            const val = textarea.value.trim();
+
+            if (!force && val) {
+                showModal(
+                    'Descartar mensagem?',
+                    'Tem certeza que deseja descartar a mensagem?',
+                    () => {
+                        document.getElementById('send-message-modal').style.display = 'none';
+                        sendMessageDirty = false;
+                    },
+                    () => {}
+                );
+                return;
+            }
+            document.getElementById('send-message-modal').style.display = 'none';
+            sendMessageDirty = false;
+        }
+
+        document.getElementById('send-message-text').addEventListener('input', function() {
+            sendMessageDirty = this.value.trim().length > 0;
+        });
+
+        function sendGlobalMessage() {
+            const whatsapp = document.getElementById('channel-whatsapp').checked;
+            const email = document.getElementById('channel-email').checked;
+            const text = document.getElementById('send-message-text').value.trim();
+
+            if (!whatsapp && !email) {
+                showModal('Aviso', 'Selecione pelo menos um canal de envio (WhatsApp ou Email).');
+                return;
+            }
+
+            if (!text) {
+                showModal('Aviso', 'Escreva uma mensagem antes de enviar.');
+                return;
+            }
+
+            const channels = [];
+            if (whatsapp) channels.push('WhatsApp');
+            if (email) channels.push('Email');
+
+            closeSendMessageModal(true);
+            showModal('Enviado', `Mensagem enviada com sucesso via ${channels.join(' e ')}.`);
+        }
+
+        function closeAnnotationExpand(force = false) {
+            const textarea = document.getElementById('expand-textarea');
+            const isEditing = textarea.style.display !== 'none' && textarea.style.display !== '';
+
+            if (!force && isEditing && annotationEditDirty) {
+                showModal(
+                    'Sair sem salvar?',
+                    'Você tem alterações não salvas. Deseja sair mesmo assim?',
+                    () => {
+                        annotationEditDirty = false;
+                        document.getElementById('annotation-expand').style.display = 'none';
+                    },
+                    () => {}
+                );
+                return;
+            }
+            annotationEditDirty = false;
             document.getElementById('annotation-expand').style.display = 'none';
         }
 
@@ -645,6 +1809,639 @@
                     `Paciente: ${a.patient}\nData: ${formatDate(a.date)} às ${a.time}\nTipo: ${a.type}\nModalidade: ${a.modality}\nStatus: ${getStatusLabel(a.status)}`
                 );
             }
+        }
+
+        function updateAppointmentBadge() {
+            const count = appointments.filter(a => a.status === 'confirmed').length;
+            const badge = document.getElementById('badge-consultas');
+            if (badge) {
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+        }
+
+        /* =========================
+           CONTROLE DE PREÇOS
+           ========================= */
+        const PRICE_STORAGE_KEY = 'inspirare_price_settings';
+
+        const PRICE_STORAGE_VERSION = 2;
+
+        function getDefaultPrices() {
+            return {
+                v: PRICE_STORAGE_VERSION,
+                avulsa: {
+                    basePrice: 55,
+                    consultationsPerMonth: 1,
+                    discountActive: false,
+                    discountPercent: 0,
+                    discountStart: '',
+                    discountEnd: ''
+                },
+                plano: {
+                    basePrice: 450,
+                    consultationsPerMonth: 4,
+                    discountActive: false,
+                    discountPercent: 0,
+                    discountStart: '',
+                    discountEnd: ''
+                }
+            };
+        }
+
+        function loadPrices() {
+            const defaults = getDefaultPrices();
+            try {
+                const raw = localStorage.getItem(PRICE_STORAGE_KEY);
+                if (raw) {
+                    const saved = JSON.parse(raw);
+                    if (saved.v === PRICE_STORAGE_VERSION) {
+                        return {
+                            ...defaults,
+                            ...saved,
+                            avulsa: { ...defaults.avulsa, ...saved.avulsa },
+                            plano: { ...defaults.plano, ...saved.plano }
+                        };
+                    }
+                }
+            } catch (e) {}
+            return defaults;
+        }
+
+        function savePrices(data) {
+            localStorage.setItem(PRICE_STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function formatCurrency(value) {
+            return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function getTodayStr() {
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        function isDiscountActive(discount) {
+            if (!discount.discountActive || discount.discountPercent <= 0) return false;
+            const today = getTodayStr();
+            if (discount.discountStart && today < discount.discountStart) return false;
+            if (discount.discountEnd && today > discount.discountEnd) return false;
+            return true;
+        }
+
+        function calculatePrice(base, discount) {
+            if (isDiscountActive(discount)) {
+                return base * (1 - discount.discountPercent / 100);
+            }
+            return base;
+        }
+
+        function updatePriceDisplay(type) {
+            const data = loadPrices();
+            const config = data[type];
+            const display = document.getElementById(type + '-display');
+            const current = calculatePrice(config.basePrice, config);
+            let html = `<span class="price-currency">R$</span><span class="price-value">${formatCurrency(current)}</span>`;
+            if (isDiscountActive(config)) {
+                html += `<span class="price-original">R$ ${formatCurrency(config.basePrice)}</span>`;
+                html += `<span class="price-discount-tag">${config.discountPercent}% OFF</span>`;
+            }
+            display.innerHTML = html;
+        }
+
+        function toggleDiscount(type) {
+            const checked = document.getElementById(type + '-desconto-ativo').checked;
+            document.getElementById(type + '-discount-fields').style.display = checked ? 'flex' : 'none';
+        }
+
+        function savePrice(type) {
+            const data = loadPrices();
+            const basePrice = parseFloat(document.getElementById(type + '-preco').value);
+            if (isNaN(basePrice) || basePrice < 0) {
+                showModal('Aviso', 'Informe um preço válido.');
+                return;
+            }
+
+            data[type].basePrice = basePrice;
+            data[type].discountActive = document.getElementById(type + '-desconto-ativo').checked;
+            data[type].discountPercent = parseFloat(document.getElementById(type + '-desconto').value) || 0;
+            data[type].discountStart = document.getElementById(type + '-desconto-inicio').value;
+            data[type].discountEnd = document.getElementById(type + '-desconto-fim').value;
+
+            const consultas = parseInt(document.getElementById(type + '-consultas').value);
+            if (isNaN(consultas) || consultas < 1) {
+                showModal('Aviso', 'Informe uma quantidade válida de consultas por mês.');
+                return;
+            }
+            data[type].consultationsPerMonth = consultas;
+
+            savePrices(data);
+            updatePriceDisplay(type);
+            if (type === 'avulsa') updateAvulsaPerSession();
+            else if (type === 'plano') updatePlanoPerSession();
+            else updateCustomPerSession(type);
+            showModal('Salvo', 'Configurações de preço atualizadas com sucesso.');
+        }
+
+        function updateAvulsaPerSession() {
+            const data = loadPrices();
+            const config = data.avulsa;
+            const current = calculatePrice(config.basePrice, config);
+            const perSession = config.consultationsPerMonth > 0 ? current / config.consultationsPerMonth : 0;
+            document.getElementById('avulsa-por-consulta').textContent = `R$ ${formatCurrency(perSession)} / consulta`;
+        }
+
+        function updatePlanoPerSession() {
+            const data = loadPrices();
+            const config = data.plano;
+            const current = calculatePrice(config.basePrice, config);
+            const perSession = config.consultationsPerMonth > 0 ? current / config.consultationsPerMonth : 0;
+            document.getElementById('plano-por-consulta').textContent = `R$ ${formatCurrency(perSession)} / consulta`;
+        }
+
+        function updateCustomPerSession(type) {
+            const data = loadPrices();
+            const config = data[type];
+            if (!config) return;
+            const current = calculatePrice(config.basePrice, config);
+            const perSession = config.consultationsPerMonth > 0 ? current / config.consultationsPerMonth : 0;
+            const el = document.getElementById(type + '-por-consulta');
+            if (el) el.textContent = `R$ ${formatCurrency(perSession)} / consulta`;
+        }
+
+        /* =========================
+           NOVO PLANO (MODAL)
+           ========================= */
+        function openNewPlanModal() {
+            document.getElementById('new-plan-modal').style.display = 'flex';
+            lucide.createIcons();
+            updatePreviewCalculations();
+        }
+
+        function closeNewPlanModal() {
+            document.getElementById('new-plan-modal').style.display = 'none';
+            closeIconPicker();
+            clearNewPlanForm();
+        }
+
+        function clearNewPlanForm() {
+            document.getElementById('preview-nome').textContent = 'Novo Plano';
+            document.getElementById('preview-icon').setAttribute('data-lucide', 'plus');
+            document.getElementById('preview-preco').value = '0';
+            document.getElementById('preview-consultas').value = '1';
+            document.getElementById('preview-desconto-ativo').checked = false;
+            document.getElementById('preview-desconto').value = '0';
+            document.getElementById('preview-desconto-inicio').value = '';
+            document.getElementById('preview-desconto-fim').value = '';
+            togglePreviewDiscount();
+            updatePreviewCalculations();
+        }
+
+        function togglePreviewDiscount() {
+            const checked = document.getElementById('preview-desconto-ativo').checked;
+            document.getElementById('preview-discount-fields').style.display = checked ? 'flex' : 'none';
+            updatePreviewCalculations();
+        }
+
+        function updatePreviewCalculations() {
+            const preco = parseFloat(document.getElementById('preview-preco').value) || 0;
+            const consultas = parseInt(document.getElementById('preview-consultas').value) || 1;
+            const descontoAtivo = document.getElementById('preview-desconto-ativo').checked;
+            const descontoPercent = parseFloat(document.getElementById('preview-desconto').value) || 0;
+            const inicio = document.getElementById('preview-desconto-inicio').value;
+            const fim = document.getElementById('preview-desconto-fim').value;
+
+            let precoFinal = preco;
+            if (descontoAtivo && descontoPercent > 0) {
+                const hoje = getTodayStr();
+                let dentroPeriodo = true;
+                if (inicio && hoje < inicio) dentroPeriodo = false;
+                if (fim && hoje > fim) dentroPeriodo = false;
+                if (dentroPeriodo) {
+                    precoFinal = preco * (1 - descontoPercent / 100);
+                }
+            }
+
+            const porConsulta = consultas > 0 ? precoFinal / consultas : 0;
+            document.getElementById('preview-por-consulta').textContent = `R$ ${formatCurrency(porConsulta)} / consulta`;
+        }
+
+        const AVAILABLE_ICONS = [
+            'calendar-days', 'puzzle', 'stethoscope', 'heart', 'heart-pulse',
+            'activity', 'flower-2', 'star', 'coffee', 'hand-heart'
+        ];
+        let selectedIcon = 'plus';
+
+        function openIconPicker(event) {
+            event.stopPropagation();
+            const popup = document.getElementById('icon-picker-popup');
+            const grid = document.getElementById('icon-picker-grid');
+            const btn = event.currentTarget;
+
+            grid.innerHTML = '';
+            AVAILABLE_ICONS.forEach(iconName => {
+                const item = document.createElement('div');
+                item.className = 'icon-picker-item';
+                item.innerHTML = `<i data-lucide="${iconName}"></i>`;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    selectIcon(iconName);
+                };
+                grid.appendChild(item);
+            });
+
+            if (window.innerWidth <= 500) {
+                popup.style.left = '50%';
+                popup.style.top = '50%';
+                popup.style.transform = 'translate(-50%, -50%)';
+                popup.style.animation = 'none';
+            } else {
+                const rect = btn.getBoundingClientRect();
+                popup.style.left = (rect.left + rect.width / 2 - 160) + 'px';
+                popup.style.top = (rect.bottom + 8) + 'px';
+                popup.style.transform = 'none';
+                popup.style.animation = '';
+            }
+            popup.style.display = 'block';
+            lucide.createIcons();
+
+            document.addEventListener('click', closeIconPickerOnClickOutside, { once: true });
+        }
+
+        function closeIconPickerOnClickOutside(e) {
+            const popup = document.getElementById('icon-picker-popup');
+            if (popup && !popup.contains(e.target)) {
+                closeIconPicker();
+            }
+        }
+
+        function closeIconPicker() {
+            const popup = document.getElementById('icon-picker-popup');
+            if (popup) popup.style.display = 'none';
+        }
+
+        function selectIcon(iconName) {
+            selectedIcon = iconName;
+            const iconEl = document.getElementById('preview-icon');
+            iconEl.setAttribute('data-lucide', iconName);
+            lucide.createIcons();
+            closeIconPicker();
+        }
+
+        function saveNewPlan() {
+            const nome = document.getElementById('preview-nome').textContent.trim();
+            if (!nome || nome === 'Novo Plano') {
+                showModal('Aviso', 'Informe o nome do plano.');
+                return;
+            }
+
+            const preco = parseFloat(document.getElementById('preview-preco').value);
+            if (isNaN(preco) || preco < 0) {
+                showModal('Aviso', 'Informe um preço válido.');
+                return;
+            }
+
+            const consultas = parseInt(document.getElementById('preview-consultas').value);
+            if (isNaN(consultas) || consultas < 1) {
+                showModal('Aviso', 'Informe uma quantidade válida de consultas por mês.');
+                return;
+            }
+
+            const descontoAtivo = document.getElementById('preview-desconto-ativo').checked;
+            const descontoPercent = parseFloat(document.getElementById('preview-desconto').value) || 0;
+            const inicio = document.getElementById('preview-desconto-inicio').value;
+            const fim = document.getElementById('preview-desconto-fim').value;
+
+            const data = loadPrices();
+            const planId = 'custom_' + Date.now();
+
+            data[planId] = {
+                basePrice: preco,
+                consultationsPerMonth: consultas,
+                discountActive: descontoAtivo,
+                discountPercent: descontoPercent,
+                discountStart: inicio,
+                discountEnd: fim,
+                name: nome,
+                icon: selectedIcon
+            };
+
+            savePrices(data);
+            customPriceCurrentPage = 0;
+            renderCustomPriceCards();
+            closeNewPlanModal();
+            showModal('Sucesso', `Plano "${nome}" criado com sucesso!`);
+        }
+
+        function deletePlan(key) {
+            const data = loadPrices();
+            const plan = data[key];
+            if (!plan) return;
+
+            showModal(
+                'Confirmar exclusão',
+                `Tem certeza que deseja deletar o plano "${plan.name || 'Plano Personalizado'}"?`,
+                () => {
+                    delete data[key];
+                    savePrices(data);
+                    renderCustomPriceCards();
+                    showModal('Deletado', 'Plano removido com sucesso.');
+                },
+                () => {}
+            );
+        }
+
+        function togglePlanStatus(key, enable) {
+            const data = loadPrices();
+            const plan = data[key];
+            if (!plan) return;
+
+            plan.disabled = !enable;
+            savePrices(data);
+            renderCustomPriceCards();
+
+            const msg = enable ? 'Plano ativado com sucesso.' : 'Plano desativado com sucesso.';
+            showModal(enable ? 'Ativado' : 'Desativado', msg);
+        }
+
+        let customPriceCurrentPage = 0;
+        const customPricesPerPage = 2;
+
+        function renderCustomPriceCards() {
+            const data = loadPrices();
+            const grid = document.querySelector('.prices-grid');
+
+            // Remove cards customizados antigos
+            grid.querySelectorAll('.price-card-custom').forEach(c => c.remove());
+
+            const paginationEl = document.getElementById('custom-price-pagination');
+            const cardAvulsa = document.getElementById('card-avulsa');
+            const cardPlano = document.getElementById('card-plano');
+
+            // Coleta apenas os planos customizados
+            const customKeys = Object.keys(data).filter(key =>
+                key !== 'v' && key !== 'avulsa' && key !== 'plano'
+            );
+
+            // Cards padrão ocupam a página 0, customizados começam da página 1
+            const totalPages = 1 + Math.ceil(customKeys.length / customPricesPerPage);
+            if (customPriceCurrentPage >= totalPages) customPriceCurrentPage = totalPages - 1;
+            if (customPriceCurrentPage < 0) customPriceCurrentPage = 0;
+
+            if (customPriceCurrentPage === 0) {
+                // Página 0: mostra os cards padrão
+                if (cardAvulsa) cardAvulsa.style.display = '';
+                if (cardPlano) cardPlano.style.display = '';
+            } else {
+                // Páginas 1+: esconde os cards padrão
+                if (cardAvulsa) cardAvulsa.style.display = 'none';
+                if (cardPlano) cardPlano.style.display = 'none';
+
+                const start = (customPriceCurrentPage - 1) * customPricesPerPage;
+                const end = start + customPricesPerPage;
+                const pageKeys = customKeys.slice(start, end);
+
+                pageKeys.forEach(key => {
+                    const plan = data[key];
+                    const card = createPriceCard(key, plan);
+                    grid.insertBefore(card, paginationEl);
+                });
+            }
+
+            // Atualiza controles de paginação
+            if (totalPages > 1) {
+                paginationEl.style.display = 'flex';
+                document.getElementById('custom-price-page-indicator').textContent = `${customPriceCurrentPage + 1} / ${totalPages}`;
+                document.getElementById('btn-prev-custom-price').disabled = customPriceCurrentPage === 0;
+                document.getElementById('btn-next-custom-price').disabled = customPriceCurrentPage >= totalPages - 1;
+            } else {
+                paginationEl.style.display = 'none';
+            }
+
+            lucide.createIcons();
+        }
+
+        function changeCustomPricePage(direction) {
+            const data = loadPrices();
+            const customKeys = Object.keys(data).filter(key =>
+                key !== 'v' && key !== 'avulsa' && key !== 'plano'
+            );
+            const totalPages = 1 + Math.ceil(customKeys.length / customPricesPerPage);
+            const newPage = customPriceCurrentPage + direction;
+            if (newPage >= 0 && newPage < totalPages) {
+                customPriceCurrentPage = newPage;
+                renderCustomPriceCards();
+            }
+        }
+
+        function createPriceCard(key, plan) {
+            const card = document.createElement('div');
+            const isDisabled = plan.disabled === true;
+            card.className = 'price-card price-card-custom' + (isDisabled ? ' disabled' : '');
+            card.dataset.planId = key;
+
+            const current = calculatePrice(plan.basePrice, plan);
+            let displayHtml = `<span class="price-currency">R$</span><span class="price-value">${formatCurrency(current)}</span>`;
+            if (isDiscountActive(plan)) {
+                displayHtml += `<span class="price-original">R$ ${formatCurrency(plan.basePrice)}</span>`;
+                displayHtml += `<span class="price-discount-tag">${plan.discountPercent}% OFF</span>`;
+            }
+
+            const perSession = plan.consultationsPerMonth > 0 ? current / plan.consultationsPerMonth : 0;
+
+            const actionBtnClass = isDisabled ? 'btn-enable-plan' : 'btn-disable-plan';
+            const actionBtnText = isDisabled ? 'Ativar' : 'Desativar';
+            const actionBtnOnClick = isDisabled ? `togglePlanStatus('${key}', true)` : `togglePlanStatus('${key}', false)`;
+
+            card.innerHTML = `
+                <div class="price-card-header">
+                    <div class="price-icon"><i data-lucide="${plan.icon || 'plus'}"></i></div>
+                    <h3>${plan.name || 'Plano Personalizado'}</h3>
+                </div>
+                <div class="price-current" id="${key}-display">
+                    ${displayHtml}
+                </div>
+                <div class="price-fields">
+                    <div class="price-field">
+                        <label>Preço fixo (R$)</label>
+                        <input type="number" id="${key}-preco" value="${plan.basePrice.toFixed(2)}" min="0" step="0.01" ${isDisabled ? 'disabled' : ''}>
+                    </div>
+                    <div class="price-field">
+                        <label>Consultas por mês</label>
+                        <input type="number" id="${key}-consultas" value="${plan.consultationsPerMonth}" min="1" step="1" ${isDisabled ? 'disabled' : ''}>
+                    </div>
+                    <div class="price-per-session" id="${key}-por-consulta">R$ ${formatCurrency(perSession)} / consulta</div>
+                    <div class="discount-toggle">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="${key}-desconto-ativo" onchange="toggleDiscount('${key}')" ${plan.discountActive ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
+                            <span>Aplicar desconto por tempo limitado</span>
+                        </label>
+                    </div>
+                    <div class="discount-fields" id="${key}-discount-fields" style="display:${plan.discountActive ? 'flex' : 'none'};">
+                        <div class="price-field">
+                            <label>% de desconto</label>
+                            <input type="number" id="${key}-desconto" value="${plan.discountPercent || 0}" min="0" max="100" step="1" ${isDisabled ? 'disabled' : ''}>
+                        </div>
+                        <div class="price-field-row">
+                            <div class="price-field">
+                                <label>Início</label>
+                                <input type="date" id="${key}-desconto-inicio" value="${plan.discountStart || ''}" ${isDisabled ? 'disabled' : ''}>
+                            </div>
+                            <div class="price-field">
+                                <label>Fim</label>
+                                <input type="date" id="${key}-desconto-fim" value="${plan.discountEnd || ''}" ${isDisabled ? 'disabled' : ''}>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-save-price" onclick="savePrice('${key}')" ${isDisabled ? 'disabled' : ''}>Salvar alterações</button>
+                <div class="price-card-actions">
+                    <button class="${actionBtnClass}" onclick="${actionBtnOnClick}">${actionBtnText}</button>
+                    <button class="btn-delete-plan" onclick="deletePlan('${key}')">Deletar</button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Atualiza cálculos do preview em tempo real
+        ['preview-preco', 'preview-consultas', 'preview-desconto', 'preview-desconto-inicio', 'preview-desconto-fim'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updatePreviewCalculations);
+        });
+        document.getElementById('preview-desconto-ativo').addEventListener('change', updatePreviewCalculations);
+
+        function initPrices() {
+            const data = loadPrices();
+
+            document.getElementById('avulsa-preco').value = data.avulsa.basePrice.toFixed(2);
+            document.getElementById('avulsa-consultas').value = data.avulsa.consultationsPerMonth;
+            document.getElementById('avulsa-desconto-ativo').checked = data.avulsa.discountActive || false;
+            document.getElementById('avulsa-desconto').value = data.avulsa.discountPercent || 0;
+            document.getElementById('avulsa-desconto-inicio').value = data.avulsa.discountStart || '';
+            document.getElementById('avulsa-desconto-fim').value = data.avulsa.discountEnd || '';
+            toggleDiscount('avulsa');
+            updatePriceDisplay('avulsa');
+            updateAvulsaPerSession();
+
+            document.getElementById('plano-preco').value = data.plano.basePrice.toFixed(2);
+            document.getElementById('plano-consultas').value = data.plano.consultationsPerMonth;
+            document.getElementById('plano-desconto-ativo').checked = data.plano.discountActive || false;
+            document.getElementById('plano-desconto').value = data.plano.discountPercent || 0;
+            document.getElementById('plano-desconto-inicio').value = data.plano.discountStart || '';
+            document.getElementById('plano-desconto-fim').value = data.plano.discountEnd || '';
+            toggleDiscount('plano');
+            updatePriceDisplay('plano');
+            updatePlanoPerSession();
+
+            renderCustomPriceCards();
+        }
+
+        initPrices();
+        updateAppointmentBadge();
+
+        /* =========================
+           MEU PERFIL
+           ========================= */
+        const PROFILE_STORAGE_KEY = 'inspirare_admin_profile';
+
+        function getDefaultProfile() {
+            return {
+                name: 'Administrador',
+                phone: '(11) 98765-4321',
+                email: 'admin@inspirare.com',
+                description: 'Administrador da plataforma Inspirare.',
+                photo: ''
+            };
+        }
+
+        function loadProfile() {
+            try {
+                const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+                if (raw) return { ...getDefaultProfile(), ...JSON.parse(raw) };
+            } catch (e) {}
+            return getDefaultProfile();
+        }
+
+        function saveProfileData(data) {
+            localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function initProfile() {
+            const data = loadProfile();
+            document.getElementById('profile-name').value = data.name;
+            document.getElementById('profile-phone').value = data.phone;
+            document.getElementById('profile-email').value = data.email;
+            document.getElementById('profile-description').value = data.description;
+
+            const preview = document.getElementById('profile-photo-preview');
+            const removeBtn = document.getElementById('profile-photo-remove');
+            if (data.photo) {
+                preview.style.backgroundImage = `url(${data.photo})`;
+                preview.textContent = '';
+                if (removeBtn) removeBtn.style.display = 'flex';
+            } else {
+                preview.style.backgroundImage = '';
+                preview.textContent = '+';
+                if (removeBtn) removeBtn.style.display = 'none';
+            }
+        }
+
+        function triggerProfilePhoto() {
+            const input = document.getElementById('profile-photo-input');
+            if (input) input.click();
+        }
+
+        function previewProfilePhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('profile-photo-preview');
+                    preview.style.backgroundImage = `url(${e.target.result})`;
+                    preview.textContent = '';
+                    document.getElementById('profile-photo-remove').style.display = 'flex';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeProfilePhoto(event) {
+            event.stopPropagation();
+            const preview = document.getElementById('profile-photo-preview');
+            preview.style.backgroundImage = '';
+            preview.textContent = '+';
+            document.getElementById('profile-photo-input').value = '';
+            document.getElementById('profile-photo-remove').style.display = 'none';
+        }
+
+        function saveProfile() {
+            const name = document.getElementById('profile-name').value.trim();
+            const phone = document.getElementById('profile-phone').value.trim();
+            const email = document.getElementById('profile-email').value.trim();
+            const description = document.getElementById('profile-description').value.trim();
+
+            if (!name || !email) {
+                showModal('Aviso', 'Preencha pelo menos nome e email.');
+                return;
+            }
+
+            const preview = document.getElementById('profile-photo-preview');
+            const currentPhoto = preview.style.backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+
+            const data = {
+                name,
+                phone,
+                email,
+                description,
+                photo: currentPhoto || ''
+            };
+
+            saveProfileData(data);
+
+            // Atualiza o nome no header
+            const navName = document.querySelector('.user-profile-nav span');
+            if (navName) navName.textContent = `Olá, ${name}`;
+
+            showModal('Salvo', 'Perfil atualizado com sucesso!');
         }
     </script>
 </body>
