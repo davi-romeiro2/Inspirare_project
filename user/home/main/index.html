@@ -1304,6 +1304,9 @@
             cancelReasonTargetBtn = null;
             pendingTutorialReactivation = false;
             resetCancelModalZIndex();
+            // Restaura botão Voltar
+            const backBtn = document.querySelector('#cancel-reason-modal .cancel-reason-actions .btn-modal-secondary');
+            if (backBtn) backBtn.style.display = '';
         }
 
         function closeCancelReasonModal() {
@@ -1314,6 +1317,9 @@
                 setTimeout(() => showReactivationHint(), 400);
             }
             resetCancelModalZIndex();
+            // Restaura botão Voltar
+            const backBtn = document.querySelector('#cancel-reason-modal .cancel-reason-actions .btn-modal-secondary');
+            if (backBtn) backBtn.style.display = '';
         }
 
         function updateCancelCharCount() {
@@ -1386,6 +1392,8 @@
             apptsPageState.scheduled = 0;
             filterAppts('scheduled', activeBtn);
             closeCancelReasonModal();
+            // Mostra modal de sucesso
+            showModal('Sucesso', 'Consulta cancelada com sucesso!', () => {});
         }
 
         function cancelAppt(btn) {
@@ -1480,6 +1488,10 @@
             resetCancelModalZIndex();
 
             overlay.style.zIndex = '';
+
+            // Restaura botão Voltar do modal caso tenha sido escondido pelo tutorial
+            const backBtn = document.querySelector('#cancel-reason-modal .cancel-reason-actions .btn-modal-secondary');
+            if (backBtn) backBtn.style.display = '';
 
             document.getElementById('tutorial-balloon').style.display = 'none';
         }
@@ -1718,6 +1730,9 @@
                         ensureCancelModalOpen();
                         document.querySelectorAll('#cancel-reason-modal input[type="checkbox"]').forEach(cb => cb.checked = false);
                         document.getElementById('cancel-textarea-wrapper').style.display = 'none';
+                        // Esconde o botão "Voltar" durante o tutorial para forçar o fluxo de cancelamento
+                        const backBtn = document.querySelector('#cancel-reason-modal .cancel-reason-actions .btn-modal-secondary');
+                        if (backBtn) backBtn.style.display = 'none';
                     }
                 }
             ];
