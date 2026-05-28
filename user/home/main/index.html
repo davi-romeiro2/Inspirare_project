@@ -1153,9 +1153,11 @@
                         blocker.classList.add('tutorial-cancel-btn');
                     } else {
                         makeClone(btn, true, () => {
-                            closeTutorial();
-                            pendingTutorialReactivation = true;
-                            openCancelReasonModal(btn);
+                            closeTutorialVisuals();
+                            btn.click();
+                            tutorialHistory.push(tutorialCurrentStep);
+                            tutorialCurrentStep++;
+                            setTimeout(() => nextTutorialStep(), 300);
                         });
                     }
                 }
