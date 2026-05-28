@@ -1613,6 +1613,7 @@
                         '#card-detail .btn-confirm'
                     ],
                     interactive: true,
+                    forceAbove: true,
                     text: 'Preencha os dados do cartão para concluir o pagamento.',
                     beforeShow: () => { }
                 }
@@ -2832,14 +2833,13 @@
 
                         // Usa os inputs reais para posicionar o balão (não os labels)
                         const inputEls = targets.filter(el => el.tagName.toLowerCase() !== 'label');
+                        positionBalloon(balloon, inputEls.length ? inputEls : targets, false, !!branch.forceAbove);
+
+                        // Ajuste fino: sobe o balão no step do cartão
                         if (branchKey === 'card') {
-                            positionBalloon(balloon, inputEls.length ? inputEls : targets, window.innerWidth <= 768);
-                            // Desce o balão um pouco no step do cartão
                             const currentTop = parseFloat(balloon.style.top) || 0;
-                            const shift = window.innerWidth > 768 ? -20 : 145;
+                            const shift = window.innerWidth > 768 ? -35 : -70;
                             balloon.style.top = (currentTop + shift) + 'px';
-                        } else {
-                            positionBalloon(balloon, inputEls.length ? inputEls : targets, false);
                         }
 
                     } else {

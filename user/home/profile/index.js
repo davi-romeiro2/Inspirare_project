@@ -138,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.disabled = true;
         isEditing = false;
         editBtn.innerHTML = '<i data-lucide="edit"></i> Editar';
+        lucide.createIcons();
     }
 
     // Delete profile functionality
