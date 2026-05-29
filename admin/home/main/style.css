@@ -303,13 +303,13 @@ body {
 
 @media (max-width: 768px) {
     #flow-precos.active {
-        padding: 16px;
+        padding: 20px;
         margin-bottom: 20px;
     }
 
     .prices-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 20px;
     }
 
     .price-card {
@@ -3221,7 +3221,7 @@ body {
     background: var(--white);
     border-radius: 20px;
     padding: 20px;
-    box-shadow: 0 8px 24px rgba(58, 80, 61, 0.06);
+    box-shadow: 0 10px 30px rgba(58, 80, 61, 0.12);
     border: 1.5px solid transparent;
     transition: all 0.3s ease;
     display: flex;
@@ -3234,7 +3234,7 @@ body {
 
 .price-card:hover {
     border-color: var(--primary-color);
-    box-shadow: 0 12px 30px rgba(187, 137, 145, 0.1);
+    box-shadow: 0 14px 35px rgba(187, 137, 145, 0.18);
 }
 
 .price-card-header {
