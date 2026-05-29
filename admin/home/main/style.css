@@ -301,6 +301,61 @@ body {
     overflow: visible;
 }
 
+@media (max-width: 768px) {
+    #flow-precos.active {
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .prices-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .price-card {
+        padding: 16px;
+    }
+
+    .price-field-row {
+        grid-template-columns: 1fr;
+    }
+
+    .price-card-header h3 {
+        font-size: 1rem;
+    }
+
+    .price-current .price-value {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .price-card {
+        padding: 12px;
+        border-radius: 14px;
+    }
+
+    .price-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .price-field input {
+        padding: 6px 8px;
+        font-size: 0.85rem;
+    }
+
+    .btn-save-price {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .price-pagination {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
 #flow-perfil.active {
     max-width: 720px;
     width: 100%;
