@@ -303,17 +303,20 @@ body {
 
 @media (max-width: 768px) {
     #flow-precos.active {
-        padding: 24px 32px;
+        padding: 20px 12px;
         margin-bottom: 20px;
     }
 
     .prices-grid {
         grid-template-columns: 1fr;
-        gap: 28px;
+        gap: 20px;
     }
 
     .price-card {
         padding: 20px;
+        margin: 0 12px;
+        border: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 0 6px 18px rgba(58, 80, 61, 0.12), 0 16px 40px rgba(58, 80, 61, 0.08);
     }
 
     .price-field-row {
