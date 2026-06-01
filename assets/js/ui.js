@@ -1,8 +1,8 @@
 /* =========================================================
    Inspirare - UI
-   JS compartilhado: fundo animado + icones Lucide.
-   Carregado como <script src="../../assets/js/ui.js"></script>
-   no final do body, apos o DOM existir.
+   JS compartilhado: injeta o fundo animado.
+   O Lucide continua sendo carregado diretamente no <head>
+   de cada pagina (sincrono, sem dependencia de timing).
    ========================================================= */
 
 (function () {
@@ -16,33 +16,13 @@
             '<div class="circle circle-1"></div>' +
             '<div class="circle circle-2"></div>' +
             '<div class="circle circle-3"></div>';
+        // Posicao fixa no fundo, atras de todo o conteudo
         document.body.insertBefore(bg, document.body.firstChild);
     }
 
-    function loadLucide() {
-        // Atributos [data-lucide] ja estao no HTML, entao o unico
-        // trabalho e carregar a lib e pedir pra ela renderizar.
-        if (window.lucide) {
-            window.lucide.createIcons();
-            return;
-        }
-        if (document.querySelector('script[data-lucide]')) return;
-        var s = document.createElement('script');
-        s.src = 'https://unpkg.com/lucide@latest';
-        s.defer = true;
-        s.dataset.lucide = '1';
-        s.onload = function () { window.lucide && window.lucide.createIcons(); };
-        document.head.appendChild(s);
-    }
-
-    function init() {
-        loadBgAnimation();
-        loadLucide();
-    }
-
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', loadBgAnimation);
     } else {
-        init();
+        loadBgAnimation();
     }
 })();
