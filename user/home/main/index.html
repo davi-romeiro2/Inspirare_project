@@ -28,6 +28,38 @@
         </div>
     </div>
 
+    <!-- Tela de Boas-Vindas (mostrada 1x por usuario na primeira entrada) -->
+    <div id="welcome-overlay" class="welcome-overlay" style="display:none;">
+        <div class="welcome-card">
+            <h2>Bem-vindo!</h2>
+            <p class="welcome-sub">Deseja iniciar algum tutorial?</p>
+            <div class="welcome-options">
+                <button class="welcome-option" data-tutorial="schedule">
+                    <i data-lucide="calendar-plus"></i>
+                    <div class="welcome-option-text">
+                        <strong>Como marcar consulta</strong>
+                        <small>Aprenda o passo a passo do agendamento</small>
+                    </div>
+                </button>
+                <button class="welcome-option" data-tutorial="cancel">
+                    <i data-lucide="calendar-x"></i>
+                    <div class="welcome-option-text">
+                        <strong>Como cancelar consulta</strong>
+                        <small>Veja como cancelar quando precisar</small>
+                    </div>
+                </button>
+                <button class="welcome-option" data-tutorial="view">
+                    <i data-lucide="calendar-search"></i>
+                    <div class="welcome-option-text">
+                        <strong>Como visualizar consultas</strong>
+                        <small>Conheça a área de Minhas Consultas</small>
+                    </div>
+                </button>
+            </div>
+            <button class="welcome-decline" id="welcome-decline">Agora não, obrigado</button>
+        </div>
+    </div>
+
     <!-- Botão Hambúrguer Global -->
     <button class="menu-toggle" onclick="toggleMenu()" aria-label="Abrir Menu">
         <i data-lucide="menu"></i>
@@ -1889,9 +1921,8 @@
             if (type !== 'view') {
                 closeFlow();
             }
-            if (type === 'view' || type === 'cancel') {
-                setTimeout(() => showReactivationHint(), 400);
-            }
+            // O balão "Precisa de ajuda?" aparece em qualquer finalização de tutorial.
+            setTimeout(() => showReactivationHint(), 400);
         }
 
         function getCombinedBoundingBox(elements) {
@@ -2834,10 +2865,20 @@
                         const inputEls = targets.filter(el => el.tagName.toLowerCase() !== 'label');
                         if (branchKey === 'card') {
                             positionBalloon(balloon, inputEls.length ? inputEls : targets, window.innerWidth <= 768);
-                            // Desce o balão um pouco no step do cartão
-                            const currentTop = parseFloat(balloon.style.top) || 0;
-                            const shift = window.innerWidth > 768 ? -20 : 145;
-                            balloon.style.top = (currentTop + shift) + 'px';
+                            // No passo do cartão o balão fica ACIMA do modal de pagamento,
+                            // nunca embaixo (antes somava 145px no mobile, escondendo o balão).
+                            const isMobile = window.innerWidth <= 768;
+                            balloon.classList.add('balloon-above'); // seta aponta pra baixo, pros campos do cartão
+                            if (isMobile) {
+                                // Mobile: fixa no topo, acima do modal
+                                balloon.style.top = '80px';
+                                balloon.style.bottom = 'auto';
+                            } else {
+                                // Desktop: sobe o balão para não cobrir o "Pagar Agora"
+                                const currentTop = parseFloat(balloon.style.top) || 0;
+                                balloon.style.top = (currentTop - 200) + 'px';
+                                balloon.style.bottom = 'auto';
+                            }
                         } else {
                             positionBalloon(balloon, inputEls.length ? inputEls : targets, false);
                         }
@@ -2905,11 +2946,54 @@
             const modal = document.getElementById('cancel-reason-modal');
             if (modal) modal.style.display = 'none';
 
+            // Se um tutorial estava realmente em andamento, mostra o balão
+            // "Precisa de ajuda?" para o usuário saber que pode reiniciar.
+            const wasActive = currentTutorialType !== null;
             tutorialCurrentStep = 0;
             tutorialHistory = [];
             tutorialActiveBranch = null;
             currentTutorialType = null;
+            if (wasActive) {
+                setTimeout(() => showReactivationHint(), 400);
+            }
         }
+
+        /* =========================
+           TELA DE BOAS-VINDAS
+           Aparece 1x por usuario, gravado em localStorage.
+           ========================= */
+        (function initWelcome() {
+            const KEY = 'inspirare.welcomeShown';
+            if (localStorage.getItem(KEY) === '1') return;
+
+            const overlay = document.getElementById('welcome-overlay');
+            if (!overlay) return;
+            overlay.style.display = 'flex';
+            if (window.lucide) window.lucide.createIcons();
+
+            const close = (startFn) => {
+                try { localStorage.setItem(KEY, '1'); } catch (e) {}
+                overlay.style.display = 'none';
+                if (typeof startFn === 'function') {
+                    setTimeout(() => startFn(), 200);
+                } else {
+                    // Recusou o tutorial: mostra o balao "Precisa de ajuda?"
+                    setTimeout(() => showReactivationHint(), 400);
+                }
+            };
+
+            overlay.querySelectorAll('.welcome-option').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const type = btn.dataset.tutorial;
+                    const fn = type === 'schedule' ? startScheduleTutorial
+                             : type === 'cancel'   ? startCancelTutorial
+                             :                        startViewTutorial;
+                    close(fn);
+                });
+            });
+
+            document.getElementById('welcome-decline').addEventListener('click', () => close(null));
+        })();
     </script>
 </body>
 
