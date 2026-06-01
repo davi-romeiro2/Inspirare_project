@@ -1,0 +1,238 @@
+/* =========================================================
+   Inspirare - Base
+   CSS compartilhado por todas as paginas de autenticacao.
+   ========================================================= */
+
+:root {
+    --primary-color: #BB8991;    /* Rosado/Terroso - Destaques */
+    --secondary-color: #3A503D;  /* Verde Escuro - Textos e Seriedade */
+    --accent-color: #91A697;     /* Verde Acinzentado - Suavidade */
+    --neutral-color: #C4C4C4;    /* Cinza - Bordas e Inputs */
+    --bg-color: #f9fbf9;         /* Fundo bem claro para leveza */
+    --white: #ffffff;
+    --error-color: #e74c3c;
+    --success-color: #2ecc71;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    background-image: linear-gradient(135deg, var(--bg-color) 0%, #e8eee8 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--secondary-color);
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 450px;
+}
+
+/* Background Animations */
+.bg-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.circle {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.5;
+    animation: float 20s infinite ease-in-out;
+}
+
+.circle-1 {
+    width: 400px;
+    height: 400px;
+    background: var(--accent-color);
+    top: -100px;
+    left: -100px;
+}
+
+.circle-2 {
+    width: 300px;
+    height: 300px;
+    background: var(--primary-color);
+    bottom: -50px;
+    right: -50px;
+    animation-delay: -5s;
+}
+
+.circle-3 {
+    width: 250px;
+    height: 250px;
+    background: #d1d1d1;
+    top: 40%;
+    left: 60%;
+    animation-delay: -10s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, 50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+}
+
+/* Card generico (login, signup, forgot-password compartilham) */
+.auth-card {
+    background: var(--white);
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: 0 15px 35px rgba(58, 80, 61, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.auth-card:hover {
+    transform: translateY(-5px);
+}
+
+.auth-header {
+    margin-bottom: 32px;
+}
+
+.auth-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 8px;
+}
+
+.auth-header p {
+    font-size: 0.9rem;
+    color: var(--accent-color);
+    font-weight: 300;
+}
+
+/* Input group compartilhado */
+.input-group {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin-left: 4px;
+}
+
+.input-group input {
+    padding: 14px 16px;
+    border: 1.5px solid var(--neutral-color);
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.input-group input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 4px rgba(145, 166, 151, 0.2);
+}
+
+/* Botao primario compartilhado (Entrar, Finalizar Cadastro, Alterar Senha) */
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #a6757d;
+    box-shadow: 0 5px 15px rgba(187, 137, 145, 0.4);
+}
+
+/* Password field com toggle (olhinho) */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 50px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    transition: color 0.3s ease;
+}
+
+.toggle-password:hover {
+    color: var(--primary-color);
+}
+
+.toggle-password svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Requisitos de senha (compartilhado entre signup e forgot-password) */
+.password-requirements {
+    list-style: none;
+    font-size: 0.75rem;
+    margin-bottom: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.req-item {
+    color: var(--error-color);
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.req-item.valid {
+    color: var(--success-color);
+}
+
+.req-item.valid::before {
+    content: '✓';
+}
+
+.req-item:not(.valid)::before {
+    content: '○';
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

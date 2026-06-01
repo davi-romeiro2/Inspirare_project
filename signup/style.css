@@ -1,34 +1,9 @@
-:root {
-    --primary-color: #BB8991;
-    --secondary-color: #3A503D;
-    --accent-color: #91A697;
-    --neutral-color: #C4C4C4;
-    --bg-color: #f9fbf9;
-    --white: #ffffff;
-    --error-color: #e74c3c;
-    --success-color: #2ecc71;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    font-family: 'Poppins', sans-serif;
-    background-color: var(--bg-color);
-    background-image: linear-gradient(135deg, var(--bg-color) 0%, #e8eee8 100%);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--secondary-color);
-    padding: 20px;
-}
+/* =========================================================
+   Signup - estilos especificos.
+   Base compartilhada vem de ../../assets/css/base.css
+   ========================================================= */
 
 .container {
-    width: 100%;
     max-width: 600px;
 }
 
@@ -38,7 +13,7 @@ body {
     border-radius: 24px;
     box-shadow: 0 15px 35px rgba(58, 80, 61, 0.1);
     text-align: center;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease;
 }
 
 .signup-header {
@@ -70,66 +45,6 @@ body {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
-.input-group {
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.input-group label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--secondary-color);
-    margin-left: 4px;
-}
-
-.input-group input, .input-group select {
-    padding: 14px 16px;
-    border: 1.5px solid var(--neutral-color);
-    border-radius: 12px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    outline: none;
-}
-
-.input-group input:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 4px rgba(145, 166, 151, 0.2);
-}
-
-/* Password Requirements */
-.password-requirements {
-    list-style: none;
-    font-size: 0.75rem;
-    margin-bottom: 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.req-item {
-    color: var(--error-color);
-    transition: color 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.req-item.valid {
-    color: var(--success-color);
-}
-
-.req-item.valid::before {
-    content: '✓';
-}
-
-.req-item:not(.valid)::before {
-    content: '○';
-}
-
 
 /* Button Layout */
 .btn-group {
@@ -168,44 +83,4 @@ body {
 
 .btn-back-login:hover {
     color: var(--primary-color);
-}
-
-/* Background Animations (Same as Login) */
-.bg-animation {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    overflow: hidden;
-}
-
-.circle {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.5;
-    animation: float 20s infinite ease-in-out;
-}
-
-.circle-1 {
-    width: 400px; height: 400px; background: var(--accent-color);
-    top: -100px; left: -100px;
-}
-
-.circle-2 {
-    width: 300px; height: 300px; background: var(--primary-color);
-    bottom: -50px; right: -50px; animation-delay: -5s;
-}
-
-.circle-3 {
-    width: 250px; height: 250px; background: #d1d1d1;
-    top: 40%; left: 60%; animation-delay: -10s;
-}
-
-@keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(30px, 50px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
 }
