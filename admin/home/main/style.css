@@ -3790,6 +3790,23 @@ body {
 @media (max-width: 768px) {
     .prices-grid {
         grid-template-columns: 1fr;
+        justify-items: center;
+    }
+    .price-card {
+        width: 100%;
+        max-width: 420px;
+        align-self: center;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    #flow-precos.active {
+        padding: 16px;
+    }
+    .price-card {
+        max-width: 100%;
+        padding: 16px;
     }
 }
 
