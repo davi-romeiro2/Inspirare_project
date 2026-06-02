@@ -13,8 +13,10 @@ cp .env.example .env
 # open .env and fill in SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
 # (find them at Supabase dashboard -> Project Settings -> API)
 
-# 3. (one-time, in Supabase) Run the SQL from the project plan
-#    to create the `profiles` table, RLS policies and the on_auth_user_created trigger.
+# 3. (one-time, in Supabase) Run `backend/sql/001_profiles.sql` in the SQL Editor.
+#    This creates the `profiles` table, RLS policies and the on_auth_user_created
+#    trigger. The script is idempotent; it updates the `role` CHECK to accept
+#    ('user', 'admin', 'funcionario') if the table already exists.
 
 # 4. Run the server
 npm run dev          # API on http://localhost:3000 (auto-reload)

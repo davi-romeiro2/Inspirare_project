@@ -5,6 +5,7 @@
   'use strict';
 
   var TOKEN_KEY = 'inspirare_token';
+  var PROFILE_KEY = 'inspirare_profile';
   // In production this would come from a config file or <meta> tag.
   var API_BASE = 'http://localhost:3000/api';
 
@@ -18,6 +19,24 @@
 
   function clearToken() {
     try { localStorage.removeItem(TOKEN_KEY); } catch (_e) { /* ignore */ }
+  }
+
+  function getProfile() {
+    try {
+      var raw = localStorage.getItem(PROFILE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (_e) { return null; }
+  }
+
+  function setProfile(profile) {
+    try {
+      if (profile) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      else localStorage.removeItem(PROFILE_KEY);
+    } catch (_e) { /* ignore */ }
+  }
+
+  function clearProfile() {
+    try { localStorage.removeItem(PROFILE_KEY); } catch (_e) { /* ignore */ }
   }
 
   function api(path, options) {
@@ -44,5 +63,9 @@
       });
   }
 
-  window.InspirareAuth = { getToken: getToken, setToken: setToken, clearToken: clearToken, api: api };
+  window.InspirareAuth = {
+    getToken: getToken, setToken: setToken, clearToken: clearToken,
+    getProfile: getProfile, setProfile: setProfile, clearProfile: clearProfile,
+    api: api,
+  };
 })();

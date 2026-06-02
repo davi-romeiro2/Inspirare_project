@@ -83,6 +83,16 @@
 
         // Login submit -> POST /api/auth/login
         const loginForm = document.getElementById('login-form');
+
+        // Redirect by role: user -> user home; admin/funcionario -> admin home.
+        // Unknown / missing roles fall back to the user home (safer than blocking login).
+        function redirectByRole(role) {
+            if (role === 'admin' || role === 'funcionario') {
+                return '../admin/home/main/index.html';
+            }
+            return '../user/home/main/index.html';
+        }
+
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             InspirareFeedback.clearError(loginForm);
@@ -102,7 +112,10 @@
                 if (data.session && data.session.access_token) {
                     InspirareAuth.setToken(data.session.access_token);
                 }
-                window.location.href = '../user/home/main/index.html';
+                if (data.profile) {
+                    InspirareAuth.setProfile(data.profile);
+                }
+                window.location.href = redirectByRole(data.profile && data.profile.role);
             } catch (err) {
                 let msg = 'Erro ao entrar. Tente novamente.';
                 if (err.status === 401) msg = 'E-mail ou senha incorretos.';
