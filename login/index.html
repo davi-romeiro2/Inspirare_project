@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inspirare - Login</title>
     <link rel="stylesheet" href="../assets/css/base.css">
+    <link rel="stylesheet" href="../assets/css/feedback.css">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +20,7 @@
                 <p>Seu espaço de acolhimento e equilíbrio</p>
             </div>
 
-            <form class="login-form" onsubmit="event.preventDefault(); window.location.href='../user/home/main/index.html';">
+            <form class="login-form" id="login-form">
                 <div class="input-group">
                     <label for="email">E-mail</label>
                     <input type="email" id="email" name="email" placeholder="exemplo@email.com" required>
@@ -61,6 +62,8 @@
     </div>
 
     <script src="../assets/js/ui.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/ui-feedback.js"></script>
     <script>
         // Garante que o Lucide renderize os icones presentes no DOM
         if (window.lucide) lucide.createIcons();
@@ -76,6 +79,43 @@
             // Toggle the icon by updating the innerHTML and then re-initializing Lucide
             this.innerHTML = `<i data-lucide="${type === 'text' ? 'eye-off' : 'eye'}"></i>`;
             lucide.createIcons();
+        });
+
+        // Login submit -> POST /api/auth/login
+        const loginForm = document.getElementById('login-form');
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            InspirareFeedback.clearError(loginForm);
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Entrando...';
+
+            try {
+                const data = await InspirareAuth.api('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password }),
+                });
+                if (data.session && data.session.access_token) {
+                    InspirareAuth.setToken(data.session.access_token);
+                }
+                window.location.href = '../user/home/main/index.html';
+            } catch (err) {
+                let msg = 'Erro ao entrar. Tente novamente.';
+                if (err.status === 401) msg = 'E-mail ou senha incorretos.';
+                else if (err.status === 400 && err.fields) {
+                    msg = Object.entries(err.fields)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join('\n');
+                }
+                InspirareFeedback.showError(loginForm, msg);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         });
     </script>
 </body>

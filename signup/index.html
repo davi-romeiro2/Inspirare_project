@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inspirare - Cadastro</title>
     <link rel="stylesheet" href="../assets/css/base.css">
+    <link rel="stylesheet" href="../assets/css/feedback.css">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,6 +65,8 @@
     </div>
 
     <script src="../assets/js/ui.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/ui-feedback.js"></script>
     <script>
         if (window.lucide) lucide.createIcons();
 
@@ -122,6 +125,50 @@
             input.addEventListener('keypress', (e) => {
                 if (!/[0-9]/.test(e.key)) e.preventDefault();
             });
+        });
+
+        // Signup submit -> POST /api/auth/signup
+        const signupForm = document.getElementById('signup-form');
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            InspirareFeedback.clearError(signupForm);
+
+            const fullname = document.getElementById('fullname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('user-phone').value.trim();
+            const pwd = password.value;
+
+            const submitBtn = signupForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Cadastrando...';
+
+            try {
+                const data = await InspirareAuth.api('/auth/signup', {
+                    method: 'POST',
+                    body: JSON.stringify({ fullname, email, phone, password: pwd }),
+                });
+
+                if (data.session && data.session.access_token) {
+                    InspirareAuth.setToken(data.session.access_token);
+                    window.location.href = '../user/home/main/index.html';
+                } else {
+                    // Conta criada mas sem sessão (ex.: confirmação de e-mail exigida)
+                    window.location.href = '../login/index.html';
+                }
+            } catch (err) {
+                let msg = 'Erro ao cadastrar. Tente novamente.';
+                if (err.status === 409) msg = 'Este e-mail já está cadastrado.';
+                else if (err.status === 400 && err.fields) {
+                    msg = Object.entries(err.fields)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join('\n');
+                }
+                InspirareFeedback.showError(signupForm, msg);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         });
     </script>
 </body>

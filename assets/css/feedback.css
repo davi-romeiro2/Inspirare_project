@@ -1,0 +1,19 @@
+/* =========================================================
+   Inspirare - form feedback
+   Inline error banner rendered inside a <form>.
+   Palette: derived from base.css greens (#3A503D etc.)
+   ========================================================= */
+
+.form-error {
+  display: none;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #FDECEC;
+  border-left: 4px solid #C0392B;
+  color: #7B241C;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
