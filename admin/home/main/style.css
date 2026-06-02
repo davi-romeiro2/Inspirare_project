@@ -307,6 +307,25 @@ body {
     padding: 32px;
 }
 
+#flow-disponibilidade.active {
+    max-width: 1100px;
+    width: 100%;
+    padding: 32px;
+    padding-top: 60px;
+    margin-bottom: 40px;
+}
+
+#flow-disponibilidade .appointments-header {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+@media (max-width: 720px) {
+    #flow-disponibilidade.active {
+        padding-top: 70px;
+    }
+}
+
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -3199,6 +3218,24 @@ body {
     color: var(--primary-color);
 }
 
+.price-icon-btn {
+    border: 1px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    font: inherit;
+}
+
+.price-icon-btn:hover {
+    border-color: var(--primary-color);
+    background: #f5ecef;
+}
+
+.price-icon-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
 .price-icon i {
     width: 22px;
     height: 22px;
@@ -3303,9 +3340,54 @@ body {
 .price-field-row .price-field input[type="date"] {
     width: 100%;
     min-width: 0;
-    padding: 6px 2px 6px 8px;
-    font-size: 0.75rem;
+    padding: 8px 10px;
+    font-size: 0.85rem;
     box-sizing: border-box;
+    border: 1px solid #e6d4d9;
+    border-radius: 8px;
+    background: #fcf6f7;
+    color: #4a2a35;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.price-field-row .price-field input[type="date"]:hover {
+    border-color: var(--primary-color);
+    background: #fff;
+}
+
+.price-field-row .price-field input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(196, 113, 137, 0.15);
+}
+
+/* Estiliza o ícone de calendário nativo (Chrome/Edge/Safari) */
+.price-field-row .price-field input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.55;
+    filter: invert(28%) sepia(53%) saturate(458%) hue-rotate(307deg) brightness(94%) contrast(86%);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    padding: 2px;
+    border-radius: 4px;
+}
+
+.price-field-row .price-field input[type="date"]:hover::-webkit-calendar-picker-indicator,
+.price-field-row .price-field input[type="date"]:focus::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    background: rgba(196, 113, 137, 0.1);
+}
+
+/* Esconde o "dd/mm/aaaa" placeholder que o navegador mostra quando vazio
+   (alguns navegadores) e força o formato pt-BR via lang no <html lang="pt-br">
+   já está no topo da página. */
+.price-field-row .price-field input[type="date"]::-webkit-datetime-edit {
+    color: #4a2a35;
+}
+
+.price-field-row .price-field input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    color: #4a2a35;
 }
 
 .discount-toggle {
@@ -3450,6 +3532,514 @@ body {
     border-color: var(--primary-color);
     color: var(--primary-color);
     background: #fcf6f7;
+}
+
+/* =========================================================
+   CONTROLE DE DISPONIBILIDADE
+   ========================================================= */
+.avail-intro {
+    color: #6a6a6a;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: -8px 0 24px;
+    padding: 14px 18px;
+    background: #fcf6f7;
+    border-left: 3px solid var(--primary-color);
+    border-radius: 8px;
+}
+
+.avail-section {
+    background: #fafbfb;
+    border: 1px solid #ececec;
+    border-radius: 18px;
+    padding: 22px 24px;
+    margin-bottom: 22px;
+}
+
+.avail-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.avail-section-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+    font-weight: 700;
+}
+
+.avail-section-header h3 i {
+    color: var(--primary-color);
+}
+
+.avail-week-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.avail-day-row {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 16px;
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #ececec;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avail-day-row:hover {
+    border-color: #d8c8cf;
+}
+
+.avail-day-row.is-disabled {
+    opacity: 0.7;
+}
+
+.avail-day-label {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 0.95rem;
+    min-width: 0;
+}
+
+.avail-day-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.1;
+}
+
+.avail-day-toggle {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.avail-day-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.avail-day-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #cfcfcf;
+    border-radius: 22px;
+    transition: background 0.25s ease;
+}
+
+.avail-day-toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 16px; width: 16px;
+    left: 3px; bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.25s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.avail-day-toggle input:checked + .avail-day-toggle-slider {
+    background: var(--primary-color);
+}
+
+.avail-day-toggle input:checked + .avail-day-toggle-slider::before {
+    transform: translateX(16px);
+}
+
+.avail-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.avail-slot {
+    background: #f4f4f4;
+    color: #999;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    min-width: 64px;
+    text-align: center;
+    user-select: none;
+}
+
+.avail-slot:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.avail-slot.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 6px rgba(187, 137, 145, 0.3);
+}
+
+.avail-slot.active:hover {
+    background: #a6757d;
+    border-color: #a6757d;
+}
+
+.avail-day-row.is-disabled .avail-slot {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+@media (max-width: 720px) {
+    .avail-day-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .avail-day-label {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
+}
+
+/* =========================================================
+   CALENDÁRIO MENSAL (DISPONIBILIDADE)
+   ========================================================= */
+.avail-legend {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: #6a6a6a;
+}
+
+.avail-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.avail-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.avail-dot-default { background: #c4c4c4; }
+.avail-dot-custom  { background: var(--primary-color); }
+.avail-dot-block   { background: var(--error-color); }
+
+.avail-cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border: 1px solid #ececec;
+    border-radius: 12px;
+    padding: 8px 14px;
+    margin-bottom: 8px;
+}
+
+.avail-cal-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--secondary-color);
+    text-transform: capitalize;
+}
+
+.avail-cal-nav {
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.avail-cal-nav:hover {
+    background: #fcf6f7;
+    color: #a87580;
+}
+
+.avail-cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+    padding: 0 2px;
+}
+
+.avail-cal-weekdays span {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 0;
+}
+
+.avail-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.avail-cal-cell {
+    background: white;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    padding: 8px 6px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-family: 'Poppins', sans-serif;
+    aspect-ratio: 1 / 1;
+    min-height: 52px;
+}
+
+.avail-cal-cell:hover:not(:disabled):not(.is-empty) {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(187, 137, 145, 0.18);
+}
+
+.avail-cal-cell:disabled,
+.avail-cal-cell.is-empty {
+    background: #fafafa;
+    border-color: transparent;
+    cursor: default;
+}
+
+.avail-cal-cell-num {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--secondary-color);
+    line-height: 1;
+}
+
+.avail-cal-cell.is-today {
+    border-color: var(--primary-color);
+    background: #fcf6f7;
+}
+
+.avail-cal-cell.is-today .avail-cal-cell-num {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.avail-cal-cell.is-selected {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 4px 14px rgba(187, 137, 145, 0.4);
+}
+
+.avail-cal-cell.is-selected .avail-cal-cell-num {
+    color: white;
+    font-weight: 700;
+}
+
+.avail-cal-cell.is-block .avail-cal-cell-num {
+    color: var(--error-color);
+    text-decoration: line-through;
+}
+
+.avail-cal-cell.is-block {
+    background: #fdeceb;
+    border-color: #f4c5be;
+}
+
+/* Editor de dia selecionado */
+.avail-day-editor {
+    margin-top: 18px;
+    background: white;
+    border: 1px solid var(--primary-color);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 8px 20px rgba(187, 137, 145, 0.12);
+    animation: availEditorIn 0.22s ease;
+}
+
+@keyframes availEditorIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.avail-day-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.avail-day-editor-header h4 {
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--secondary-color);
+    font-weight: 700;
+}
+
+.avail-day-editor-close {
+    background: transparent;
+    border: none;
+    color: #b0b0b0;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+}
+
+.avail-day-editor-close:hover {
+    color: var(--error-color);
+    background: rgba(231, 76, 60, 0.08);
+}
+
+.avail-day-editor-hint {
+    color: #6a6a6a;
+    font-size: 0.82rem;
+    margin: 0 0 14px;
+    line-height: 1.4;
+}
+
+.avail-day-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.avail-radio {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    background: #fafbfb;
+    font-size: 0.88rem;
+    color: var(--secondary-color);
+}
+
+.avail-radio:hover {
+    border-color: var(--primary-color);
+    background: white;
+}
+
+.avail-radio input[type="radio"] {
+    accent-color: var(--primary-color);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.avail-radio input[type="radio"]:checked + span {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.avail-radio:has(input:checked) {
+    border-color: var(--primary-color);
+    background: #fcf6f7;
+}
+
+.avail-day-slots {
+    margin-bottom: 14px;
+    padding-top: 6px;
+}
+
+.avail-day-editor-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.avail-day-editor-remove {
+    background: transparent;
+    border: 1px solid #f4c5be;
+    color: var(--error-color);
+    padding: 9px 14px;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.18s ease;
+}
+
+.avail-day-editor-remove:hover {
+    background: rgba(231, 76, 60, 0.08);
+    border-color: var(--error-color);
+}
+
+.avail-day-editor-apply {
+    margin-top: 0;
+    width: auto;
+    padding: 9px 24px;
+    font-size: 0.85rem;
+    min-height: 0;
+}
+
+@media (max-width: 720px) {
+    .avail-cal-cell {
+        min-height: 44px;
+        padding: 6px 2px 4px;
+    }
+    .avail-cal-cell-num {
+        font-size: 0.78rem;
+    }
+    .avail-day-editor {
+        padding: 16px 14px;
+    }
+    .avail-day-editor-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .avail-day-editor-remove,
+    .avail-day-editor-apply {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 .btn-page:disabled {
@@ -3645,7 +4235,6 @@ body {
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
-    padding: 6px 4px 6px 8px;
     font-size: 0.75rem;
 }
 

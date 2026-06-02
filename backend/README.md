@@ -40,6 +40,12 @@ npx http-server -p 8080 -c-1
 - `POST /api/auth/forgot/verify` — body: `{ identifier, code }` — validates the code, returns `resetToken`
 - `POST /api/auth/reset`       — body: `{ resetToken, newPassword }` — sets the new password
 
+- `GET    /api/plans`                  — public, returns `{ plans: [...] }` ordered by `display_order`
+- `GET    /api/plans/:slug`            — public, returns `{ plan }` or 404
+- `POST   /api/plans`                  — admin only, body: `{ title, icon?, base_price, consultations_per_month, discount_active?, discount_percent?, discount_start?, discount_end? }` → `{ plan }` (201)
+- `PATCH  /api/plans/:id`              — admin only, partial update of any editable field → `{ plan }`
+- `DELETE /api/plans/:id`              — admin only, 204; fixed plans (`slug in {avulsa, mensal}`) return 409 `cannot_delete_fixed_plan`
+
 All responses are JSON. Error shape: `{ "error": "<code>", "fields": { ... }? }`.
 
 ## Password reset (custom 6-digit code)

@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inspirare - Home</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../../assets/css/datepicker.css?v=1">
+    <link rel="stylesheet" href="style.css?v=2">
     <link rel="stylesheet" href="../../menu/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +14,9 @@
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap"
         rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../../../assets/js/auth.js?v=1"></script>
+    <script src="../../../assets/js/plans.js?v=1"></script>
+    <script src="../../../assets/js/datepicker.js?v=1"></script>
 </head>
 
 <body style="display: block;">
@@ -196,7 +200,7 @@
                 <h2 id="sched-title">Agendamento</h2>
             </div>
 
-            <!-- Step 1: Payment Type -->
+            <!-- Step 1: Tipo de plano -->
             <div id="sched-step-1" class="sched-step active">
                 <p style="margin-bottom: 20px; text-align: center;">Escolha o tipo de atendimento:</p>
                 <div id="type-grid" class="option-grid"></div>
@@ -208,10 +212,44 @@
                 </div>
             </div>
 
-            <!-- Step 2: Payment Method -->
+            <!-- Step 2: Psicólogo -->
             <div id="sched-step-2" class="sched-step" style="display:none;">
-                <p style="margin-bottom: 20px; text-align: center;">Forma de pagamento:</p>
-                <div class="option-grid">
+                <p style="margin-bottom: 15px; text-align: center;">Escolha seu psicólogo:</p>
+                <div class="psych-search-bar">
+                    <input type="text" id="psych-search" placeholder="Pesquisar psicólogo..." oninput="searchProfessionals()">
+                </div>
+                <div id="psych-grid" class="psych-grid"></div>
+                <div class="pagination-controls" id="psych-pagination">
+                    <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)"
+                        disabled="disabled">Anterior</button>
+                    <span class="page-indicator" id="page-indicator">1 / 1</span>
+                    <button class="btn-page" id="btn-next-page" onclick="changePage(1)">Próxima</button>
+                </div>
+                <button id="next-to-date-btn" class="btn-confirm" style="display:none;"
+                    onclick="goToDateSelection()">Continuar</button>
+            </div>
+
+            <!-- Step 3: Tipo de consulta + dia + horário -->
+            <div id="sched-step-3" class="sched-step" style="display:none;">
+                <p style="margin-bottom: 15px; text-align: center;">Tipo de Consulta:</p>
+                <div class="option-grid" style="margin-bottom: 30px;">
+                    <div class="option-card consultation-type-card" onclick="selectConsultationType(this, 'online')">
+                        Online</div>
+                    <div class="option-card consultation-type-card"
+                        onclick="selectConsultationType(this, 'presencial')">Presencial</div>
+                </div>
+                <p style="margin-bottom: 15px; text-align: center;">Selecione o dia:</p>
+                <div id="date-picker" class="date-grid"></div>
+                <p style="margin-bottom: 15px; text-align: center;">Selecione o horário:</p>
+                <div id="time-picker" class="time-grid"></div>
+                <button id="next-to-payment-btn" class="btn-confirm" style="display:none;"
+                    onclick="goToPayment()">Continuar para pagamento</button>
+            </div>
+
+            <!-- Step 4: Pagamento + confirmar -->
+            <div id="sched-step-4" class="sched-step" style="display:none;">
+                <p style="margin-bottom: 15px; text-align: center;">Forma de pagamento:</p>
+                <div class="option-grid" style="margin-bottom: 24px;">
                     <div class="option-card" onclick="selectPaymentMethod('pix')">
                         <i data-lucide="qr-code"></i>
                         <h4>Pix</h4>
@@ -221,10 +259,6 @@
                         <h4>Cartão</h4>
                     </div>
                 </div>
-            </div>
-
-            <!-- Step 3: Payment Details -->
-            <div id="sched-step-3" class="sched-step" style="display:none;">
                 <div id="pix-detail" style="display:none;" class="pix-container">
                     <div class="qr-placeholder">
                         <i data-lucide="qr-code" style="width:64px;height:64px;"></i>
@@ -274,42 +308,9 @@
                         </div>
                         <input type="hidden" id="card-parcelas" value="1">
                     </div>
-                    <button class="btn-confirm" onclick="simulatePayment()">Pagar Agora</button>
                 </div>
-            </div>
-
-            <!-- Step 4: Psychologist Selection -->
-            <div id="sched-step-4" class="sched-step" style="display:none;">
-                <p style="margin-bottom: 15px; text-align: center;">Escolha seu psicólogo:</p>
-                <div class="psych-search-bar">
-                    <input type="text" id="psych-search" placeholder="Pesquisar psicólogo..." oninput="searchProfessionals()">
-                </div>
-                <div id="psych-grid" class="psych-grid"></div>
-                <div class="pagination-controls" id="psych-pagination">
-                    <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)"
-                        disabled="disabled">Anterior</button>
-                    <span class="page-indicator" id="page-indicator">1 / 1</span>
-                    <button class="btn-page" id="btn-next-page" onclick="changePage(1)">Próxima</button>
-                </div>
-                <button id="next-to-date-btn" class="btn-confirm" style="display:none;"
-                    onclick="goToDateSelection()">Continuar</button>
-            </div>
-
-            <!-- Step 5: Format & Date -->
-            <div id="sched-step-5" class="sched-step" style="display:none;">
-                <p style="margin-bottom: 15px; text-align: center;">Tipo de Consulta:</p>
-                <div class="option-grid" style="margin-bottom: 30px;">
-                    <div class="option-card consultation-type-card" onclick="selectConsultationType(this, 'online')">
-                        Online</div>
-                    <div class="option-card consultation-type-card"
-                        onclick="selectConsultationType(this, 'presencial')">Presencial</div>
-                </div>
-                <p style="margin-bottom: 15px; text-align: center;">Selecione o dia:</p>
-                <div id="date-picker" class="date-grid"></div>
-                <p style="margin-bottom: 15px; text-align: center;">Selecione o horário:</p>
-                <div id="time-picker" class="time-grid"></div>
                 <button id="final-confirm-btn" class="btn-confirm" style="display:none;"
-                    onclick="confirmAppointment()">Confirmar Agendamento</button>
+                    onclick="confirmAppointment()">Pagar e Confirmar Agendamento</button>
             </div>
         </div>
 
@@ -477,33 +478,77 @@
 
         /* =========================
            TIPOS DE AGENDAMENTO - PAGINAÇÃO
+           Carregados do backend via /api/plans (mesma fonte que o admin
+           edita no "Controle de Preços"). Apenas planos com active=true
+           aparecem. O slug identifica o plano nas etapas seguintes.
            ========================= */
-        const scheduleTypes = [
-            { type: 'single', price: 55, title: 'Consulta Avulsa', priceLabel: 'R$ 55,00', extra: '', icon: 'stethoscope' },
-            { type: 'plan', price: 450, title: 'Plano Mensal', priceLabel: 'R$ 450,00', extra: '(4 consultas/mês)', icon: 'calendar-days' },
-            { type: 'package', price: 150, title: 'Pacote 3 Consultas', priceLabel: 'R$ 150,00', extra: '(válido por 3 meses)', icon: 'package' }
-        ];
+        let scheduleTypes = [];   // array de planos do backend (snake_case)
         let typeCurrentPage = 0;
         const typesPerPage = 2;
+
+        async function loadScheduleTypes() {
+            try {
+                const plans = await InspirarePlans.loadPlans();
+                scheduleTypes = (plans || [])
+                    .filter(p => p.active !== false)
+                    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+            } catch (e) {
+                console.warn('[plans] failed to load, falling back to empty list:', e?.message || e);
+                scheduleTypes = [];
+            }
+            typeCurrentPage = 0;
+            renderScheduleTypesPage();
+        }
 
         function renderScheduleTypesPage() {
             const grid = document.getElementById('type-grid');
             const start = typeCurrentPage * typesPerPage;
             const end = start + typesPerPage;
             const pageItems = scheduleTypes.slice(start, end);
-            const totalPages = Math.ceil(scheduleTypes.length / typesPerPage);
+            const totalPages = Math.max(1, Math.ceil(scheduleTypes.length / typesPerPage));
+            if (typeCurrentPage >= totalPages) typeCurrentPage = totalPages - 1;
+            if (typeCurrentPage < 0) typeCurrentPage = 0;
 
             grid.innerHTML = '';
             grid.classList.toggle('single-card', pageItems.length === 1);
-            pageItems.forEach(item => {
+            pageItems.forEach(plan => {
+                const finalPrice = InspirarePlans.applyDiscount(plan);
+                const formatted = InspirarePlans.formatCurrency(finalPrice);
+                const perSession = InspirarePlans.perSessionPrice(plan);
+                const isActive = InspirarePlans.isDiscountActive(plan);
+                const consults = plan.consultations_per_month || 1;
+
+                // Preço: com desconto, mostra o original riscado (linha de cima, menor),
+                // o final em destaque (linha principal) e a tag % OFF abaixo.
+                let priceHtml;
+                if (isActive) {
+                    priceHtml = `
+                        <div class="price-block">
+                            <span class="price-original">de R$ ${InspirarePlans.formatCurrency(plan.base_price)}</span>
+                            <span class="price">R$ ${formatted}</span>
+                            <span class="price-discount-tag">${plan.discount_percent}% OFF</span>
+                        </div>`;
+                } else {
+                    priceHtml = `<div class="price-block"><span class="price">R$ ${formatted}</span></div>`;
+                }
+
+                // Sub-info: "X consultas por mês" + "R$ Y / consulta".
+                // Mostrado para todos os planos (>= 1 consulta), pra manter o
+                // card visualmente consistente independente do tipo.
+                const consultsLabel = consults === 1 ? '1 consulta' : `${consults} consultas por mês`;
+                const extraHtml = `<div class="price-extra-block">
+                                       <p class="price-extra">${consultsLabel}</p>
+                                       <p class="price-extra">R$ ${InspirarePlans.formatCurrency(perSession)} / consulta</p>
+                                   </div>`;
+
                 const card = document.createElement('div');
-                card.className = 'option-card';
-                card.onclick = function () { selectPaymentType(item.type, item.price); };
+                card.className = 'option-card type-card';
+                card.onclick = function () { selectPaymentType(plan.slug, finalPrice); };
                 card.innerHTML = `
-                    <i data-lucide="${item.icon || 'circle'}" style="width:32px;height:32px;margin-bottom:8px;color:var(--secondary-color);"></i>
-                    <h4>${item.title}</h4>
-                    <span class="price">${item.priceLabel}</span>
-                    ${item.extra ? `<p style="font-size: 0.7rem;">${item.extra}</p>` : ''}
+                    <i data-lucide="${plan.icon || 'circle'}" class="type-card-icon"></i>
+                    <h4>${plan.title}</h4>
+                    ${priceHtml}
+                    ${extraHtml}
                 `;
                 grid.appendChild(card);
             });
@@ -521,7 +566,7 @@
         }
 
         function changeTypePage(direction) {
-            const totalPages = Math.ceil(scheduleTypes.length / typesPerPage);
+            const totalPages = Math.max(1, Math.ceil(scheduleTypes.length / typesPerPage));
             const newPage = typeCurrentPage + direction;
             if (newPage >= 0 && newPage < totalPages) {
                 typeCurrentPage = newPage;
@@ -610,7 +655,7 @@
         }
 
         window.addEventListener('resize', () => {
-            if (document.getElementById('sched-step-4').style.display !== 'none') {
+            if (document.getElementById('sched-step-2').style.display !== 'none') {
                 const itemsPerPage = getItemsPerPage();
                 const sourceList = psychActiveList || professionals;
                 const totalPages = Math.ceil(sourceList.length / itemsPerPage);
@@ -708,15 +753,10 @@
                 btn.disabled = false;
                 lucide.createIcons();
 
-                goToScheduleStep(4);
-
-                if (document.getElementById('tutorial-overlay').classList.contains('active') && tutorialActiveBranch === 'pix') {
-                    document.querySelectorAll('.tutorial-clone').forEach(c => c.remove());
-                    tutorialActiveBranch = null;
-                    tutorialHistory.push(2);
-                    tutorialCurrentStep = 3;
-                    nextTutorialStep();
-                }
+                // No novo fluxo, o pagamento fica no step 4, então não há
+                // próximo tutorial step após o Pix. O user clica no botão
+                // "Pagar e Confirmar Agendamento" (#final-confirm-btn) que
+                // já está no alvo do branch `pix`.
             }, 3000);
         }
 
@@ -845,8 +885,8 @@
         function resetScheduleFlow() {
             document.querySelectorAll('.sched-step').forEach(s => s.style.display = 'none');
             currentScheduleStep = 1;
-            typeCurrentPage = 0;
-            renderScheduleTypesPage();
+            // Re-fetch plans to pick up any admin edits since the last open.
+            loadScheduleTypes();
             document.getElementById('sched-step-1').style.display = 'block';
         }
 
@@ -858,7 +898,8 @@
             document.getElementById(`sched-step-${step}`).style.display = 'block';
             currentScheduleStep = step;
 
-            if (step === 4) {
+            // Step 2: psicólogo
+            if (step === 2) {
                 psychCurrentPage = 0;
                 psychActiveList = null;
                 const searchInput = document.getElementById('psych-search');
@@ -867,7 +908,7 @@
             }
 
             const backBtn = document.querySelector('.btn-back-small');
-            if (step === 4) {
+            if (step === 1) {
                 backBtn.style.display = 'none';
             } else {
                 backBtn.style.display = 'flex';
@@ -875,19 +916,35 @@
         }
 
         function selectPaymentType(type, price) {
+            // Step 1 -> 2 (psicólogo). O pagamento foi pro final do fluxo.
             goToScheduleStep(2);
         }
 
         function selectPaymentMethod(method) {
-            goToScheduleStep(3);
+            // Step 4: mostra o detalhe do método escolhido (Pix ou Cartão) e
+            // o botão "Pagar e Confirmar Agendamento".
             document.getElementById('pix-detail').style.display = method === 'pix' ? 'flex' : 'none';
             document.getElementById('card-detail').style.display = method === 'card' ? 'block' : 'none';
+            document.getElementById('final-confirm-btn').style.display = 'block';
         }
 
-        function simulatePayment() {
-            showModal('Pagamento Confirmado', 'Seu pagamento foi processado com sucesso!', () => {
-                goToScheduleStep(4);
-            });
+        function goToDateSelection() {
+            // Step 2 -> 3 (tipo de consulta + dia + horário).
+            goToScheduleStep(3);
+            generateDates();
+        }
+
+        function goToPayment() {
+            // Validação rápida: precisa ter tipo de consulta, dia e horário.
+            const hasType = document.querySelector('.consultation-type-card.selected');
+            const hasDate = document.querySelector('.date-btn.selected');
+            const hasTime = document.querySelector('.time-btn.selected');
+            if (!hasType || !hasDate || !hasTime) {
+                showModal('Atenção', 'Selecione o tipo de consulta, o dia e o horário antes de continuar.');
+                return;
+            }
+            // Step 3 -> 4 (pagamento + confirmar).
+            goToScheduleStep(4);
         }
 
         function selectPsych(element) {
@@ -895,11 +952,6 @@
             element.classList.add('selected');
             const btn = document.getElementById('next-to-date-btn');
             if (btn) btn.style.display = 'block';
-        }
-
-        function goToDateSelection() {
-            goToScheduleStep(5);
-            generateDates();
         }
 
         function selectConsultationType(element, type) {
@@ -937,20 +989,34 @@
                 btn.onclick = () => {
                     document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
                     btn.classList.add('selected');
-                    document.getElementById('final-confirm-btn').style.display = 'block';
+                    document.getElementById('next-to-payment-btn').style.display = 'block';
                 };
                 picker.appendChild(btn);
             }
         }
 
         function confirmAppointment() {
-            showModal('Agendamento Concluído', 'Sua consulta foi marcada com sucesso!', () => {
+            // Se o tutorial está ativo, closeTutorial() cuida de mostrar o
+            // balão "Precisa de ajuda?" — então finishFlow não deve duplicar.
+            const finishFlow = () => {
                 closeFlow();
                 if (showTutorialReactivation) {
                     showTutorialReactivation = false;
-                    setTimeout(() => showReactivationHint(), 400);
+                    // Não chama showReactivationHint aqui: closeTutorial
+                    // (chamado acima quando o tutorial está ativo) já cuida.
                 }
-            });
+            };
+            // Se o tutorial está ativo, fecha-o e eleva o modal antes de mostrar.
+            if (currentTutorialType !== null) {
+                closeTutorial();
+                setTimeout(() => {
+                    const modal = document.getElementById('custom-modal');
+                    if (modal) modal.style.zIndex = '3000';
+                    showModal('Agendamento Concluído', 'Sua consulta foi marcada com sucesso!', finishFlow);
+                }, 200);
+            } else {
+                showModal('Agendamento Concluído', 'Sua consulta foi marcada com sucesso!', finishFlow);
+            }
         }
 
         // Mostra um balão ao lado do botão de ajuda indicando que o tutorial pode ser reativado
@@ -1551,23 +1617,11 @@
                     }
                 },
                 {
-                    targets: [
-                        '#sched-step-2 .option-card:nth-child(1)',
-                        '#sched-step-2 .option-card:nth-child(2)'
-                    ],
-                    text: 'Agora escolha como prefere pagar: Pix ou Cartão.',
-                    beforeShow: () => { },
-                    branchedTargets: [
-                        { selector: '#sched-step-2 .option-card:nth-child(1)', branch: 'pix' },
-                        { selector: '#sched-step-2 .option-card:nth-child(2)', branch: 'card' }
-                    ]
-                },
-                {
                     targets: ['#psych-search'],
                     text: 'Você pode pesquisar pelo nome ou especialidade do psicólogo.',
                     forceAbove: true,
                     advanceButton: true,
-                    beforeShow: () => { goToScheduleStep(4); }
+                    beforeShow: () => { goToScheduleStep(2); }
                 },
                 {
                     targets: ['#psych-grid .psych-card', '#psych-pagination'],
@@ -1602,7 +1656,7 @@
                     beforeShow: () => { }
                 },
                 {
-                    targets: ['#sched-step-5 .consultation-type-card:nth-child(1)', '#sched-step-5 .consultation-type-card:nth-child(2)'],
+                    targets: ['#sched-step-3 .consultation-type-card:nth-child(1)', '#sched-step-3 .consultation-type-card:nth-child(2)'],
                     text: 'Escolha o formato da consulta: Online ou Presencial.',
                     beforeShow: () => { goToDateSelection(); }
                 },
@@ -1617,20 +1671,31 @@
                     beforeShow: () => { }
                 },
                 {
-                    targets: ['#final-confirm-btn'],
-                    text: 'Agora confirme seu agendamento clicando aqui.',
+                    targets: ['#next-to-payment-btn'],
+                    text: 'Aperte em Continuar para ir para a etapa de pagamento.',
                     beforeShow: () => { }
+                },
+                {
+                    targets: [
+                        '#sched-step-4 .option-card:nth-child(1)',
+                        '#sched-step-4 .option-card:nth-child(2)'
+                    ],
+                    text: 'Agora escolha como prefere pagar: Pix ou Cartão.',
+                    beforeShow: () => { goToPayment(); },
+                    branchedTargets: [
+                        { selector: '#sched-step-4 .option-card:nth-child(1)', branch: 'pix' },
+                        { selector: '#sched-step-4 .option-card:nth-child(2)', branch: 'card' }
+                    ]
                 }
             ];
 
             tutorialBranches = {
                 pix: {
-                    targets: ['#pix-detail .qr-placeholder', '#pix-detail .btn-copy'],
-                    text: 'Escaneie o QR Code com o app do seu banco ou copie a chave Pix para realizar o pagamento.',
+                    targets: ['#pix-detail .qr-placeholder', '#pix-detail .btn-copy', '#final-confirm-btn'],
+                    text: 'Escaneie o QR Code com o app do seu banco ou copie a chave Pix. Depois, clique em "Pagar e Confirmar Agendamento" para finalizar.',
                     beforeShow: () => { }
                 },
                 card: {
-                    // labels e inputs listados juntos em targets; a função distingue pelo tagName
                     targets: [
                         '#card-detail .input-group:nth-child(1) label',
                         '#card-name',
@@ -1642,10 +1707,10 @@
                         '#card-cvv',
                         '#card-detail .input-group:nth-child(4) label',
                         '#parcelas-trigger',
-                        '#card-detail .btn-confirm'
+                        '#final-confirm-btn'
                     ],
                     interactive: true,
-                    text: 'Preencha os dados do cartão para concluir o pagamento.',
+                    text: 'Preencha os dados do cartão e, em seguida, clique em "Pagar e Confirmar Agendamento" para finalizar.',
                     beforeShow: () => { }
                 }
             };
@@ -2826,37 +2891,14 @@
                                     });
                                 }
 
-                                // Botão "Pagar Agora" do cartão: reconecta o comportamento e avança o tutorial
-                                if (el.classList.contains('btn-confirm')) {
-                                    clone.addEventListener('click', (e) => {
-                                        e.stopPropagation();
-                                        e.preventDefault();
-
-                                        // Fecha visuais do tutorial para o modal ficar acessível
-                                        closeTutorialVisuals();
-
-                                        // Eleva o z-index do modal para ficar acima do overlay
-                                        const modal = document.getElementById('custom-modal');
-                                        modal.style.zIndex = '3000';
-
-                                        simulatePayment();
-
-                                        // Intercepta o fechamento do modal para continuar o tutorial
-                                        setTimeout(() => {
-                                            const modalBtnYes = document.getElementById('modal-btn-yes');
-                                            if (modalBtnYes) {
-                                                modalBtnYes.onclick = () => {
-                                                    modal.style.display = 'none';
-                                                    modal.style.zIndex = '';
-
-                                                    tutorialActiveBranch = null;
-                                                    tutorialHistory.push(2);
-                                                    tutorialCurrentStep = 3;
-                                                    nextTutorialStep();
-                                                };
-                                            }
-                                        }, 50);
-                                    });
+                                // (No novo fluxo, o botão "Pagar Agora" do cartão
+                                // foi removido — o pagamento é confirmado pelo
+                                // #final-confirm-btn fora do card-detail. Mantemos
+                                // um stub vazio aqui pra não introduzir dead code
+                                // que confunda futuras leituras.)
+                                if (false && el.classList.contains('btn-confirm')) {
+                                    // (código do botão "Pagar Agora" antigo —
+                                    // não usado no novo fluxo)
                                 }
                             }
                         });
@@ -2994,6 +3036,11 @@
 
             document.getElementById('welcome-decline').addEventListener('click', () => close(null));
         })();
+
+        // Carrega os planos do backend para a etapa de "tipo de atendimento".
+        // Como o admin pode editar/ativar/desativar planos a qualquer momento,
+        // recarregamos a lista cada vez que o usuário abre o fluxo de agendamento.
+        loadScheduleTypes();
     </script>
 </body>
 

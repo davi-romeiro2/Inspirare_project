@@ -6,13 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Home</title>
     <link rel="stylesheet" href="../../../user/menu/style.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../../assets/css/datepicker.css?v=1">
+    <link rel="stylesheet" href="style.css?v=7">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap"
         rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../../../assets/js/auth.js?v=1"></script>
+    <script src="../../../assets/js/plans.js?v=1"></script>
+    <script src="../../../assets/js/datepicker.js?v=1"></script>
 </head>
 
 <body style="display: block;">
@@ -163,6 +167,10 @@
                 <div class="icon-box"><i data-lucide="dollar-sign"></i></div>
                 <h3>Controle de preços</h3>
             </div>
+            <div class="menu-card" onclick="openFlow('disponibilidade')">
+                <div class="icon-box"><i data-lucide="calendar-clock"></i></div>
+                <h3>Controle de Disponibilidade</h3>
+            </div>
             <div class="menu-card" onclick="openFlow('perfil')">
                 <div class="icon-box"><i data-lucide="user"></i></div>
                 <h3>Meu perfil</h3>
@@ -258,7 +266,7 @@
                 <!-- Consulta Avulsa -->
                 <div class="price-card" id="card-avulsa">
                     <div class="price-card-header">
-                        <div class="price-icon"><i data-lucide="stethoscope"></i></div>
+                        <button type="button" class="price-icon price-icon-btn" data-plan-key="avulsa" onclick="openPlanIconPicker(event, 'avulsa')" title="Trocar ícone"><i data-lucide="stethoscope"></i></button>
                         <h3>Consulta Avulsa</h3>
                     </div>
                     <div class="price-current" id="avulsa-display">
@@ -304,7 +312,7 @@
                 <!-- Plano Mensal -->
                 <div class="price-card" id="card-plano">
                     <div class="price-card-header">
-                        <div class="price-icon"><i data-lucide="calendar-days"></i></div>
+                        <button type="button" class="price-icon price-icon-btn" data-plan-key="plano" onclick="openPlanIconPicker(event, 'plano')" title="Trocar ícone"><i data-lucide="calendar-days"></i></button>
                         <h3>Plano Mensal</h3>
                     </div>
                     <div class="price-current" id="plano-display">
@@ -451,6 +459,96 @@
             </div>
 
             <button class="btn-new-note" onclick="openNewNoteModal()">Nova anotação +</button>
+        </div>
+
+        <!-- Flow: Controle de Disponibilidade -->
+        <div id="flow-disponibilidade" class="flow-container">
+            <div class="appointments-header">
+                <button type="button" class="btn-back-small" onclick="closeFlow()">
+                    <i data-lucide="arrow-left"></i> Voltar
+                </button>
+                <h2>Controle de Disponibilidade</h2>
+            </div>
+
+            <p class="avail-intro">Defina os dias e horários em que os usuários podem agendar consultas. Use o <strong>padrão semanal</strong> abaixo pra recorrência e ajuste datas específicas no <strong>calendário</strong> quando precisar (feriado, folga, sábado extra).</p>
+
+            <!-- Calendário mensal (datas específicas) -->
+            <div class="avail-section">
+                <div class="avail-section-header">
+                    <h3><i data-lucide="calendar"></i> Calendário</h3>
+                    <span class="avail-legend">
+                        <span class="avail-legend-item"><span class="avail-dot avail-dot-default"></span> Padrão</span>
+                        <span class="avail-legend-item"><span class="avail-dot avail-dot-custom"></span> Horário próprio</span>
+                        <span class="avail-legend-item"><span class="avail-dot avail-dot-block"></span> Bloqueado</span>
+                    </span>
+                </div>
+
+                <div class="avail-cal-header">
+                    <button type="button" class="avail-cal-nav" id="avail-cal-prev" title="Mês anterior">
+                        <i data-lucide="chevron-left"></i>
+                    </button>
+                    <span class="avail-cal-title" id="avail-cal-title">—</span>
+                    <button type="button" class="avail-cal-nav" id="avail-cal-next" title="Próximo mês">
+                        <i data-lucide="chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="avail-cal-weekdays">
+                    <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+                </div>
+                <div class="avail-cal-grid" id="avail-cal-grid"><!-- preenchido por JS --></div>
+
+                <!-- Editor do dia selecionado -->
+                <div class="avail-day-editor" id="avail-day-editor" style="display:none;">
+                    <div class="avail-day-editor-header">
+                        <h4 id="avail-day-editor-title">—</h4>
+                        <button type="button" class="avail-day-editor-close" id="avail-day-editor-close" title="Fechar">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+
+                    <p class="avail-day-editor-hint">Esse dia seguirá o padrão semanal por padrão. Personalize só se quiser alterar.</p>
+
+                    <div class="avail-day-mode">
+                        <label class="avail-radio">
+                            <input type="radio" name="avail-day-mode" value="default" checked>
+                            <span>Seguir padrão semanal</span>
+                        </label>
+                        <label class="avail-radio">
+                            <input type="radio" name="avail-day-mode" value="custom">
+                            <span>Horário próprio (definir abaixo)</span>
+                        </label>
+                        <label class="avail-radio">
+                            <input type="radio" name="avail-day-mode" value="block">
+                            <span>Bloquear este dia inteiro</span>
+                        </label>
+                    </div>
+
+                    <div class="avail-day-slots" id="avail-day-slots" style="display:none;">
+                        <div class="avail-slots" id="avail-day-slots-grid"><!-- preenchido por JS --></div>
+                    </div>
+
+                    <div class="avail-day-editor-actions">
+                        <button type="button" class="avail-day-editor-remove" id="avail-day-editor-remove" style="display:none;">
+                            <i data-lucide="trash-2"></i> Remover personalização
+                        </button>
+                        <button type="button" class="btn-save-price avail-day-editor-apply" id="avail-day-editor-apply">
+                            Aplicar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grade semanal (recorrência) -->
+            <div class="avail-section">
+                <div class="avail-section-header">
+                    <h3><i data-lucide="repeat"></i> Padrão semanal</h3>
+                </div>
+                <p class="avail-hint">Esse padrão se repete toda semana. Dias não marcados ficam fechados; dias marcados ficam com os horários selecionados. Você pode sobrescrever qualquer data no calendário acima.</p>
+                <div class="avail-week-grid" id="avail-week-grid"><!-- preenchido por JS --></div>
+            </div>
+
+            <button class="btn-save-price" id="avail-save-btn" onclick="saveAvailability()">Salvar alterações</button>
         </div>
 
         <!-- Flow: Meu Perfil -->
@@ -711,6 +809,9 @@
             }
             if (flow === 'perfil') {
                 initProfile();
+            }
+            if (flow === 'disponibilidade') {
+                initAvailability();
             }
             lucide.createIcons();
             window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1823,53 +1924,201 @@
         /* =========================
            CONTROLE DE PREÇOS
            ========================= */
+
+        // Backed by the Supabase API. We keep a small in-memory cache (window.__plansCache)
+        // so the ~20 call sites of `loadPrices()` don't hit the network on every call.
+        // A localStorage fallback (PRICE_STORAGE_KEY) is kept as offline cache.
         const PRICE_STORAGE_KEY = 'inspirare_price_settings';
+        const PRICE_MIGRATION_FLAG = 'inspirare_pricing_migrated_v1';
+        const LEGACY_PRICE_VERSION = 2;
 
-        const PRICE_STORAGE_VERSION = 2;
+        let __plansCache = null;          // array of plans from /api/plans
+        let __plansLoaded = false;
+        let __plansLoading = null;        // promise dedupe
+        let __priceMutation = 0;          // bumps on every save/create/delete to invalidate
 
-        function getDefaultPrices() {
+        function planToLegacyShape(plan) {
+            // Convert a Supabase plan row to the camelCase shape the rest of the admin
+            // expects: { basePrice, consultationsPerMonth, discountActive, discountPercent,
+            //            discountStart, discountEnd, name, icon, id, isFixed, active }.
             return {
-                v: PRICE_STORAGE_VERSION,
-                avulsa: {
-                    basePrice: 55,
-                    consultationsPerMonth: 1,
-                    discountActive: false,
-                    discountPercent: 0,
-                    discountStart: '',
-                    discountEnd: ''
-                },
-                plano: {
-                    basePrice: 450,
-                    consultationsPerMonth: 4,
-                    discountActive: false,
-                    discountPercent: 0,
-                    discountStart: '',
-                    discountEnd: ''
-                }
+                id: plan.id,
+                slug: plan.slug,
+                name: plan.title,
+                icon: plan.icon,
+                basePrice: Number(plan.base_price),
+                consultationsPerMonth: plan.consultations_per_month,
+                discountActive: plan.discount_active,
+                discountPercent: Number(plan.discount_percent || 0),
+                discountStart: plan.discount_start || '',
+                discountEnd: plan.discount_end || '',
+                isFixed: plan.is_fixed === true,
+                active: plan.active !== false,
+                disabled: plan.active === false,
             };
         }
 
-        function loadPrices() {
-            const defaults = getDefaultPrices();
+        function getDefaultPrices() {
+            // Returns the legacy camelCase shape. Used as offline fallback and as
+            // a starter object before the API has loaded.
+            return {
+                v: LEGACY_PRICE_VERSION,
+                avulsa: planToLegacyShape({
+                    id: 'local-avulsa', slug: 'avulsa', title: 'Consulta Avulsa',
+                    icon: 'stethoscope', base_price: 55, consultations_per_month: 1,
+                    discount_active: false, discount_percent: 0,
+                    discount_start: null, discount_end: null, is_fixed: true, active: true,
+                }),
+                plano: planToLegacyShape({
+                    id: 'local-mensal', slug: 'mensal', title: 'Plano Mensal',
+                    icon: 'calendar-days', base_price: 450, consultations_per_month: 4,
+                    discount_active: false, discount_percent: 0,
+                    discount_start: null, discount_end: null, is_fixed: true, active: true,
+                }),
+            };
+        }
+
+        function localLoadPrices() {
             try {
                 const raw = localStorage.getItem(PRICE_STORAGE_KEY);
                 if (raw) {
                     const saved = JSON.parse(raw);
-                    if (saved.v === PRICE_STORAGE_VERSION) {
-                        return {
-                            ...defaults,
-                            ...saved,
-                            avulsa: { ...defaults.avulsa, ...saved.avulsa },
-                            plano: { ...defaults.plano, ...saved.plano }
-                        };
-                    }
+                    if (saved.v === LEGACY_PRICE_VERSION) return saved;
                 }
-            } catch (e) {}
-            return defaults;
+            } catch (e) { /* ignore */ }
+            return getDefaultPrices();
+        }
+
+        function localSavePrices(data) {
+            try {
+                localStorage.setItem(PRICE_STORAGE_KEY, JSON.stringify(data));
+            } catch (e) { /* ignore */ }
+        }
+
+        function buildLegacyFromCache() {
+            const out = { v: LEGACY_PRICE_VERSION };
+            for (const p of (__plansCache || [])) {
+                // The fixed monthly plan's slug in the DB is "mensal" but the admin
+                // inputs are keyed "plano" (legacy). Map the two so existing input
+                // IDs keep working.
+                const legacyKey = p.slug === 'mensal' ? 'plano' : p.slug;
+                out[legacyKey] = planToLegacyShape(p);
+            }
+            // Always have both fixed plans present, even if the API hasn't returned yet.
+            if (!out.avulsa) out.avulsa = planToLegacyShape({
+                id: 'pending', slug: 'avulsa', title: 'Consulta Avulsa',
+                icon: 'stethoscope', base_price: 55, consultations_per_month: 1,
+                discount_active: false, discount_percent: 0,
+                discount_start: null, discount_end: null, is_fixed: true, active: true,
+            });
+            if (!out.plano) out.plano = planToLegacyShape({
+                id: 'pending', slug: 'mensal', title: 'Plano Mensal',
+                icon: 'calendar-days', base_price: 450, consultations_per_month: 4,
+                discount_active: false, discount_percent: 0,
+                discount_start: null, discount_end: null, is_fixed: true, active: true,
+            });
+            return out;
+        }
+
+        async function ensurePlansLoaded() {
+            if (__plansLoaded) return __plansCache;
+            if (__plansLoading) return __plansLoading;
+            __plansLoading = (async () => {
+                try {
+                    __plansCache = await InspirarePlans.loadPlans();
+                    __plansLoaded = true;
+                    // Single re-render once the real data is in. We do this
+                    // here, exactly once, so the boot flow doesn't end up
+                    // re-running initPrices() in a loop. Safe to call even if
+                    // the user has already started mutating, because the
+                    // mutation paths update __plansCache themselves.
+                    try { initPrices(); } catch (e) { console.warn('[prices] post-load render failed:', e); }
+                } catch (e) {
+                    console.warn('[prices] API load failed, falling back to localStorage:', e?.message || e);
+                    __plansCache = null;
+                } finally {
+                    __plansLoading = null;
+                }
+                return __plansCache;
+            })();
+            return __plansLoading;
+        }
+
+        /**
+         * Returns the legacy-shape price object, awaiting the API on first call.
+         * The ~20 call sites in the admin (initPrices, renderCustomPriceCards,
+         * updatePriceDisplay, etc.) all use this synchronously, so we cache the
+         * converted shape in memory after the first fetch.
+         */
+        function loadPrices() {
+            // Sync fast-path: if we already have the cache, return converted shape.
+            if (__plansLoaded) return buildLegacyFromCache();
+            // Slow-path: kick off the load once. Do NOT auto-call initPrices()
+            // from the .then() — that would re-enter loadPrices() and re-render
+            // the whole page on every input change, freezing the UI.
+            // The boot path explicitly calls initPrices() right after kicking
+            // off ensurePlansLoaded().
+            ensurePlansLoaded();
+            return localLoadPrices();
         }
 
         function savePrices(data) {
-            localStorage.setItem(PRICE_STORAGE_KEY, JSON.stringify(data));
+            // Legacy write-path used by the old code. New mutations go through
+            // savePrice/saveNewPlan/deletePlan and call the API directly.
+            // We still keep the local mirror so the offline fallback works.
+            localSavePrices(data);
+        }
+
+        // --- One-shot migration from localStorage (legacy v2) to Supabase.
+        // Runs the first time we have a successful API load. Idempotent via
+        // PRICE_MIGRATION_FLAG. After migrating, we let the next render pass
+        // pick up the new values — we deliberately do NOT toggle __plansLoaded
+        // here, because that would cause the queued boot render to re-run in a
+        // loop and freeze the page.
+        async function maybeMigrateLocalStorageToApi() {
+            if (localStorage.getItem(PRICE_MIGRATION_FLAG) === '1') return;
+            if (!__plansLoaded) return;
+
+            const local = localLoadPrices();
+            const hasCustomized =
+                local.avulsa && local.avulsa.basePrice !== 55 ||
+                local.plano && local.plano.basePrice !== 450;
+            if (!hasCustomized) {
+                localStorage.setItem(PRICE_MIGRATION_FLAG, '1');
+                return;
+            }
+
+            // local.avulsa <-> slug 'avulsa'; local.plano <-> slug 'mensal'.
+            const slugMap = { avulsa: 'avulsa', plano: 'mensal' };
+            const remote = buildLegacyFromCache();
+            for (const localKey of ['avulsa', 'plano']) {
+                const slug = slugMap[localKey];
+                const l = local[localKey];
+                const r = remote[localKey];
+                if (!l || !r) continue;
+                const diff =
+                    l.basePrice !== r.basePrice ||
+                    l.consultationsPerMonth !== r.consultationsPerMonth ||
+                    l.discountActive !== r.discountActive ||
+                    Number(l.discountPercent || 0) !== Number(r.discountPercent || 0) ||
+                    (l.discountStart || '') !== (r.discountStart || '') ||
+                    (l.discountEnd || '') !== (r.discountEnd || '');
+                if (!diff) continue;
+                try {
+                    await InspirarePlans.updatePlan(r.id, {
+                        base_price: l.basePrice,
+                        consultations_per_month: l.consultationsPerMonth,
+                        discount_active: !!l.discountActive,
+                        discount_percent: Number(l.discountPercent || 0),
+                        discount_start: l.discountStart || null,
+                        discount_end: l.discountEnd || null,
+                    });
+                    console.log(`[prices] migrated ${slug} from localStorage to API`);
+                } catch (e) {
+                    console.warn(`[prices] migration failed for ${slug}:`, e?.message || e);
+                }
+            }
+            localStorage.setItem(PRICE_MIGRATION_FLAG, '1');
         }
 
         function formatCurrency(value) {
@@ -1913,33 +2162,62 @@
             document.getElementById(type + '-discount-fields').style.display = checked ? 'flex' : 'none';
         }
 
-        function savePrice(type) {
+        async function savePrice(type) {
             const data = loadPrices();
+            const plan = data[type];
+            if (!plan || !plan.id || plan.id === 'pending') {
+                showModal('Erro', 'Plano ainda não carregou. Tente novamente em alguns segundos.');
+                return;
+            }
             const basePrice = parseFloat(document.getElementById(type + '-preco').value);
             if (isNaN(basePrice) || basePrice < 0) {
                 showModal('Aviso', 'Informe um preço válido.');
                 return;
             }
-
-            data[type].basePrice = basePrice;
-            data[type].discountActive = document.getElementById(type + '-desconto-ativo').checked;
-            data[type].discountPercent = parseFloat(document.getElementById(type + '-desconto').value) || 0;
-            data[type].discountStart = document.getElementById(type + '-desconto-inicio').value;
-            data[type].discountEnd = document.getElementById(type + '-desconto-fim').value;
-
             const consultas = parseInt(document.getElementById(type + '-consultas').value);
             if (isNaN(consultas) || consultas < 1) {
                 showModal('Aviso', 'Informe uma quantidade válida de consultas por mês.');
                 return;
             }
-            data[type].consultationsPerMonth = consultas;
+            const discountActive = document.getElementById(type + '-desconto-ativo').checked;
+            const discountPercent = parseFloat(document.getElementById(type + '-desconto').value) || 0;
+            const discountStart = document.getElementById(type + '-desconto-inicio').value || null;
+            const discountEnd = document.getElementById(type + '-desconto-fim').value || null;
 
-            savePrices(data);
-            updatePriceDisplay(type);
-            if (type === 'avulsa') updateAvulsaPerSession();
-            else if (type === 'plano') updatePlanoPerSession();
-            else updateCustomPerSession(type);
-            showModal('Salvo', 'Configurações de preço atualizadas com sucesso.');
+            // Feedback visual no botão que disparou o save.
+            const btn = document.activeElement;
+            const originalText = btn && btn.classList.contains('btn-save-price') ? btn.textContent : null;
+            if (btn && btn.classList.contains('btn-save-price')) {
+                btn.disabled = true;
+                btn.textContent = 'Salvando...';
+            }
+
+            try {
+                const updated = await InspirarePlans.updatePlan(plan.id, {
+                    icon: plan.icon,
+                    base_price: basePrice,
+                    consultations_per_month: consultas,
+                    discount_active: discountActive,
+                    discount_percent: discountPercent,
+                    discount_start: discountStart,
+                    discount_end: discountEnd,
+                });
+                // Update cache.
+                const idx = __plansCache.findIndex(p => p.id === updated.id);
+                if (idx >= 0) __plansCache[idx] = updated;
+                updatePriceDisplay(type);
+                if (type === 'avulsa') updateAvulsaPerSession();
+                else if (type === 'mensal') updatePlanoPerSession();
+                else updateCustomPerSession(type);
+                showModal('Salvo', 'Configurações de preço atualizadas com sucesso.');
+            } catch (err) {
+                showModal('Erro', err?.message || 'Não foi possível salvar as alterações.');
+            } finally {
+                if (btn && originalText !== null) {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            }
         }
 
         function updateAvulsaPerSession() {
@@ -2087,7 +2365,79 @@
             closeIconPicker();
         }
 
-        function saveNewPlan() {
+        // --- Icon picker for editing an existing plan (avulsa, plano, custom) ---
+        // Reuses the same popup grid. Tracks which plan is being edited in
+        // __editingPlanIconKey; selectPlanIcon() applies the choice and saves.
+        let __editingPlanIconKey = null;
+
+        function openPlanIconPicker(event, key) {
+            event.stopPropagation();
+            event.preventDefault();
+            __editingPlanIconKey = key;
+            const popup = document.getElementById('icon-picker-popup');
+            const grid = document.getElementById('icon-picker-grid');
+            grid.innerHTML = '';
+            AVAILABLE_ICONS.forEach(iconName => {
+                const item = document.createElement('div');
+                item.className = 'icon-picker-item';
+                item.innerHTML = `<i data-lucide="${iconName}"></i>`;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    selectPlanIcon(iconName);
+                };
+                grid.appendChild(item);
+            });
+            if (window.innerWidth <= 500) {
+                popup.style.left = '50%';
+                popup.style.top = '50%';
+                popup.style.transform = 'translate(-50%, -50%)';
+                popup.style.animation = 'none';
+            } else {
+                const rect = event.currentTarget.getBoundingClientRect();
+                popup.style.left = (rect.left + rect.width / 2 - 160) + 'px';
+                popup.style.top = (rect.bottom + 8) + 'px';
+                popup.style.transform = 'none';
+                popup.style.animation = '';
+            }
+            popup.style.display = 'block';
+            lucide.createIcons();
+            document.addEventListener('click', closeIconPickerOnClickOutside, { once: true });
+        }
+
+        async function selectPlanIcon(iconName) {
+            const key = __editingPlanIconKey;
+            __editingPlanIconKey = null;
+            closeIconPicker();
+            if (!key) return;
+            const data = loadPrices();
+            const plan = data[key];
+            if (!plan || !plan.id || plan.id === 'pending') {
+                showModal('Erro', 'Plano ainda não carregou. Tente novamente em alguns segundos.');
+                return;
+            }
+            // Optimistic UI: swap the icon in the card right away.
+            // We replace the <i data-lucide="..."> with a fresh one and call
+            // lucide.createIcons() on it, because Lucide swaps <i> for <svg>
+            // on first render and the original attribute is then gone.
+            const btn = document.querySelector(`.price-icon-btn[data-plan-key="${key}"]`);
+            if (btn) {
+                const oldIcon = btn.querySelector('svg, i');
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', iconName);
+                if (oldIcon) oldIcon.replaceWith(newIcon);
+                else btn.appendChild(newIcon);
+                lucide.createIcons();
+            }
+            try {
+                const updated = await InspirarePlans.updatePlan(plan.id, { icon: iconName });
+                const idx = __plansCache.findIndex(p => p.id === updated.id);
+                if (idx >= 0) __plansCache[idx] = updated;
+            } catch (err) {
+                showModal('Erro', err?.message || 'Não foi possível atualizar o ícone.');
+            }
+        }
+
+        async function saveNewPlan() {
             const nome = document.getElementById('preview-nome').textContent.trim();
             if (!nome || nome === 'Novo Plano') {
                 showModal('Aviso', 'Informe o nome do plano.');
@@ -2108,59 +2458,85 @@
 
             const descontoAtivo = document.getElementById('preview-desconto-ativo').checked;
             const descontoPercent = parseFloat(document.getElementById('preview-desconto').value) || 0;
-            const inicio = document.getElementById('preview-desconto-inicio').value;
-            const fim = document.getElementById('preview-desconto-fim').value;
+            const inicio = document.getElementById('preview-desconto-inicio').value || null;
+            const fim = document.getElementById('preview-desconto-fim').value || null;
 
-            const data = loadPrices();
-            const planId = 'custom_' + Date.now();
-
-            data[planId] = {
-                basePrice: preco,
-                consultationsPerMonth: consultas,
-                discountActive: descontoAtivo,
-                discountPercent: descontoPercent,
-                discountStart: inicio,
-                discountEnd: fim,
-                name: nome,
-                icon: selectedIcon
-            };
-
-            savePrices(data);
-            customPriceCurrentPage = 0;
-            renderCustomPriceCards();
-            closeNewPlanModal();
-            showModal('Sucesso', `Plano "${nome}" criado com sucesso!`);
+            try {
+                const created = await InspirarePlans.createPlan({
+                    title: nome,
+                    icon: selectedIcon,
+                    base_price: preco,
+                    consultations_per_month: consultas,
+                    discount_active: descontoAtivo,
+                    discount_percent: descontoPercent,
+                    discount_start: inicio,
+                    discount_end: fim,
+                });
+                __plansCache.push(created);
+                customPriceCurrentPage = 0;
+                renderCustomPriceCards();
+                closeNewPlanModal();
+                showModal('Sucesso', `Plano "${nome}" criado com sucesso!`);
+            } catch (err) {
+                const code = err?.code;
+                if (code === 'slug_taken') {
+                    showModal('Erro', 'Já existe um plano com esse nome (slug duplicado). Tente outro nome.');
+                } else {
+                    showModal('Erro', err?.message || 'Não foi possível criar o plano.');
+                }
+            }
         }
 
         function deletePlan(key) {
             const data = loadPrices();
             const plan = data[key];
             if (!plan) return;
-
+            if (plan.isFixed) {
+                showModal('Bloqueado', 'Planos fixos (Consulta Avulsa e Plano Mensal) não podem ser deletados.');
+                return;
+            }
+            if (!plan.id || plan.id === 'pending') {
+                showModal('Erro', 'Plano ainda não carregou. Tente novamente em alguns segundos.');
+                return;
+            }
             showModal(
                 'Confirmar exclusão',
                 `Tem certeza que deseja deletar o plano "${plan.name || 'Plano Personalizado'}"?`,
-                () => {
-                    delete data[key];
-                    savePrices(data);
-                    renderCustomPriceCards();
-                    showModal('Deletado', 'Plano removido com sucesso.');
+                async () => {
+                    try {
+                        await InspirarePlans.deletePlan(plan.id);
+                        __plansCache = __plansCache.filter(p => p.id !== plan.id);
+                        renderCustomPriceCards();
+                        showModal('Deletado', 'Plano removido com sucesso.');
+                    } catch (err) {
+                        if (err?.code === 'cannot_delete_fixed_plan') {
+                            showModal('Bloqueado', 'Este plano é fixo e não pode ser deletado.');
+                        } else {
+                            showModal('Erro', err?.message || 'Não foi possível deletar o plano.');
+                        }
+                    }
                 },
                 () => {}
             );
         }
 
-        function togglePlanStatus(key, enable) {
+        async function togglePlanStatus(key, enable) {
             const data = loadPrices();
             const plan = data[key];
-            if (!plan) return;
-
-            plan.disabled = !enable;
-            savePrices(data);
-            renderCustomPriceCards();
-
-            const msg = enable ? 'Plano ativado com sucesso.' : 'Plano desativado com sucesso.';
-            showModal(enable ? 'Ativado' : 'Desativado', msg);
+            if (!plan || !plan.id || plan.id === 'pending') {
+                showModal('Erro', 'Plano ainda não carregou. Tente novamente em alguns segundos.');
+                return;
+            }
+            try {
+                const updated = await InspirarePlans.updatePlan(plan.id, { active: enable });
+                const idx = __plansCache.findIndex(p => p.id === updated.id);
+                if (idx >= 0) __plansCache[idx] = updated;
+                renderCustomPriceCards();
+                const msg = enable ? 'Plano ativado com sucesso.' : 'Plano desativado com sucesso.';
+                showModal(enable ? 'Ativado' : 'Desativado', msg);
+            } catch (err) {
+                showModal('Erro', err?.message || 'Não foi possível atualizar o status do plano.');
+            }
         }
 
         let customPriceCurrentPage = 0;
@@ -2218,6 +2594,8 @@
             }
 
             lucide.createIcons();
+            // Wire up flatpickr on any newly added date inputs (custom cards).
+            if (window.InspirareDatePicker) window.InspirareDatePicker.initAll(grid);
         }
 
         function changeCustomPricePage(direction) {
@@ -2235,8 +2613,9 @@
 
         function createPriceCard(key, plan) {
             const card = document.createElement('div');
-            const isDisabled = plan.disabled === true;
-            card.className = 'price-card price-card-custom' + (isDisabled ? ' disabled' : '');
+            const isActive = plan.active !== false;
+            const isFixed = plan.isFixed === true;
+            card.className = 'price-card price-card-custom' + (!isActive ? ' disabled' : '');
             card.dataset.planId = key;
 
             const current = calculatePrice(plan.basePrice, plan);
@@ -2248,14 +2627,15 @@
 
             const perSession = plan.consultationsPerMonth > 0 ? current / plan.consultationsPerMonth : 0;
 
-            const actionBtnClass = isDisabled ? 'btn-enable-plan' : 'btn-disable-plan';
-            const actionBtnText = isDisabled ? 'Ativar' : 'Desativar';
-            const actionBtnOnClick = isDisabled ? `togglePlanStatus('${key}', true)` : `togglePlanStatus('${key}', false)`;
+            const actionBtnClass = !isActive ? 'btn-enable-plan' : 'btn-disable-plan';
+            const actionBtnText = !isActive ? 'Ativar' : 'Desativar';
+            const actionBtnOnClick = !isActive ? `togglePlanStatus('${key}', true)` : `togglePlanStatus('${key}', false)`;
+            const fixedTag = isFixed ? `<span class="price-fixed-tag" title="Plano fixo não pode ser deletado">Fixo</span>` : '';
 
             card.innerHTML = `
                 <div class="price-card-header">
-                    <div class="price-icon"><i data-lucide="${plan.icon || 'plus'}"></i></div>
-                    <h3>${plan.name || 'Plano Personalizado'}</h3>
+                    <button type="button" class="price-icon price-icon-btn" data-plan-key="${key}" onclick="openPlanIconPicker(event, '${key}')" title="Trocar ícone"><i data-lucide="${plan.icon || 'plus'}"></i></button>
+                    <h3>${plan.name || 'Plano Personalizado'}${fixedTag}</h3>
                 </div>
                 <div class="price-current" id="${key}-display">
                     ${displayHtml}
@@ -2263,40 +2643,40 @@
                 <div class="price-fields">
                     <div class="price-field">
                         <label>Preço fixo (R$)</label>
-                        <input type="number" id="${key}-preco" value="${plan.basePrice.toFixed(2)}" min="0" step="0.01" ${isDisabled ? 'disabled' : ''}>
+                        <input type="number" id="${key}-preco" value="${plan.basePrice.toFixed(2)}" min="0" step="0.01" ${!isActive ? 'disabled' : ''}>
                     </div>
                     <div class="price-field">
                         <label>Consultas por mês</label>
-                        <input type="number" id="${key}-consultas" value="${plan.consultationsPerMonth}" min="1" step="1" ${isDisabled ? 'disabled' : ''}>
+                        <input type="number" id="${key}-consultas" value="${plan.consultationsPerMonth}" min="1" step="1" ${!isActive ? 'disabled' : ''}>
                     </div>
                     <div class="price-per-session" id="${key}-por-consulta">R$ ${formatCurrency(perSession)} / consulta</div>
                     <div class="discount-toggle">
                         <label class="checkbox-label">
-                            <input type="checkbox" id="${key}-desconto-ativo" onchange="toggleDiscount('${key}')" ${plan.discountActive ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
+                            <input type="checkbox" id="${key}-desconto-ativo" onchange="toggleDiscount('${key}')" ${plan.discountActive ? 'checked' : ''} ${!isActive ? 'disabled' : ''}>
                             <span>Aplicar desconto por tempo limitado</span>
                         </label>
                     </div>
                     <div class="discount-fields" id="${key}-discount-fields" style="display:${plan.discountActive ? 'flex' : 'none'};">
                         <div class="price-field">
                             <label>% de desconto</label>
-                            <input type="number" id="${key}-desconto" value="${plan.discountPercent || 0}" min="0" max="100" step="1" ${isDisabled ? 'disabled' : ''}>
+                            <input type="number" id="${key}-desconto" value="${plan.discountPercent || 0}" min="0" max="100" step="1" ${!isActive ? 'disabled' : ''}>
                         </div>
                         <div class="price-field-row">
                             <div class="price-field">
                                 <label>Início</label>
-                                <input type="date" id="${key}-desconto-inicio" value="${plan.discountStart || ''}" ${isDisabled ? 'disabled' : ''}>
+                                <input type="date" id="${key}-desconto-inicio" value="${plan.discountStart || ''}" ${!isActive ? 'disabled' : ''}>
                             </div>
                             <div class="price-field">
                                 <label>Fim</label>
-                                <input type="date" id="${key}-desconto-fim" value="${plan.discountEnd || ''}" ${isDisabled ? 'disabled' : ''}>
+                                <input type="date" id="${key}-desconto-fim" value="${plan.discountEnd || ''}" ${!isActive ? 'disabled' : ''}>
                             </div>
                         </div>
                     </div>
                 </div>
-                <button class="btn-save-price" onclick="savePrice('${key}')" ${isDisabled ? 'disabled' : ''}>Salvar alterações</button>
+                <button class="btn-save-price" onclick="savePrice('${key}')" ${!isActive ? 'disabled' : ''}>Salvar alterações</button>
                 <div class="price-card-actions">
                     <button class="${actionBtnClass}" onclick="${actionBtnOnClick}">${actionBtnText}</button>
-                    <button class="btn-delete-plan" onclick="deletePlan('${key}')">Deletar</button>
+                    <button class="btn-delete-plan" onclick="deletePlan('${key}')" ${isFixed ? 'disabled title="Plano fixo não pode ser deletado"' : ''}>Deletar</button>
                 </div>
             `;
 
@@ -2312,6 +2692,7 @@
 
         function initPrices() {
             const data = loadPrices();
+            maybeMigrateLocalStorageToApi();
 
             document.getElementById('avulsa-preco').value = data.avulsa.basePrice.toFixed(2);
             document.getElementById('avulsa-consultas').value = data.avulsa.consultationsPerMonth;
@@ -2334,6 +2715,8 @@
             updatePlanoPerSession();
 
             renderCustomPriceCards();
+            // Re-attach flatpickr to any date inputs that were re-rendered.
+            if (window.InspirareDatePicker) window.InspirareDatePicker.initAll();
         }
 
         initPrices();
@@ -2442,6 +2825,394 @@
             if (navName) navName.textContent = `Olá, ${name}`;
 
             showModal('Salvo', 'Perfil atualizado com sucesso!');
+        }
+
+        /* =========================
+           CONTROLE DE DISPONIBILIDADE
+           Apenas front-end. Estado em localStorage.
+
+           Modelo v2:
+             {
+               version: 2,
+               week: { dom:{enabled,slots}, seg:{...}, ... },
+               dateOverrides: {
+                 'YYYY-MM-DD': { mode: 'default' | 'custom' | 'block', slots: ['08:00', ...] }
+               }
+             }
+
+           Lógica (aplicada na leitura pelo user — futuro):
+             - Se a data tem override com mode='block'  -> bloqueado
+             - Se tem override com mode='custom' -> usa override.slots
+             - Se tem override com mode='default' ou não tem override -> usa week[dayOfWeek]
+           ========================= */
+        const AVAIL_STORAGE_KEY = 'inspirare_availability_settings';
+        const AVAIL_VERSION = 2;
+        const AVAIL_DAYS = [
+            { key: 'dom', label: 'Domingo' },
+            { key: 'seg', label: 'Segunda' },
+            { key: 'ter', label: 'Terça'   },
+            { key: 'qua', label: 'Quarta'  },
+            { key: 'qui', label: 'Quinta'  },
+            { key: 'sex', label: 'Sexta'   },
+            { key: 'sab', label: 'Sábado'  }
+        ];
+        const AVAIL_DAY_KEYS = ['dom','seg','ter','qua','qui','sex','sab'];
+        const AVAIL_MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+        function buildHourlySlots(startHour, endHour) {
+            const slots = [];
+            for (let h = startHour; h <= endHour; h++) {
+                slots.push(String(h).padStart(2, '0') + ':00');
+            }
+            return slots;
+        }
+
+        function getDefaultAvailability() {
+            const commercial = buildHourlySlots(8, 18);
+            return {
+                version: AVAIL_VERSION,
+                week: {
+                    dom: { enabled: false, slots: [] },
+                    seg: { enabled: true,  slots: commercial.slice() },
+                    ter: { enabled: true,  slots: commercial.slice() },
+                    qua: { enabled: true,  slots: commercial.slice() },
+                    qui: { enabled: true,  slots: commercial.slice() },
+                    sex: { enabled: true,  slots: commercial.slice() },
+                    sab: { enabled: false, slots: [] }
+                },
+                dateOverrides: {}
+            };
+        }
+
+        function loadAvailability() {
+            try {
+                const raw = localStorage.getItem(AVAIL_STORAGE_KEY);
+                if (!raw) return getDefaultAvailability();
+                const parsed = JSON.parse(raw);
+                if (!parsed || parsed.version !== AVAIL_VERSION) return getDefaultAvailability();
+                AVAIL_DAYS.forEach(d => {
+                    if (!parsed.week[d.key]) {
+                        parsed.week[d.key] = { enabled: false, slots: [] };
+                    }
+                });
+                if (!parsed.dateOverrides || typeof parsed.dateOverrides !== 'object') {
+                    parsed.dateOverrides = {};
+                }
+                return parsed;
+            } catch (e) {
+                console.warn('[availability] failed to load, using defaults', e);
+                return getDefaultAvailability();
+            }
+        }
+
+        function saveAvailabilityData(data) {
+            try {
+                localStorage.setItem(AVAIL_STORAGE_KEY, JSON.stringify(data));
+                return true;
+            } catch (e) {
+                console.error('[availability] failed to save', e);
+                return false;
+            }
+        }
+
+        let availabilityState = null;
+        let calCursor = { year: 0, month: 0 };
+        let selectedDateKey = null;
+
+        function pad2(n) { return String(n).padStart(2, '0'); }
+        function dateKey(y, m, d) { return y + '-' + pad2(m+1) + '-' + pad2(d); }
+        function dayKeyFromDate(date) { return AVAIL_DAY_KEYS[date.getDay()]; }
+        function todayKey() {
+            const t = new Date();
+            return dateKey(t.getFullYear(), t.getMonth(), t.getDate());
+        }
+
+        function getSlotsForDay() {
+            return buildHourlySlots(8, 20);
+        }
+
+        // ===== Grade semanal (padrão recorrente) =====
+        function renderWeekGrid() {
+            const grid = document.getElementById('avail-week-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            AVAIL_DAYS.forEach(d => {
+                const dayData = availabilityState.week[d.key];
+                const row = document.createElement('div');
+                row.className = 'avail-day-row' + (dayData.enabled ? '' : ' is-disabled');
+                row.innerHTML = ''
+                    + '<div class="avail-day-label">'
+                    +   '<span class="avail-day-name">' + d.label + '</span>'
+                    +   '<label class="avail-day-toggle" title="Ativar/desativar ' + d.label + '">'
+                    +     '<input type="checkbox" data-day="' + d.key + '"' + (dayData.enabled ? ' checked' : '') + '>'
+                    +     '<span class="avail-day-toggle-slider"></span>'
+                    +   '</label>'
+                    + '</div>'
+                    + '<div class="avail-slots" data-slots-day="' + d.key + '">'
+                    +   getSlotsForDay().map(function(slot) {
+                        return '<button type="button"'
+                            + ' class="avail-slot' + (dayData.slots.includes(slot) ? ' active' : '') + '"'
+                            + ' data-day="' + d.key + '"'
+                            + ' data-slot="' + slot + '">' + slot + '</button>';
+                    }).join('')
+                    + '</div>';
+                grid.appendChild(row);
+            });
+
+            grid.querySelectorAll('input[type="checkbox"][data-day]').forEach(function(cb) {
+                cb.addEventListener('change', function(e) {
+                    const k = e.target.getAttribute('data-day');
+                    availabilityState.week[k].enabled = e.target.checked;
+                    if (e.target.checked && availabilityState.week[k].slots.length === 0) {
+                        availabilityState.week[k].slots = ['08:00'];
+                    }
+                    renderWeekGrid();
+                });
+            });
+
+            grid.querySelectorAll('.avail-slot').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const k = btn.getAttribute('data-day');
+                    const slot = btn.getAttribute('data-slot');
+                    const dayData = availabilityState.week[k];
+                    if (!dayData.enabled) return;
+                    const idx = dayData.slots.indexOf(slot);
+                    if (idx >= 0) {
+                        dayData.slots.splice(idx, 1);
+                    } else {
+                        dayData.slots.push(slot);
+                        dayData.slots.sort();
+                    }
+                    btn.classList.toggle('active');
+                });
+            });
+        }
+
+        // ===== Calendário mensal =====
+        function renderCalendar() {
+            const grid = document.getElementById('avail-cal-grid');
+            const title = document.getElementById('avail-cal-title');
+            if (!grid || !title) return;
+            grid.innerHTML = '';
+
+            const y = calCursor.year;
+            const m = calCursor.month;
+            title.textContent = AVAIL_MONTHS_PT[m] + ' ' + y;
+
+            const first = new Date(y, m, 1);
+            const startWeekday = first.getDay();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const today = todayKey();
+
+            const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
+
+            for (let i = 0; i < totalCells; i++) {
+                const dayNum = i - startWeekday + 1;
+                const cell = document.createElement('button');
+                cell.type = 'button';
+
+                if (dayNum < 1 || dayNum > daysInMonth) {
+                    cell.className = 'avail-cal-cell is-empty';
+                    cell.disabled = true;
+                } else {
+                    const k = dateKey(y, m, dayNum);
+                    const dt = new Date(y, m, dayNum);
+                    const dow = dayKeyFromDate(dt);
+                    const override = availabilityState.dateOverrides[k];
+                    const hasOverride = !!override;
+                    const mode = hasOverride ? override.mode : 'default';
+
+                    let dotClass = 'avail-dot-default';
+                    if (mode === 'block') dotClass = 'avail-dot-block';
+                    else if (mode === 'custom') dotClass = 'avail-dot-custom';
+
+                    cell.className = 'avail-cal-cell';
+                    if (k === today) cell.classList.add('is-today');
+                    if (k === selectedDateKey) cell.classList.add('is-selected');
+                    if (mode === 'block') cell.classList.add('is-block');
+                    else if (mode === 'custom') cell.classList.add('is-custom');
+                    else if (availabilityState.week[dow].enabled) cell.classList.add('is-open');
+                    else cell.classList.add('is-closed');
+
+                    cell.setAttribute('data-date', k);
+                    cell.innerHTML = '<span class="avail-cal-cell-num">' + dayNum + '</span>'
+                        + '<span class="avail-dot ' + dotClass + '"></span>';
+                }
+                grid.appendChild(cell);
+            }
+
+            grid.querySelectorAll('.avail-cal-cell[data-date]').forEach(function(cell) {
+                cell.addEventListener('click', function() {
+                    const k = cell.getAttribute('data-date');
+                    selectedDateKey = k;
+                    renderCalendar();
+                    openDayEditor(k);
+                });
+            });
+        }
+
+        function navigateCalendar(delta) {
+            let y = calCursor.year;
+            let m = calCursor.month + delta;
+            if (m < 0) { m = 11; y--; }
+            else if (m > 11) { m = 0; y++; }
+            calCursor.year = y;
+            calCursor.month = m;
+            renderCalendar();
+        }
+
+        // ===== Editor de dia =====
+        function openDayEditor(dateKeyStr) {
+            const editor = document.getElementById('avail-day-editor');
+            const titleEl = document.getElementById('avail-day-editor-title');
+            if (!editor || !titleEl) return;
+
+            const parts = dateKeyStr.split('-').map(Number);
+            const y = parts[0], mo = parts[1], d = parts[2];
+            const dt = new Date(y, mo - 1, d);
+            const dow = dayKeyFromDate(dt);
+            const dayLabel = AVAIL_DAYS.find(function(x) { return x.key === dow; }).label;
+            titleEl.textContent = d + '/' + mo + '/' + y + ' — ' + dayLabel;
+
+            const override = availabilityState.dateOverrides[dateKeyStr];
+            const currentMode = override ? override.mode : 'default';
+
+            const radios = editor.querySelectorAll('input[name="avail-day-mode"]');
+            radios.forEach(function(r) { r.checked = (r.value === currentMode); });
+
+            renderDaySlots(override && override.mode === 'custom' ? override.slots : []);
+
+            updateDayEditorVisibility();
+
+            const removeBtn = document.getElementById('avail-day-editor-remove');
+            if (removeBtn) {
+                removeBtn.style.display = override ? 'inline-flex' : 'none';
+            }
+
+            editor.style.display = 'block';
+            requestAnimationFrame(function() {
+                editor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        }
+
+        function closeDayEditor() {
+            const editor = document.getElementById('avail-day-editor');
+            if (editor) editor.style.display = 'none';
+            selectedDateKey = null;
+            renderCalendar();
+        }
+
+        function renderDaySlots(currentSlots) {
+            const grid = document.getElementById('avail-day-slots-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            getSlotsForDay().forEach(function(slot) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'avail-slot' + (currentSlots.includes(slot) ? ' active' : '');
+                btn.setAttribute('data-slot', slot);
+                btn.textContent = slot;
+                btn.addEventListener('click', function() {
+                    btn.classList.toggle('active');
+                });
+                grid.appendChild(btn);
+            });
+        }
+
+        function updateDayEditorVisibility() {
+            const checked = document.querySelector('input[name="avail-day-mode"]:checked');
+            const slotsBox = document.getElementById('avail-day-slots');
+            if (!checked || !slotsBox) return;
+            slotsBox.style.display = (checked.value === 'custom') ? 'block' : 'none';
+        }
+
+        function applyDayOverride() {
+            if (!selectedDateKey) return;
+            const checked = document.querySelector('input[name="avail-day-mode"]:checked');
+            const mode = checked ? checked.value : 'default';
+
+            if (mode === 'default') {
+                delete availabilityState.dateOverrides[selectedDateKey];
+            } else if (mode === 'block') {
+                availabilityState.dateOverrides[selectedDateKey] = { mode: 'block', slots: [] };
+            } else if (mode === 'custom') {
+                const slots = Array.from(document.querySelectorAll('#avail-day-slots-grid .avail-slot.active'))
+                    .map(function(b) { return b.getAttribute('data-slot'); })
+                    .sort();
+                availabilityState.dateOverrides[selectedDateKey] = { mode: 'custom', slots: slots };
+            }
+
+            renderCalendar();
+            openDayEditor(selectedDateKey);
+        }
+
+        function removeDayOverride() {
+            if (!selectedDateKey) return;
+            delete availabilityState.dateOverrides[selectedDateKey];
+            renderCalendar();
+            openDayEditor(selectedDateKey);
+        }
+
+        function attachCalendarEvents() {
+            const prev = document.getElementById('avail-cal-prev');
+            const next = document.getElementById('avail-cal-next');
+            if (prev) prev.addEventListener('click', function() { navigateCalendar(-1); });
+            if (next) next.addEventListener('click', function() { navigateCalendar(1); });
+
+            const close = document.getElementById('avail-day-editor-close');
+            if (close) close.addEventListener('click', closeDayEditor);
+
+            const apply = document.getElementById('avail-day-editor-apply');
+            if (apply) apply.addEventListener('click', applyDayOverride);
+
+            const remove = document.getElementById('avail-day-editor-remove');
+            if (remove) remove.addEventListener('click', removeDayOverride);
+
+            document.querySelectorAll('input[name="avail-day-mode"]').forEach(function(r) {
+                r.addEventListener('change', updateDayEditorVisibility);
+            });
+        }
+
+        function initAvailability() {
+            availabilityState = loadAvailability();
+            const now = new Date();
+            calCursor = { year: now.getFullYear(), month: now.getMonth() };
+            selectedDateKey = null;
+            renderCalendar();
+            renderWeekGrid();
+            attachCalendarEvents();
+        }
+
+        function saveAvailability() {
+            const btn = document.getElementById('avail-save-btn');
+            const originalText = btn ? btn.textContent : null;
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Salvando...';
+            }
+
+            let totalSlots = 0;
+            AVAIL_DAYS.forEach(function(d) {
+                if (availabilityState.week[d.key].enabled) {
+                    totalSlots += availabilityState.week[d.key].slots.length;
+                }
+            });
+            if (totalSlots === 0) {
+                if (btn) { btn.disabled = false; btn.textContent = originalText; }
+                showModal('Nada configurado', 'Ative pelo menos um dia e selecione horários no padrão semanal antes de salvar.');
+                return;
+            }
+
+            setTimeout(function() {
+                const ok = saveAvailabilityData(availabilityState);
+                if (btn) { btn.disabled = false; btn.textContent = originalText; }
+                if (ok) {
+                    showModal('Salvo', 'Disponibilidade atualizada com sucesso!');
+                } else {
+                    showModal('Erro', 'Não foi possível salvar a disponibilidade. Tente novamente.');
+                }
+            }, 350);
         }
     </script>
 </body>

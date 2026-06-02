@@ -1,0 +1,170 @@
+/* =========================================================
+   Inspirare - Flatpickr theme override
+   Recolors the flatpickr calendar popup to match the site
+   (primary #BB8991, secondary #3A503D, neutral #C4C4C4,
+   bg #f9fbf9).
+   ========================================================= */
+
+/* Main popup container */
+.flatpickr-calendar {
+    font-family: 'Poppins', sans-serif !important;
+    border-radius: 14px !important;
+    border: 1px solid #e6d4d9 !important;
+    box-shadow: 0 12px 36px rgba(187, 137, 145, 0.18) !important;
+    padding: 10px 8px !important;
+    background: #ffffff !important;
+    color: #3A503D !important;
+    width: 320px !important;
+    max-width: 95vw !important;
+}
+
+/* Month nav header */
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month {
+    color: #3A503D !important;
+    font-weight: 600 !important;
+    font-size: 1.05rem !important;
+}
+.flatpickr-current-month .cur-month,
+.flatpickr-current-month input.cur-year {
+    color: #3A503D !important;
+    font-weight: 600 !important;
+}
+.flatpickr-current-month .numInputWrapper:hover {
+    background: transparent !important;
+}
+
+/* Arrows prev/next */
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+    color: #BB8991 !important;
+    fill: #BB8991 !important;
+}
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover,
+.flatpickr-months .flatpickr-prev-month:focus,
+.flatpickr-months .flatpickr-next-month:focus {
+    color: #3A503D !important;
+    fill: #3A503D !important;
+}
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+/* Weekday row */
+span.flatpickr-weekday {
+    color: #BB8991 !important;
+    font-weight: 600 !important;
+    font-size: 0.78rem !important;
+    background: transparent !important;
+}
+
+/* Day cells */
+.flatpickr-day {
+    color: #3A503D !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    font-size: 0.85rem !important;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.flatpickr-day:hover,
+.flatpickr-day:focus {
+    background: #fdf0f3 !important;
+    color: #3A503D !important;
+    border-color: transparent !important;
+}
+
+/* Today */
+.flatpickr-day.today {
+    border-color: #BB8991 !important;
+    color: #BB8991 !important;
+    font-weight: 600 !important;
+}
+.flatpickr-day.today:hover {
+    background: #fdf0f3 !important;
+    color: #3A503D !important;
+}
+
+/* Selected */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: #BB8991 !important;
+    color: #ffffff !important;
+    border-color: #BB8991 !important;
+    box-shadow: none !important;
+    font-weight: 600 !important;
+}
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange:hover,
+.flatpickr-day.endRange:hover {
+    background: #a87580 !important;
+    color: #ffffff !important;
+    border-color: #a87580 !important;
+}
+
+/* Disabled days */
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover {
+    color: #d4d4d4 !important;
+    background: transparent !important;
+}
+
+/* Out-of-month day (previous/next month spillover) */
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+    color: #c4c4c4 !important;
+}
+
+/* Bottom bar (none by default, but just in case) */
+.flatpickr-time,
+.flatpickr-time-range {
+    color: #3A503D !important;
+}
+.flatpickr-time input,
+.flatpickr-time-range input {
+    color: #3A503D !important;
+}
+
+/* Number input (year) */
+.flatpickr-current-month .numInputWrapper input {
+    color: #3A503D !important;
+}
+.flatpickr-current-month .numInputWrapper span.arrowUp,
+.flatpickr-current-month .numInputWrapper span.arrowDown {
+    border-color: #BB8991 transparent transparent transparent !important;
+}
+.flatpickr-current-month .numInputWrapper span.arrowUp {
+    border-bottom-color: #BB8991 !important;
+    border-top-color: transparent !important;
+}
+
+/* The flatpickr replaces the native input. The input itself should match
+   our existing date input style (border, padding, focus ring). */
+.flatpickr-input,
+input.flatpickr-input {
+    background: #fcf6f7 !important;
+    border: 1px solid #e6d4d9 !important;
+    border-radius: 8px !important;
+    color: #4a2a35 !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 0.85rem !important;
+    padding: 8px 10px !important;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease !important;
+    cursor: pointer;
+}
+.flatpickr-input:hover,
+input.flatpickr-input:hover {
+    border-color: #BB8991 !important;
+    background: #fff !important;
+}
+.flatpickr-input:focus,
+input.flatpickr-input:focus,
+.flatpickr-input.active {
+    outline: none !important;
+    border-color: #BB8991 !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(187, 137, 145, 0.18) !important;
+}
