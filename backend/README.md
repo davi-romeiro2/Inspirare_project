@@ -36,8 +36,17 @@ npx http-server -p 8080 -c-1
 - `POST /api/auth/signup`      — body: `{ fullname, email, phone, password }`
 - `POST /api/auth/login`       — body: `{ email, password }`
 - `GET  /api/auth/me`          — requires `Authorization: Bearer <access_token>`
+- `POST /api/auth/forgot`      — body: `{ identifier }` — starts password reset, sends a 6-digit code
+- `POST /api/auth/forgot/verify` — body: `{ identifier, code }` — validates the code, returns `resetToken`
+- `POST /api/auth/reset`       — body: `{ resetToken, newPassword }` — sets the new password
 
 All responses are JSON. Error shape: `{ "error": "<code>", "fields": { ... }? }`.
+
+## Password reset (custom 6-digit code)
+
+Flow: user submits e-mail → backend generates a code, stores `sha256(code + salt)` in `public.password_reset_codes`, and emails the plain code via Resend → user types the 6 digits → backend validates and returns a one-shot `resetToken` → user submits a new password with that token. Tokens are uuid v4 (122 bits entropy), expire after `RESET_CODE_TTL_MINUTES` (default 10), and are invalidated after `RESET_MAX_ATTEMPTS` bad attempts (default 5).
+
+If `RESEND_API_KEY` is empty in `.env`, the code is **printed to the server console** instead of being emailed (dev mode). Set the key when you want real sends.
 
 ## Environment variables
 

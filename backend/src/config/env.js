@@ -17,6 +17,13 @@ function optional(name, fallback) {
   return value && value.trim() !== '' ? value : fallback;
 }
 
+function optionalInt(name, fallback) {
+  const raw = process.env[name];
+  if (!raw || raw.trim() === '') return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
 export const env = Object.freeze({
   PORT: Number(optional('PORT', '3000')),
   NODE_ENV: optional('NODE_ENV', 'development'),
@@ -28,4 +35,12 @@ export const env = Object.freeze({
     .map((s) => s.trim())
     .filter(Boolean),
   JWT_SECRET: optional('JWT_SECRET', ''),
+
+  // Resend (password reset). Vazio = modo dev: o codigo sai no console.
+  RESEND_API_KEY: optional('RESEND_API_KEY', ''),
+  RESEND_FROM_EMAIL: optional('RESEND_FROM_EMAIL', 'onboarding@resend.dev'),
+  RESET_CODE_TTL_MINUTES: optionalInt('RESET_CODE_TTL_MINUTES', 10),
+  RESET_MAX_ATTEMPTS: optionalInt('RESET_MAX_ATTEMPTS', 5),
 });
+
+export const RESEND_ENABLED = Boolean(env.RESEND_API_KEY);

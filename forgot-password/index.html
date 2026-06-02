@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inspirare - Recuperar Senha</title>
-    <link rel="stylesheet" href="../assets/css/base.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../assets/css/base.css?v=1">
+    <link rel="stylesheet" href="../assets/css/feedback.css?v=1">
+    <link rel="stylesheet" href="style.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -70,7 +71,20 @@
         </div>
     </div>
 
-    <script src="../assets/js/ui.js"></script>
+    <!-- Success modal: shown after /api/auth/reset returns ok. Click OK to go to login. -->
+    <div id="success-modal" class="modal-overlay" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="success-modal-title">
+            <div class="modal-icon" aria-hidden="true">
+                <i data-lucide="check"></i>
+            </div>
+            <h2 id="success-modal-title" class="modal-title">Senha alterada com sucesso!</h2>
+            <p class="modal-text">Sua nova senha já está ativa. Você pode fazer login agora com as suas credenciais.</p>
+            <button type="button" id="success-modal-ok" class="btn-primary modal-ok">OK</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/ui.js?v=1"></script>
+    <script src="../assets/js/auth.js?v=1"></script>
     <script>
         if (window.lucide) lucide.createIcons();
 
@@ -82,13 +96,39 @@
             3: document.getElementById('step-3')
         };
 
+        // Shared error banner above the active step. Resets on every step change.
+        let errorBanner = null;
+        function showStepError(message) {
+            if (!errorBanner) {
+                errorBanner = document.createElement('div');
+                errorBanner.className = 'form-error';
+                errorBanner.setAttribute('role', 'alert');
+                errorBanner.setAttribute('aria-live', 'polite');
+                errorBanner.style.marginBottom = '12px';
+                const card = document.querySelector('.forgot-card');
+                card.insertBefore(errorBanner, card.firstChild.nextSibling.nextSibling);
+            }
+            errorBanner.textContent = message;
+            errorBanner.style.display = 'block';
+        }
+        function clearStepError() {
+            if (errorBanner) {
+                errorBanner.textContent = '';
+                errorBanner.style.display = 'none';
+            }
+        }
+
         function goToStep(stepNum) {
+            clearStepError();
             Object.values(steps).forEach(step => step.classList.remove('active'));
             steps[stepNum].classList.add('active');
-
-            if(stepNum === 2) headerDesc.innerText = 'Validação de Identidade';
-            if(stepNum === 3) headerDesc.innerText = 'Crie sua nova senha';
+            if (stepNum === 2) headerDesc.innerText = 'Validação de Identidade';
+            if (stepNum === 3) headerDesc.innerText = 'Crie sua nova senha';
         }
+
+        // State carried across the 3 steps. In-memory only (page reload = restart flow).
+        let flowIdentifier = '';
+        let flowResetToken = '';
 
         const urlParams = new URLSearchParams(window.location.search);
         const userParam = urlParams.get('user');
@@ -104,20 +144,47 @@
             goToStep(3);
         }
 
-        // Step 1 -> Step 2
-        document.getElementById('send-code-btn').onclick = () => {
-            const id = document.getElementById('identifier').value;
-            if(id.trim() === '') {
-                alert('Por favor, insira seu e-mail ou usuário.');
+        // Simple e-mail regex (same shape as the backend validator).
+        const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        // --- Step 1 -> Step 2 ---
+        const sendCodeBtn = document.getElementById('send-code-btn');
+        const identifierInput = document.getElementById('identifier');
+        sendCodeBtn.addEventListener('click', async () => {
+            const id = identifierInput.value.trim();
+            if (id === '') {
+                showStepError('Por favor, insira seu e-mail.');
                 return;
             }
-            goToStep(2);
-        };
+            if (!EMAIL_RE.test(id)) {
+                showStepError('E-mail inválido.');
+                return;
+            }
+            clearStepError();
+            const originalText = sendCodeBtn.textContent;
+            sendCodeBtn.disabled = true;
+            sendCodeBtn.textContent = 'Enviando...';
+            try {
+                await InspirareAuth.api('/auth/forgot', {
+                    method: 'POST',
+                    body: JSON.stringify({ identifier: id }),
+                });
+                flowIdentifier = id;
+                goToStep(2);
+            } catch (err) {
+                showStepError('Não foi possível enviar o código. Tente novamente em instantes.');
+            } finally {
+                sendCodeBtn.disabled = false;
+                sendCodeBtn.textContent = originalText;
+            }
+        });
 
-        // Step 2: Auto-focus next input
+        // --- Step 2: 6-digit input UX (auto-focus + backspace) ---
         const codeInputs = document.querySelectorAll('.code-input');
         codeInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
+                // Keep only digits.
+                e.target.value = e.target.value.replace(/\D/g, '');
                 if (e.target.value && index < codeInputs.length - 1) {
                     codeInputs[index + 1].focus();
                 }
@@ -129,22 +196,35 @@
             });
         });
 
-        // Step 2 -> Step 3
-        document.getElementById('verify-code-btn').onclick = () => {
-            const codeInputs = document.querySelectorAll('.code-input');
+        // --- Step 2 -> Step 3 ---
+        const verifyCodeBtn = document.getElementById('verify-code-btn');
+        verifyCodeBtn.addEventListener('click', async () => {
             let fullCode = '';
             codeInputs.forEach(input => fullCode += input.value);
-
-            if(fullCode.length < 6) {
-                alert('Por favor, preencha todos os 6 dígitos do código.');
+            if (fullCode.length < 6) {
+                showStepError('Por favor, preencha todos os 6 dígitos do código.');
                 return;
             }
+            clearStepError();
+            const originalText = verifyCodeBtn.textContent;
+            verifyCodeBtn.disabled = true;
+            verifyCodeBtn.textContent = 'Verificando...';
+            try {
+                const data = await InspirareAuth.api('/auth/forgot/verify', {
+                    method: 'POST',
+                    body: JSON.stringify({ identifier: flowIdentifier, code: fullCode }),
+                });
+                flowResetToken = data.resetToken;
+                goToStep(3);
+            } catch (err) {
+                showStepError('Código inválido ou expirado. Verifique e tente novamente.');
+            } finally {
+                verifyCodeBtn.disabled = false;
+                verifyCodeBtn.textContent = originalText;
+            }
+        });
 
-            // Simulação de validação de código
-            goToStep(3);
-        };
-
-        // Step 3: Reset Password
+        // --- Step 3: password requirements UI ---
         const newPassInput = document.getElementById('new-password');
         const requirements = {
             upper: document.getElementById('req-upper'),
@@ -165,38 +245,75 @@
             isValid ? el.classList.add('valid') : el.classList.remove('valid');
         }
 
-        document.getElementById('reset-password-btn').onclick = () => {
+        // --- Step 3 -> Login ---
+        const resetPasswordBtn = document.getElementById('reset-password-btn');
+        const successModal = document.getElementById('success-modal');
+        const successModalOk = document.getElementById('success-modal-ok');
+
+        function showSuccessModal() {
+            successModal.hidden = false;
+            successModal.classList.add('is-open');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        successModalOk.addEventListener('click', () => {
+            window.location.href = '../login/index.html';
+        });
+
+        // Esc fecha o modal (UX bonus). Nao bloqueia outros atalhos.
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !successModal.hidden) {
+                window.location.href = '../login/index.html';
+            }
+        });
+
+        resetPasswordBtn.addEventListener('click', async () => {
             const pass = newPassInput.value;
             const confirm = document.getElementById('confirm-password').value;
-
             const allValid = Object.values(requirements).every(el => el.classList.contains('valid'));
-            if(!allValid) {
-                alert('Por favor, atenda a todos os requisitos da senha.');
+            if (!allValid) {
+                showStepError('A senha não atende a todos os requisitos.');
                 return;
             }
+            if (!confirm) {
+                showStepError('Por favor, confirme a senha.');
+                return;
+            }
+            if (pass !== confirm) {
+                showStepError('As senhas não coincidem.');
+                return;
+            }
+            if (!flowResetToken) {
+                showStepError('Sessão de recuperação expirou. Reinicie o fluxo.');
+                return;
+            }
+            clearStepError();
+            const originalText = resetPasswordBtn.textContent;
+            resetPasswordBtn.disabled = true;
+            resetPasswordBtn.textContent = 'Alterando...';
+            try {
+                await InspirareAuth.api('/auth/reset', {
+                    method: 'POST',
+                    body: JSON.stringify({ resetToken: flowResetToken, newPassword: pass }),
+                });
+                showSuccessModal();
+            } catch (err) {
+                showStepError('Não foi possível redefinir a senha. Tente novamente.');
+            } finally {
+                resetPasswordBtn.disabled = false;
+                resetPasswordBtn.textContent = originalText;
+            }
+        });
 
-            if(!confirm) {
-                alert('Por favor, confirme a senha.');
-                return;
-            }
-            if(pass !== confirm) {
-                alert('As senhas não coincidem.');
-                return;
-            }
-            alert('Senha alterada com sucesso! Agora você pode fazer login.');
-            window.location.href = '../login/index.html';
-        };
-
-        // Password Toggle
+        // --- Password Toggle ---
         const togglePw = document.getElementById('toggle-pw');
-        // Use a different variable name to avoid collision with the one declared in Step 3
         const passInputForToggle = document.getElementById('new-password');
-        togglePw.onclick = () => {
+        togglePw.addEventListener('click', () => {
             const type = passInputForToggle.type === 'password' ? 'text' : 'password';
             passInputForToggle.type = type;
             togglePw.innerHTML = `<i data-lucide="${type === 'password' ? 'eye' : 'eye-off'}"></i>`;
             lucide.createIcons();
-        };
+        });
     </script>
 </body>
 </html>

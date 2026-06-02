@@ -48,3 +48,49 @@ export function validateLogin(body) {
 
   return { ok: Object.keys(errors).length === 0, errors, data: { email, password } };
 }
+
+// Regras de senha forte mantidas em sync com validateSignup e com
+// forgot-password/index.html (cliente). Se voce mexer em uma, mexa nas tres.
+function _validateStrongPassword(password) {
+  if (typeof password !== 'string' || password.length < 8) {
+    return 'must be at least 8 characters';
+  }
+  if (!/[A-Z]/.test(password)) return 'must contain an uppercase letter';
+  if (!/[0-9]/.test(password)) return 'must contain a digit';
+  if (!PASSWORD_SPECIAL.test(password)) return 'must contain one of @#$%&*';
+  return null;
+}
+
+export function validateForgotIdentifier(body) {
+  const errors = {};
+  const identifier = (body?.identifier ?? '').trim().toLowerCase();
+  if (!EMAIL_RE.test(identifier)) errors.identifier = 'invalid email';
+  return { ok: Object.keys(errors).length === 0, errors, data: { identifier } };
+}
+
+export function validateForgotVerify(body) {
+  const errors = {};
+  const identifier = (body?.identifier ?? '').trim().toLowerCase();
+  const code = (body?.code ?? '').toString();
+  if (!EMAIL_RE.test(identifier)) errors.identifier = 'invalid email';
+  if (!/^\d{6}$/.test(code)) errors.code = 'must be 6 digits';
+  return {
+    ok: Object.keys(errors).length === 0,
+    errors,
+    data: { identifier, code },
+  };
+}
+
+export function validateResetPassword(body) {
+  const errors = {};
+  const resetToken = (body?.resetToken ?? '').toString().trim();
+  const newPassword = (body?.newPassword ?? '').toString();
+  if (!resetToken) errors.resetToken = 'required';
+  const pwErr = _validateStrongPassword(newPassword);
+  if (pwErr) errors.newPassword = pwErr;
+  return {
+    ok: Object.keys(errors).length === 0,
+    errors,
+    data: { resetToken, newPassword },
+  };
+}

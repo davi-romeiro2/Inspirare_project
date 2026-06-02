@@ -103,3 +103,91 @@
         height: 50px;
     }
 }
+
+/* --- Success modal (shown after password reset) -------------------- */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(58, 80, 61, 0.55); /* verde escuro translucido */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-overlay.is-open {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+}
+
+/* O atributo [hidden] do HTML tbm esconde, mas o CSS .is-open ganha
+   quando ambos estao presentes (regra posterior vence). */
+.modal-overlay[hidden] {
+    display: none;
+}
+
+.modal-overlay[hidden].is-open {
+    display: flex;
+}
+
+.modal-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 36px 32px 28px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(58, 80, 61, 0.25);
+    animation: modalPop 0.25s ease;
+}
+
+@keyframes modalPop {
+    from { opacity: 0; transform: scale(0.92) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: rgba(46, 204, 113, 0.15);
+    color: var(--success-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+}
+
+.modal-icon svg {
+    width: 36px;
+    height: 36px;
+    stroke-width: 2.5;
+}
+
+.modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    margin: 0 0 10px;
+}
+
+.modal-text {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--secondary-color);
+    margin: 0 0 22px;
+}
+
+.modal-ok {
+    width: 100%;
+    background-color: var(--secondary-color);
+}
+
+.modal-ok:hover {
+    background-color: #4a6450;
+    box-shadow: 0 5px 15px rgba(58, 80, 61, 0.3);
+}
