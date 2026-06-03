@@ -242,4 +242,62 @@ router.post('/:id/cancel', async (req, res, next) => {
   }
 });
 
+// GET /api/appointments/debug
+// Diagnostico: retorna o profile do caller, todas as consultas do banco
+// e quais delas deveriam aparecer na visao do profissional. Use quando
+// a UI mostrar "vazio" pra descobrir se eh token errado, codigo antigo
+// do backend, ou consultas em outro professional_id.
+// REMOVER apos debug.
+router.get('/debug', async (req, res, next) => {
+  try {
+    if (!req.profile) {
+      return res.json({
+        caller: null,
+        hint: 'Sem profile. Token invalido ou trigger falhou.',
+      });
+    }
+
+    const debugLog = { errors: {} };
+    const [byCaller, allAppts, allPros] = await Promise.all([
+      supabase
+        .from('appointments')
+        .select(APPT_SELECT)
+        .eq('professional_id', req.profile.id)
+        .order('date_key', { ascending: false }),
+      supabase
+        .from('appointments')
+        .select('id, user_id, professional_id, plan_slug, status, date_key, time_slot')
+        .order('created_at', { ascending: false })
+        .limit(20),
+      supabase
+        .from('profiles')
+        .select('id, fullname, role')
+        .in('role', ['admin', 'funcionario']),
+    ]);
+    if (byCaller.error) debugLog.errors.byCaller = byCaller.error.message;
+    if (allAppts.error) debugLog.errors.allAppts = allAppts.error.message;
+    if (allPros.error) debugLog.errors.allPros = allPros.error.message;
+
+    res.json({
+      caller: {
+        id: req.profile.id,
+        fullname: req.profile.fullname,
+        role: req.profile.role,
+      },
+      env: {
+        supabase_url: (process.env.SUPABASE_URL || '').slice(0, 40) + '...',
+        key_prefix: (process.env.SUPABASE_SERVICE_ROLE_KEY || '').slice(0, 30) + '...',
+      },
+      as_professional: byCaller.data || [],
+      as_professional_count: (byCaller.data || []).length,
+      all_appointments: allAppts.data || [],
+      all_appointments_count: (allAppts.data || []).length,
+      all_professionals: allPros.data || [],
+      debug_log: debugLog,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

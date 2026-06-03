@@ -1072,12 +1072,21 @@
                         </div>
                     </div>
                     <div class="appointment-actions">
-                        <button class="btn-action btn-more" onclick="openAppointmentModal(${a.id})" title="Mais opções">
+                        <button class="btn-action btn-more" data-appointment-id="${a.id}" title="Mais opções">
                             <i data-lucide="more-vertical"></i>
                         </button>
                     </div>
                 </div>
             `).join('');
+
+            // Event listener por botão (em vez de onclick inline). Evita
+            // problemas de escape quando o id tem caracteres especiais
+            // e mantém a função como single source of truth.
+            container.querySelectorAll('.btn-more').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    openAppointmentModal(btn.getAttribute('data-appointment-id'));
+                });
+            });
 
             lucide.createIcons();
             updateAppointmentsScrollArrows();
