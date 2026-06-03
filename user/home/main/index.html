@@ -4,9 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Inspirare - Home</title>
     <link rel="stylesheet" href="../../../assets/css/datepicker.css?v=1">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=7">
     <link rel="stylesheet" href="../../menu/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,9 +17,9 @@
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap"
         rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../../../assets/js/auth.js?v=1"></script>
-    <script src="../../../assets/js/plans.js?v=1"></script>
-    <script src="../../../assets/js/datepicker.js?v=1"></script>
+    <script src="../../../assets/js/auth.js?v=20260602"></script>
+    <script src="../../../assets/js/plans.js?v=20260602"></script>
+    <script src="../../../assets/js/datepicker.js?v=20260602"></script>
 </head>
 
 <body style="display: block;">
@@ -238,10 +241,31 @@
                     <div class="option-card consultation-type-card"
                         onclick="selectConsultationType(this, 'presencial')">Presencial</div>
                 </div>
-                <p style="margin-bottom: 15px; text-align: center;">Selecione o dia:</p>
-                <div id="date-picker" class="date-grid"></div>
-                <p style="margin-bottom: 15px; text-align: center;">Selecione o horário:</p>
+
+                <p style="margin-bottom: 12px; text-align: center;">Selecione o dia:</p>
+
+                <div class="user-cal-wrapper">
+                    <div class="user-cal-header">
+                        <button type="button" class="user-cal-nav" id="user-cal-prev" title="Mês anterior">
+                            <i data-lucide="chevron-left"></i>
+                        </button>
+                        <span class="user-cal-title" id="user-cal-title">—</span>
+                        <button type="button" class="user-cal-nav" id="user-cal-next" title="Próximo mês">
+                            <i data-lucide="chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="user-cal-weekdays">
+                        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+                    </div>
+                    <div id="date-picker" class="user-cal-grid"><!-- preenchido por JS --></div>
+                </div>
+
+                <p style="margin: 22px 0 12px; text-align: center;">Selecione o horário:</p>
                 <div id="time-picker" class="time-grid"></div>
+                <p class="user-cal-no-slots" id="user-cal-no-slots" style="display:none;">
+                    Não há horários disponíveis neste dia.
+                </p>
+
                 <button id="next-to-payment-btn" class="btn-confirm" style="display:none;"
                     onclick="goToPayment()">Continuar para pagamento</button>
             </div>
@@ -827,7 +851,9 @@
                 btnYes.style.display = 'inline-block';
                 btnNo.style.display = 'none';
             } else {
-                btnYes.style.display = 'none';
+                // Modal informativo (Atenção) — mostra "Ok" pra fechar
+                btnYes.innerText = 'Ok';
+                btnYes.style.display = 'inline-block';
                 btnNo.style.display = 'none';
             }
 
@@ -888,6 +914,27 @@
             // Re-fetch plans to pick up any admin edits since the last open.
             loadScheduleTypes();
             document.getElementById('sched-step-1').style.display = 'block';
+
+            // Limpa seleções de passos anteriores
+            document.querySelectorAll('.consultation-type-card.selected').forEach(c => c.classList.remove('selected'));
+            document.querySelectorAll('.option-card.selected').forEach(c => c.classList.remove('selected'));
+            userSelectedDateKey = null;
+            userSelectedTime = null;
+            // Limpa inputs do cartão
+            ['card-name', 'card-number', 'card-expiry', 'card-cvv'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            // Esconde os detalhes de pagamento e o botão final
+            const pixDetail = document.getElementById('pix-detail');
+            const cardDetail = document.getElementById('card-detail');
+            const finalBtn = document.getElementById('final-confirm-btn');
+            if (pixDetail) pixDetail.style.display = 'none';
+            if (cardDetail) cardDetail.style.display = 'none';
+            if (finalBtn) finalBtn.style.display = 'none';
+            // Esconde o botão "Continuar pra pagamento" do step 3
+            const nextToPaymentBtn = document.getElementById('next-to-payment-btn');
+            if (nextToPaymentBtn) nextToPaymentBtn.style.display = 'none';
         }
 
         function goToScheduleStep(step) {
@@ -931,14 +978,19 @@
         function goToDateSelection() {
             // Step 2 -> 3 (tipo de consulta + dia + horário).
             goToScheduleStep(3);
-            generateDates();
+            // Carrega availability (async, não bloqueia) e desenha o calendário.
+            loadUserAvailability().then(function() {
+                renderUserCalendar();
+                userAttachCalEvents();
+                renderTimePicker();
+            });
         }
 
         function goToPayment() {
             // Validação rápida: precisa ter tipo de consulta, dia e horário.
             const hasType = document.querySelector('.consultation-type-card.selected');
-            const hasDate = document.querySelector('.date-btn.selected');
-            const hasTime = document.querySelector('.time-btn.selected');
+            const hasDate = userSelectedDateKey !== null;
+            const hasTime = userSelectedTime !== null;
             if (!hasType || !hasDate || !hasTime) {
                 showModal('Atenção', 'Selecione o tipo de consulta, o dia e o horário antes de continuar.');
                 return;
@@ -960,39 +1012,253 @@
         }
 
         function generateDates() {
-            const picker = document.getElementById('date-picker');
-            picker.innerHTML = '';
-            const today = new Date();
-            const totalDays = 14;
-            for (let i = 0; i < totalDays; i++) {
-                const d = new Date();
-                d.setDate(today.getDate() + i);
-                const btn = document.createElement('button');
-                btn.className = 'date-btn';
-                btn.innerText = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-                btn.onclick = () => {
-                    document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('selected'));
-                    btn.classList.add('selected');
-                    generateTimes();
-                };
-                picker.appendChild(btn);
-            }
+            renderUserCalendar();
         }
 
         function generateTimes() {
-            const picker = document.getElementById('time-picker');
-            picker.innerHTML = '';
-            for (let h = 8; h <= 18; h++) {
-                const btn = document.createElement('button');
-                btn.className = 'time-btn';
-                btn.innerText = `${h}:00`;
-                btn.onclick = () => {
-                    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
-                    btn.classList.add('selected');
-                    document.getElementById('next-to-payment-btn').style.display = 'block';
-                };
-                picker.appendChild(btn);
+            renderTimePicker();
+        }
+
+        /* =========================
+           DISPONIBILIDADE NO USER
+           Carrega /api/availability (com fallback local) e expõe
+           effectiveSlotsByDate: Map<dateKey, slots[]>
+           ========================= */
+        const USER_AVAIL_VERSION = 3;
+        const USER_AVAIL_DAY_KEYS = ['dom','seg','ter','qua','qui','sex','sab'];
+        const USER_AVAIL_MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const USER_AVAIL_WINDOW_DAYS = 60;
+
+        let userAvailability = null;     // estado carregado
+        let userCalCursor = { year: 0, month: 0 };
+        let userCalWindow = { minMs: 0, maxMs: 0 };
+        let userSelectedDateKey = null;
+        let userSelectedTime = null;
+
+        function userPad2(n) { return String(n).padStart(2, '0'); }
+        function userDateKey(y, m, d) { return y + '-' + userPad2(m+1) + '-' + userPad2(d); }
+        function userDayKeyFromDate(date) { return USER_AVAIL_DAY_KEYS[date.getDay()]; }
+        function userStartOfDay(d) {
+            const x = new Date(d);
+            x.setHours(0, 0, 0, 0);
+            return x;
+        }
+        function userTodayKey() {
+            const t = new Date();
+            return userDateKey(t.getFullYear(), t.getMonth(), t.getDate());
+        }
+
+        function userBuildHourlySlots(startHour, endHour) {
+            const slots = [];
+            for (let h = startHour; h <= endHour; h++) {
+                slots.push(userPad2(h) + ':00');
             }
+            return slots;
+        }
+
+        function userGetDefaultAvailability() {
+            const commercial = userBuildHourlySlots(8, 18);
+            return {
+                version: USER_AVAIL_VERSION,
+                week: {
+                    dom: { enabled: false, slots: [] },
+                    seg: { enabled: true,  slots: commercial.slice() },
+                    ter: { enabled: true,  slots: commercial.slice() },
+                    qua: { enabled: true,  slots: commercial.slice() },
+                    qui: { enabled: true,  slots: commercial.slice() },
+                    sex: { enabled: true,  slots: commercial.slice() },
+                    sab: { enabled: false, slots: [] }
+                },
+                dateOverrides: {}
+            };
+        }
+
+        // Retorna os slots efetivos de uma data (override > padrão semanal).
+        function userGetEffectiveSlotsForDate(dateKeyStr, state) {
+            const s = state || userAvailability;
+            if (!s) return [];
+            const override = s.dateOverrides && s.dateOverrides[dateKeyStr];
+            if (override) {
+                if (override.mode === 'block') return [];
+                if (override.mode === 'custom') return override.slots || [];
+            }
+            const parts = dateKeyStr.split('-').map(Number);
+            const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+            const dow = userDayKeyFromDate(dt);
+            const weekData = s.week && s.week[dow];
+            if (weekData && weekData.enabled) return weekData.slots || [];
+            return [];
+        }
+
+        // Tenta GET /api/availability; cai no default local se falhar.
+        async function loadUserAvailability() {
+            try {
+                if (window.InspirareAuth && typeof window.InspirareAuth.api === 'function') {
+                    const res = await window.InspirareAuth.api('/availability');
+                    if (res && (res.availability || res.data)) {
+                        const av = res.availability || res.data;
+                        // Sanity check mínima
+                        if (av && av.week && av.dateOverrides !== undefined) {
+                            userAvailability = av;
+                            return;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('[user-availability] /api/availability falhou, usando default local', e);
+            }
+            userAvailability = userGetDefaultAvailability();
+        }
+
+        function userComputeCalWindow() {
+            const now = userStartOfDay(new Date());
+            const max = new Date(now);
+            max.setDate(max.getDate() + USER_AVAIL_WINDOW_DAYS);
+            userCalWindow = { minMs: now.getTime(), maxMs: max.getTime() };
+        }
+
+        function userIsAtMin() {
+            const firstOfCursorMonth = new Date(userCalCursor.year, userCalCursor.month, 1);
+            return firstOfCursorMonth.getTime() <= userCalWindow.minMs;
+        }
+        function userIsAtMax() {
+            const lastOfCursorMonth = new Date(userCalCursor.year, userCalCursor.month + 1, 0);
+            lastOfCursorMonth.setHours(23, 59, 59, 999);
+            return lastOfCursorMonth.getTime() >= userCalWindow.maxMs;
+        }
+        function userIsDateInWindow(y, m, d) {
+            const dt = new Date(y, m, d).getTime();
+            return dt >= userCalWindow.minMs && dt <= userCalWindow.maxMs;
+        }
+
+        function userNavigateCalendar(delta) {
+            if (delta < 0 && userIsAtMin()) return;
+            if (delta > 0 && userIsAtMax()) return;
+            let y = userCalCursor.year;
+            let m = userCalCursor.month + delta;
+            if (m < 0) { m = 11; y--; }
+            else if (m > 11) { m = 0; y++; }
+            userCalCursor.year = y;
+            userCalCursor.month = m;
+            renderUserCalendar();
+        }
+
+        function renderUserCalendar() {
+            const grid = document.getElementById('date-picker');
+            const title = document.getElementById('user-cal-title');
+            const prev = document.getElementById('user-cal-prev');
+            const next = document.getElementById('user-cal-next');
+            if (!grid || !title) return;
+
+            // Garante estado inicial se for a 1ª render
+            if (!userAvailability) userAvailability = userGetDefaultAvailability();
+            userComputeCalWindow();
+            if (userCalCursor.year === 0) {
+                const now = new Date();
+                userCalCursor = { year: now.getFullYear(), month: now.getMonth() };
+            }
+            grid.innerHTML = '';
+            grid.className = 'user-cal-grid';
+
+            const y = userCalCursor.year;
+            const m = userCalCursor.month;
+            title.textContent = USER_AVAIL_MONTHS_PT[m] + ' ' + y;
+
+            const first = new Date(y, m, 1);
+            const startWeekday = first.getDay();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const today = userTodayKey();
+
+            const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
+
+            for (let i = 0; i < totalCells; i++) {
+                const dayNum = i - startWeekday + 1;
+                const cell = document.createElement('button');
+                cell.type = 'button';
+
+                if (dayNum < 1 || dayNum > daysInMonth) {
+                    cell.className = 'user-cal-cell is-empty';
+                    cell.disabled = true;
+                } else {
+                    const k = userDateKey(y, m, dayNum);
+                    const inWindow = userIsDateInWindow(y, m, dayNum);
+                    const slots = userGetEffectiveSlotsForDate(k, userAvailability);
+                    const hasSlots = slots.length > 0;
+
+                    cell.className = 'user-cal-cell';
+                    if (!inWindow) cell.classList.add('is-out-of-window');
+                    else if (!hasSlots) cell.classList.add('is-no-slots');
+                    else cell.classList.add('is-available');
+                    if (k === today) cell.classList.add('is-today');
+                    if (k === userSelectedDateKey) cell.classList.add('is-selected');
+                    cell.setAttribute('data-date', k);
+                    cell.innerHTML = '<span class="user-cal-cell-num">' + dayNum + '</span>';
+                }
+                grid.appendChild(cell);
+            }
+
+            if (prev) prev.disabled = userIsAtMin();
+            if (next) next.disabled = userIsAtMax();
+
+            grid.querySelectorAll('.user-cal-cell[data-date]').forEach(function(cell) {
+                cell.addEventListener('click', function() {
+                    if (cell.disabled) return;
+                    const k = cell.getAttribute('data-date');
+                    userSelectedDateKey = k;
+                    // Limpa horário selecionado (mudou o dia)
+                    userSelectedTime = null;
+                    document.getElementById('next-to-payment-btn').style.display = 'none';
+                    document.querySelectorAll('.time-btn').forEach(function(b) {
+                        b.classList.remove('selected');
+                    });
+                    renderUserCalendar();
+                    renderTimePicker();
+                });
+            });
+        }
+
+        function renderTimePicker() {
+            const picker = document.getElementById('time-picker');
+            const noSlots = document.getElementById('user-cal-no-slots');
+            if (!picker) return;
+            picker.innerHTML = '';
+
+            if (!userSelectedDateKey) {
+                if (noSlots) noSlots.style.display = 'block';
+                return;
+            }
+
+            const slots = userGetEffectiveSlotsForDate(userSelectedDateKey, userAvailability);
+            if (!slots.length) {
+                if (noSlots) noSlots.style.display = 'block';
+                return;
+            }
+            if (noSlots) noSlots.style.display = 'none';
+
+            slots.forEach(function(slot) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'time-btn';
+                btn.setAttribute('data-slot', slot);
+                btn.textContent = slot;
+                if (userSelectedTime === slot) btn.classList.add('selected');
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.time-btn').forEach(function(b) {
+                        b.classList.remove('selected');
+                    });
+                    btn.classList.add('selected');
+                    userSelectedTime = slot;
+                    document.getElementById('next-to-payment-btn').style.display = 'block';
+                });
+                picker.appendChild(btn);
+            });
+        }
+
+        function userAttachCalEvents() {
+            const prev = document.getElementById('user-cal-prev');
+            const next = document.getElementById('user-cal-next');
+            if (prev) prev.addEventListener('click', function() { userNavigateCalendar(-1); });
+            if (next) next.addEventListener('click', function() { userNavigateCalendar(1); });
         }
 
         function confirmAppointment() {
@@ -1661,7 +1927,7 @@
                     beforeShow: () => { goToDateSelection(); }
                 },
                 {
-                    targets: ['#date-picker .date-btn'],
+                    targets: ['#date-picker .user-cal-cell.is-available'],
                     text: 'Escolha o dia da sua consulta entre as datas disponíveis.',
                     beforeShow: () => { }
                 },
@@ -2854,6 +3120,14 @@
                                 // abre e fecha no mesmo clique.
                                 clone.removeAttribute('onclick');
 
+                                // Reconecta o onclick do botão "Pagar e Confirmar Agendamento"
+                                // — sem isso, o clone é só visual e o click não dispara nada.
+                                if (el.id === 'final-confirm-btn') {
+                                    clone.addEventListener('click', function() {
+                                        confirmAppointment();
+                                    });
+                                }
+
                                 document.body.appendChild(clone);
 
                                 // Trigger do select de parcelas: reconecta o comportamento
@@ -2912,13 +3186,13 @@
                             const isMobile = window.innerWidth <= 768;
                             balloon.classList.add('balloon-above'); // seta aponta pra baixo, pros campos do cartão
                             if (isMobile) {
-                                // Mobile: fixa no topo, acima do modal
-                                balloon.style.top = '80px';
+                                // Mobile: fixa um pouco abaixo do topo, sem cobrir o título
+                                balloon.style.top = '50px';
                                 balloon.style.bottom = 'auto';
                             } else {
                                 // Desktop: sobe o balão para não cobrir o "Pagar Agora"
                                 const currentTop = parseFloat(balloon.style.top) || 0;
-                                balloon.style.top = (currentTop - 200) + 'px';
+                                balloon.style.top = (currentTop - 280) + 'px';
                                 balloon.style.bottom = 'auto';
                             }
                         } else {

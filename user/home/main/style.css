@@ -18,6 +18,10 @@
     padding: 0;
 }
 
+html {
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Poppins', sans-serif;
     background-color: var(--bg-color);
@@ -25,6 +29,7 @@ body {
     min-height: 100vh;
     color: var(--secondary-color);
     padding: 20px;
+    overflow-x: hidden;
 }
 
 @media (max-width: 768px) {
@@ -275,6 +280,16 @@ body.tutorial-view-mode .tutorial-clone.appts-page-btn {
     align-items: center;
     z-index: 1000;
     backdrop-filter: blur(4px);
+}
+
+/* O backdrop-filter acima cria um containing block que faz o `position: fixed`
+   dos descendentes ser relativo ao overlay (não ao viewport). Em mobile isso
+   causa scroll horizontal quando o body está com algum overflow. O calendário
+   é o único modal que pode ser aberto durante estados de scroll
+   (tutorial, etc), então ele não usa o blur. */
+.user-cal-modal-overlay {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 .custom-modal {
@@ -1849,6 +1864,207 @@ body.tutorial-view-mode .tutorial-clone.appts-page-btn {
     .psych-card p {
         font-size: 0.65rem;
     }
+
+}
+
+/* =========================================================
+   CALENDÁRIO MENSAL DO USER (STEP 3)
+   ========================================================= */
+.user-cal-wrapper {
+    background: white;
+    border: 1px solid #ececec;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 4px 14px rgba(58, 80, 61, 0.06);
+}
+
+.user-cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 4px 10px;
+    border-bottom: 1px solid #f0e6ea;
+    margin-bottom: 10px;
+}
+
+.user-cal-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--secondary-color);
+    text-transform: capitalize;
+}
+
+.user-cal-nav {
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.user-cal-nav:hover:not(:disabled) {
+    background: #fcf6f7;
+    color: #a87580;
+}
+
+.user-cal-nav:disabled {
+    color: #d0d0d0;
+    cursor: not-allowed;
+}
+
+.user-cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+    margin-bottom: 4px;
+    padding: 0 2px;
+}
+
+.user-cal-weekdays span {
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 0;
+}
+
+.user-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+}
+
+#date-picker.user-cal-grid button {
+    width: 100%;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
+    box-shadow: none;
+}
+
+.user-cal-cell {
+    -webkit-appearance: none;
+    appearance: none;
+    background: white;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    padding: 6px 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-family: 'Poppins', sans-serif;
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1;
+    outline: none;
+    text-align: center;
+    overflow: hidden;
+}
+
+.user-cal-cell:disabled,
+.user-cal-cell.is-empty {
+    background: #fafafa;
+    border-color: transparent;
+    cursor: default;
+}
+
+.user-cal-cell.is-out-of-window {
+    background: #f5f5f5;
+    border-color: #ededed;
+    color: #c8c8c8;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.user-cal-cell.is-no-slots {
+    background: #fafafa;
+    border-color: #f0f0f0;
+    color: #c0c0c0;
+    cursor: not-allowed;
+}
+
+.user-cal-cell.is-no-slots .user-cal-cell-num {
+    color: #c8c8c8;
+}
+
+.user-cal-cell.is-available {
+    background: #fcf6f7;
+    border-color: #e6d4d9;
+}
+
+.user-cal-cell.is-available:hover {
+    background: #fbe7ec;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(187, 137, 145, 0.18);
+}
+
+.user-cal-cell.is-today {
+    box-shadow: inset 0 0 0 2px var(--primary-color);
+}
+
+.user-cal-cell.is-today .user-cal-cell-num {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.user-cal-cell.is-selected {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 4px 14px rgba(187, 137, 145, 0.4);
+}
+
+.user-cal-cell.is-selected .user-cal-cell-num {
+    color: white !important;
+    font-weight: 600;
+}
+
+.user-cal-cell-num {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--secondary-color);
+    line-height: 1;
+}
+
+.user-cal-no-slots {
+    text-align: center;
+    color: #999;
+    font-size: 0.85rem;
+    font-style: italic;
+    margin: 8px 0 0;
+}
+
+@media (max-width: 480px) {
+    .user-cal-wrapper {
+        padding: 10px;
+    }
+    .user-cal-grid {
+        gap: 2px;
+    }
+    .user-cal-cell {
+        padding: 4px 1px;
+        border-radius: 8px;
+    }
+    .user-cal-cell-num {
+        font-size: 0.78rem;
+    }
+}
 
     .filter-bar {
         flex-wrap: wrap;

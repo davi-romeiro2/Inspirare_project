@@ -7,7 +7,7 @@
     <title>Admin - Home</title>
     <link rel="stylesheet" href="../../../user/menu/style.css">
     <link rel="stylesheet" href="../../../assets/css/datepicker.css?v=1">
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=10">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -169,7 +169,7 @@
             </div>
             <div class="menu-card" onclick="openFlow('disponibilidade')">
                 <div class="icon-box"><i data-lucide="calendar-clock"></i></div>
-                <h3>Controle de Disponibilidade</h3>
+                <h3>Agenda</h3>
             </div>
             <div class="menu-card" onclick="openFlow('perfil')">
                 <div class="icon-box"><i data-lucide="user"></i></div>
@@ -467,19 +467,20 @@
                 <button type="button" class="btn-back-small" onclick="closeFlow()">
                     <i data-lucide="arrow-left"></i> Voltar
                 </button>
-                <h2>Controle de Disponibilidade</h2>
+                <h2>Agenda</h2>
             </div>
 
-            <p class="avail-intro">Defina os dias e horários em que os usuários podem agendar consultas. Use o <strong>padrão semanal</strong> abaixo pra recorrência e ajuste datas específicas no <strong>calendário</strong> quando precisar (feriado, folga, sábado extra).</p>
+            <p class="avail-intro">Clique em um dia do calendário para configurar os horários disponíveis. Você pode planejar com até 60 dias de antecedência.</p>
 
-            <!-- Calendário mensal (datas específicas) -->
+            <!-- Calendário -->
             <div class="avail-section">
                 <div class="avail-section-header">
                     <h3><i data-lucide="calendar"></i> Calendário</h3>
                     <span class="avail-legend">
-                        <span class="avail-legend-item"><span class="avail-dot avail-dot-default"></span> Padrão</span>
-                        <span class="avail-legend-item"><span class="avail-dot avail-dot-custom"></span> Horário próprio</span>
-                        <span class="avail-legend-item"><span class="avail-dot avail-dot-block"></span> Bloqueado</span>
+                        <span class="avail-legend-item"><span class="avail-legend-swatch avail-swatch-default"></span> Sem configuração</span>
+                        <span class="avail-legend-item"><span class="avail-legend-swatch avail-swatch-pattern"></span> Padrão semanal</span>
+                        <span class="avail-legend-item"><span class="avail-legend-swatch avail-swatch-custom"></span> Com horários</span>
+                        <span class="avail-legend-item"><span class="avail-legend-swatch avail-swatch-block"></span> Bloqueado</span>
                     </span>
                 </div>
 
@@ -497,55 +498,27 @@
                     <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
                 </div>
                 <div class="avail-cal-grid" id="avail-cal-grid"><!-- preenchido por JS --></div>
+            </div>
 
-                <!-- Editor do dia selecionado -->
-                <div class="avail-day-editor" id="avail-day-editor" style="display:none;">
-                    <div class="avail-day-editor-header">
-                        <h4 id="avail-day-editor-title">—</h4>
-                        <button type="button" class="avail-day-editor-close" id="avail-day-editor-close" title="Fechar">
+            <!-- Linha do dia selecionado (aparece ao clicar) -->
+            <div class="avail-section avail-day-panel" id="avail-day-panel" style="display:none;">
+                <div class="avail-day-panel-header">
+                    <h3 id="avail-day-panel-title">—</h3>
+                    <div class="avail-day-panel-actions">
+                        <button type="button" class="avail-day-panel-block" id="avail-day-panel-block" title="Bloquear/desbloquear este dia">
+                            <i data-lucide="ban"></i>
+                            <span>Bloquear dia</span>
+                        </button>
+                        <button type="button" class="avail-day-panel-close" id="avail-day-panel-close" title="Fechar painel">
                             <i data-lucide="x"></i>
                         </button>
                     </div>
-
-                    <p class="avail-day-editor-hint">Esse dia seguirá o padrão semanal por padrão. Personalize só se quiser alterar.</p>
-
-                    <div class="avail-day-mode">
-                        <label class="avail-radio">
-                            <input type="radio" name="avail-day-mode" value="default" checked>
-                            <span>Seguir padrão semanal</span>
-                        </label>
-                        <label class="avail-radio">
-                            <input type="radio" name="avail-day-mode" value="custom">
-                            <span>Horário próprio (definir abaixo)</span>
-                        </label>
-                        <label class="avail-radio">
-                            <input type="radio" name="avail-day-mode" value="block">
-                            <span>Bloquear este dia inteiro</span>
-                        </label>
-                    </div>
-
-                    <div class="avail-day-slots" id="avail-day-slots" style="display:none;">
-                        <div class="avail-slots" id="avail-day-slots-grid"><!-- preenchido por JS --></div>
-                    </div>
-
-                    <div class="avail-day-editor-actions">
-                        <button type="button" class="avail-day-editor-remove" id="avail-day-editor-remove" style="display:none;">
-                            <i data-lucide="trash-2"></i> Remover personalização
-                        </button>
-                        <button type="button" class="btn-save-price avail-day-editor-apply" id="avail-day-editor-apply">
-                            Aplicar
-                        </button>
-                    </div>
                 </div>
-            </div>
 
-            <!-- Grade semanal (recorrência) -->
-            <div class="avail-section">
-                <div class="avail-section-header">
-                    <h3><i data-lucide="repeat"></i> Padrão semanal</h3>
+                <div class="avail-day-panel-slots-wrap" id="avail-day-panel-slots-wrap">
+                    <p class="avail-hint">Selecione os horários em que este dia fica disponível para agendamento.</p>
+                    <div class="avail-slots" id="avail-day-panel-slots"><!-- preenchido por JS --></div>
                 </div>
-                <p class="avail-hint">Esse padrão se repete toda semana. Dias não marcados ficam fechados; dias marcados ficam com os horários selecionados. Você pode sobrescrever qualquer data no calendário acima.</p>
-                <div class="avail-week-grid" id="avail-week-grid"><!-- preenchido por JS --></div>
             </div>
 
             <button class="btn-save-price" id="avail-save-btn" onclick="saveAvailability()">Salvar alterações</button>
@@ -2831,22 +2804,25 @@
            CONTROLE DE DISPONIBILIDADE
            Apenas front-end. Estado em localStorage.
 
-           Modelo v2:
+           Modelo v3 (refatorado):
              {
-               version: 2,
+               version: 3,
                week: { dom:{enabled,slots}, seg:{...}, ... },
                dateOverrides: {
-                 'YYYY-MM-DD': { mode: 'default' | 'custom' | 'block', slots: ['08:00', ...] }
+                 'YYYY-MM-DD': { mode: 'block' | 'custom', slots: [...] }
                }
              }
 
-           Lógica (aplicada na leitura pelo user — futuro):
-             - Se a data tem override com mode='block'  -> bloqueado
-             - Se tem override com mode='custom' -> usa override.slots
-             - Se tem override com mode='default' ou não tem override -> usa week[dayOfWeek]
+           Cada dia do calendário tem:
+             - mode = 'block'  -> bloqueado (botão)
+             - mode = 'custom' -> usa slots do override (horário próprio)
+             - sem override    -> segue week[dayOfWeek] (padrão)
+
+           Janela do calendário: [hoje, hoje + 60 dias].
+           Navegação prev/next respeita essa janela.
            ========================= */
         const AVAIL_STORAGE_KEY = 'inspirare_availability_settings';
-        const AVAIL_VERSION = 2;
+        const AVAIL_VERSION = 3;
         const AVAIL_DAYS = [
             { key: 'dom', label: 'Domingo' },
             { key: 'seg', label: 'Segunda' },
@@ -2858,6 +2834,7 @@
         ];
         const AVAIL_DAY_KEYS = ['dom','seg','ter','qua','qui','sex','sab'];
         const AVAIL_MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const AVAIL_WINDOW_DAYS = 60;
 
         function buildHourlySlots(startHour, endHour) {
             const slots = [];
@@ -2890,7 +2867,7 @@
                 if (!raw) return getDefaultAvailability();
                 const parsed = JSON.parse(raw);
                 if (!parsed || parsed.version !== AVAIL_VERSION) return getDefaultAvailability();
-                AVAIL_DAYS.forEach(d => {
+                AVAIL_DAYS.forEach(function(d) {
                     if (!parsed.week[d.key]) {
                         parsed.week[d.key] = { enabled: false, slots: [] };
                     }
@@ -2919,6 +2896,9 @@
         let calCursor = { year: 0, month: 0 };
         let selectedDateKey = null;
 
+        // Janela [hoje, hoje + AVAIL_WINDOW_DAYS]
+        let calWindow = { minMs: 0, maxMs: 0 };
+
         function pad2(n) { return String(n).padStart(2, '0'); }
         function dateKey(y, m, d) { return y + '-' + pad2(m+1) + '-' + pad2(d); }
         function dayKeyFromDate(date) { return AVAIL_DAY_KEYS[date.getDay()]; }
@@ -2926,75 +2906,63 @@
             const t = new Date();
             return dateKey(t.getFullYear(), t.getMonth(), t.getDate());
         }
+        function startOfDay(d) {
+            const x = new Date(d);
+            x.setHours(0, 0, 0, 0);
+            return x;
+        }
+
+        function computeCalWindow() {
+            const now = startOfDay(new Date());
+            const max = new Date(now);
+            max.setDate(max.getDate() + AVAIL_WINDOW_DAYS);
+            calWindow = { minMs: now.getTime(), maxMs: max.getTime() };
+        }
 
         function getSlotsForDay() {
             return buildHourlySlots(8, 20);
         }
 
-        // ===== Grade semanal (padrão recorrente) =====
-        function renderWeekGrid() {
-            const grid = document.getElementById('avail-week-grid');
-            if (!grid) return;
-            grid.innerHTML = '';
-
-            AVAIL_DAYS.forEach(d => {
-                const dayData = availabilityState.week[d.key];
-                const row = document.createElement('div');
-                row.className = 'avail-day-row' + (dayData.enabled ? '' : ' is-disabled');
-                row.innerHTML = ''
-                    + '<div class="avail-day-label">'
-                    +   '<span class="avail-day-name">' + d.label + '</span>'
-                    +   '<label class="avail-day-toggle" title="Ativar/desativar ' + d.label + '">'
-                    +     '<input type="checkbox" data-day="' + d.key + '"' + (dayData.enabled ? ' checked' : '') + '>'
-                    +     '<span class="avail-day-toggle-slider"></span>'
-                    +   '</label>'
-                    + '</div>'
-                    + '<div class="avail-slots" data-slots-day="' + d.key + '">'
-                    +   getSlotsForDay().map(function(slot) {
-                        return '<button type="button"'
-                            + ' class="avail-slot' + (dayData.slots.includes(slot) ? ' active' : '') + '"'
-                            + ' data-day="' + d.key + '"'
-                            + ' data-slot="' + slot + '">' + slot + '</button>';
-                    }).join('')
-                    + '</div>';
-                grid.appendChild(row);
-            });
-
-            grid.querySelectorAll('input[type="checkbox"][data-day]').forEach(function(cb) {
-                cb.addEventListener('change', function(e) {
-                    const k = e.target.getAttribute('data-day');
-                    availabilityState.week[k].enabled = e.target.checked;
-                    if (e.target.checked && availabilityState.week[k].slots.length === 0) {
-                        availabilityState.week[k].slots = ['08:00'];
-                    }
-                    renderWeekGrid();
-                });
-            });
-
-            grid.querySelectorAll('.avail-slot').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    const k = btn.getAttribute('data-day');
-                    const slot = btn.getAttribute('data-slot');
-                    const dayData = availabilityState.week[k];
-                    if (!dayData.enabled) return;
-                    const idx = dayData.slots.indexOf(slot);
-                    if (idx >= 0) {
-                        dayData.slots.splice(idx, 1);
-                    } else {
-                        dayData.slots.push(slot);
-                        dayData.slots.sort();
-                    }
-                    btn.classList.toggle('active');
-                });
-            });
+        // Navegação do calendário limitada à janela
+        function navigateCalendar(delta) {
+            if (delta < 0 && isAtMin()) return;
+            if (delta > 0 && isAtMax()) return;
+            let y = calCursor.year;
+            let m = calCursor.month + delta;
+            if (m < 0) { m = 11; y--; }
+            else if (m > 11) { m = 0; y++; }
+            calCursor.year = y;
+            calCursor.month = m;
+            renderCalendar();
         }
 
-        // ===== Calendário mensal =====
+        function isAtMin() {
+            const firstOfCursorMonth = new Date(calCursor.year, calCursor.month, 1);
+            return firstOfCursorMonth.getTime() <= calWindow.minMs;
+        }
+        function isAtMax() {
+            // Último dia do mês do cursor vs maxMs
+            const lastOfCursorMonth = new Date(calCursor.year, calCursor.month + 1, 0);
+            lastOfCursorMonth.setHours(23, 59, 59, 999);
+            return lastOfCursorMonth.getTime() >= calWindow.maxMs;
+        }
+
+        function isDateInWindow(y, m, d) {
+            const dt = new Date(y, m, d).getTime();
+            return dt >= calWindow.minMs && dt <= calWindow.maxMs;
+        }
+
+        // ===== Calendário =====
         function renderCalendar() {
             const grid = document.getElementById('avail-cal-grid');
             const title = document.getElementById('avail-cal-title');
+            const prev = document.getElementById('avail-cal-prev');
+            const next = document.getElementById('avail-cal-next');
             if (!grid || !title) return;
             grid.innerHTML = '';
+
+            // Recalcula janela (caso a página tenha ficado aberta virando o dia)
+            computeCalWindow();
 
             const y = calCursor.year;
             const m = calCursor.month;
@@ -3020,53 +2988,53 @@
                     const dt = new Date(y, m, dayNum);
                     const dow = dayKeyFromDate(dt);
                     const override = availabilityState.dateOverrides[k];
-                    const hasOverride = !!override;
-                    const mode = hasOverride ? override.mode : 'default';
+                    const inWindow = isDateInWindow(y, m, dayNum);
 
-                    let dotClass = 'avail-dot-default';
-                    if (mode === 'block') dotClass = 'avail-dot-block';
-                    else if (mode === 'custom') dotClass = 'avail-dot-custom';
+                    let mode = 'default';
+                    if (override) mode = override.mode;
+                    else if (availabilityState.week[dow].enabled) mode = 'pattern';
 
                     cell.className = 'avail-cal-cell';
+                    if (!inWindow) cell.classList.add('is-out-of-window');
                     if (k === today) cell.classList.add('is-today');
                     if (k === selectedDateKey) cell.classList.add('is-selected');
+
+                    // Cor inteira baseada no estado
                     if (mode === 'block') cell.classList.add('is-block');
                     else if (mode === 'custom') cell.classList.add('is-custom');
-                    else if (availabilityState.week[dow].enabled) cell.classList.add('is-open');
-                    else cell.classList.add('is-closed');
+                    else if (mode === 'pattern') cell.classList.add('is-pattern');
+                    else cell.classList.add('is-default');
 
-                    cell.setAttribute('data-date', k);
-                    cell.innerHTML = '<span class="avail-cal-cell-num">' + dayNum + '</span>'
-                        + '<span class="avail-dot ' + dotClass + '"></span>';
+                    if (inWindow) {
+                        cell.setAttribute('data-date', k);
+                    } else {
+                        cell.disabled = true;
+                    }
+                    cell.innerHTML = '<span class="avail-cal-cell-num">' + dayNum + '</span>';
                 }
                 grid.appendChild(cell);
             }
 
+            // Estado dos botões prev/next
+            if (prev) prev.disabled = isAtMin();
+            if (next) next.disabled = isAtMax();
+
+            // Eventos de clique (somente células dentro da janela)
             grid.querySelectorAll('.avail-cal-cell[data-date]').forEach(function(cell) {
                 cell.addEventListener('click', function() {
                     const k = cell.getAttribute('data-date');
                     selectedDateKey = k;
                     renderCalendar();
-                    openDayEditor(k);
+                    openDayPanel(k);
                 });
             });
         }
 
-        function navigateCalendar(delta) {
-            let y = calCursor.year;
-            let m = calCursor.month + delta;
-            if (m < 0) { m = 11; y--; }
-            else if (m > 11) { m = 0; y++; }
-            calCursor.year = y;
-            calCursor.month = m;
-            renderCalendar();
-        }
-
-        // ===== Editor de dia =====
-        function openDayEditor(dateKeyStr) {
-            const editor = document.getElementById('avail-day-editor');
-            const titleEl = document.getElementById('avail-day-editor-title');
-            if (!editor || !titleEl) return;
+        // ===== Painel do dia (aparece embaixo do calendário) =====
+        function openDayPanel(dateKeyStr) {
+            const panel = document.getElementById('avail-day-panel');
+            const titleEl = document.getElementById('avail-day-panel-title');
+            if (!panel || !titleEl) return;
 
             const parts = dateKeyStr.split('-').map(Number);
             const y = parts[0], mo = parts[1], d = parts[2];
@@ -3075,36 +3043,43 @@
             const dayLabel = AVAIL_DAYS.find(function(x) { return x.key === dow; }).label;
             titleEl.textContent = d + '/' + mo + '/' + y + ' — ' + dayLabel;
 
+            // Estado atual: override tem prioridade; senão usa padrão semanal
             const override = availabilityState.dateOverrides[dateKeyStr];
-            const currentMode = override ? override.mode : 'default';
-
-            const radios = editor.querySelectorAll('input[name="avail-day-mode"]');
-            radios.forEach(function(r) { r.checked = (r.value === currentMode); });
-
-            renderDaySlots(override && override.mode === 'custom' ? override.slots : []);
-
-            updateDayEditorVisibility();
-
-            const removeBtn = document.getElementById('avail-day-editor-remove');
-            if (removeBtn) {
-                removeBtn.style.display = override ? 'inline-flex' : 'none';
+            const weekData = availabilityState.week[dow];
+            let currentEnabled, currentSlots, currentMode;
+            if (override) {
+                currentMode = override.mode;
+                if (override.mode === 'block') {
+                    currentEnabled = false;
+                    currentSlots = [];
+                } else {
+                    currentEnabled = true;
+                    currentSlots = override.slots.slice();
+                }
+            } else {
+                currentMode = weekData.enabled ? 'pattern' : 'default';
+                currentEnabled = weekData.enabled;
+                currentSlots = weekData.slots.slice();
             }
 
-            editor.style.display = 'block';
+            // Slots: mostra grade (se for block, deixa os slots esmaecidos)
+            renderDayPanelSlots(currentSlots, currentMode);
+
+            panel.style.display = 'block';
             requestAnimationFrame(function() {
-                editor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
         }
 
-        function closeDayEditor() {
-            const editor = document.getElementById('avail-day-editor');
-            if (editor) editor.style.display = 'none';
+        function closeDayPanel() {
+            const panel = document.getElementById('avail-day-panel');
+            if (panel) panel.style.display = 'none';
             selectedDateKey = null;
             renderCalendar();
         }
 
-        function renderDaySlots(currentSlots) {
-            const grid = document.getElementById('avail-day-slots-grid');
+        function renderDayPanelSlots(currentSlots, mode) {
+            const grid = document.getElementById('avail-day-panel-slots');
             if (!grid) return;
             grid.innerHTML = '';
             getSlotsForDay().forEach(function(slot) {
@@ -3114,44 +3089,65 @@
                 btn.setAttribute('data-slot', slot);
                 btn.textContent = slot;
                 btn.addEventListener('click', function() {
+                    if (mode === 'block') return; // bloqueado, não deixa mexer
                     btn.classList.toggle('active');
                 });
                 grid.appendChild(btn);
             });
         }
 
-        function updateDayEditorVisibility() {
-            const checked = document.querySelector('input[name="avail-day-mode"]:checked');
-            const slotsBox = document.getElementById('avail-day-slots');
-            if (!checked || !slotsBox) return;
-            slotsBox.style.display = (checked.value === 'custom') ? 'block' : 'none';
-        }
-
-        function applyDayOverride() {
+        // Aplica as mudanças do painel ao estado
+        function commitDayPanel() {
             if (!selectedDateKey) return;
-            const checked = document.querySelector('input[name="avail-day-mode"]:checked');
-            const mode = checked ? checked.value : 'default';
+            const parts = selectedDateKey.split('-').map(Number);
+            const dow = dayKeyFromDate(new Date(parts[0], parts[1] - 1, parts[2]));
 
-            if (mode === 'default') {
-                delete availabilityState.dateOverrides[selectedDateKey];
-            } else if (mode === 'block') {
-                availabilityState.dateOverrides[selectedDateKey] = { mode: 'block', slots: [] };
-            } else if (mode === 'custom') {
-                const slots = Array.from(document.querySelectorAll('#avail-day-slots-grid .avail-slot.active'))
-                    .map(function(b) { return b.getAttribute('data-slot'); })
-                    .sort();
-                availabilityState.dateOverrides[selectedDateKey] = { mode: 'custom', slots: slots };
+            const override = availabilityState.dateOverrides[selectedDateKey];
+            const isBlocked = override && override.mode === 'block';
+            if (isBlocked) {
+                // Mantém bloqueado, ignora mudanças nos slots
+                return;
             }
 
+            const slots = Array.from(document.querySelectorAll('#avail-day-panel-slots .avail-slot.active'))
+                .map(function(b) { return b.getAttribute('data-slot'); })
+                .sort();
+
+            // Se igual ao padrão semanal, remove override (se existia)
+            const weekData = availabilityState.week[dow];
+            const sameAsPattern = weekData.enabled
+                && slots.length === weekData.slots.length
+                && slots.every(function(s, i) { return s === weekData.slots[i]; });
+
+            if (sameAsPattern) {
+                if (availabilityState.dateOverrides[selectedDateKey]) {
+                    delete availabilityState.dateOverrides[selectedDateKey];
+                }
+            } else {
+                availabilityState.dateOverrides[selectedDateKey] = {
+                    mode: 'custom',
+                    slots: slots
+                };
+            }
             renderCalendar();
-            openDayEditor(selectedDateKey);
+            // Reabre o painel pra refletir o estado
+            openDayPanel(selectedDateKey);
         }
 
-        function removeDayOverride() {
+        // Toggle "Bloquear dia" no header do painel
+        function toggleBlockFromPanel() {
             if (!selectedDateKey) return;
-            delete availabilityState.dateOverrides[selectedDateKey];
+            const override = availabilityState.dateOverrides[selectedDateKey];
+            const isBlocked = override && override.mode === 'block';
+            if (isBlocked) {
+                // Desbloquear: remove override, volta pro padrão semanal
+                delete availabilityState.dateOverrides[selectedDateKey];
+            } else {
+                // Bloquear
+                availabilityState.dateOverrides[selectedDateKey] = { mode: 'block', slots: [] };
+            }
             renderCalendar();
-            openDayEditor(selectedDateKey);
+            openDayPanel(selectedDateKey);
         }
 
         function attachCalendarEvents() {
@@ -3160,27 +3156,30 @@
             if (prev) prev.addEventListener('click', function() { navigateCalendar(-1); });
             if (next) next.addEventListener('click', function() { navigateCalendar(1); });
 
-            const close = document.getElementById('avail-day-editor-close');
-            if (close) close.addEventListener('click', closeDayEditor);
+            const close = document.getElementById('avail-day-panel-close');
+            if (close) close.addEventListener('click', closeDayPanel);
 
-            const apply = document.getElementById('avail-day-editor-apply');
-            if (apply) apply.addEventListener('click', applyDayOverride);
+            const block = document.getElementById('avail-day-panel-block');
+            if (block) block.addEventListener('click', toggleBlockFromPanel);
 
-            const remove = document.getElementById('avail-day-editor-remove');
-            if (remove) remove.addEventListener('click', removeDayOverride);
-
-            document.querySelectorAll('input[name="avail-day-mode"]').forEach(function(r) {
-                r.addEventListener('change', updateDayEditorVisibility);
-            });
+            // Aplica as mudanças do painel automaticamente ao mexer nos slots
+            const slotsGrid = document.getElementById('avail-day-panel-slots');
+            if (slotsGrid) {
+                slotsGrid.addEventListener('click', function() {
+                    // Pequeno delay para a classe .active refletir antes de ler
+                    setTimeout(commitDayPanel, 0);
+                });
+            }
         }
 
         function initAvailability() {
             availabilityState = loadAvailability();
+            computeCalWindow();
+            // Cursor começa no mês atual
             const now = new Date();
             calCursor = { year: now.getFullYear(), month: now.getMonth() };
             selectedDateKey = null;
             renderCalendar();
-            renderWeekGrid();
             attachCalendarEvents();
         }
 
@@ -3192,6 +3191,7 @@
                 btn.textContent = 'Salvando...';
             }
 
+            // Validação leve: pelo menos 1 slot liberado no padrão semanal
             let totalSlots = 0;
             AVAIL_DAYS.forEach(function(d) {
                 if (availabilityState.week[d.key].enabled) {
@@ -3200,7 +3200,7 @@
             });
             if (totalSlots === 0) {
                 if (btn) { btn.disabled = false; btn.textContent = originalText; }
-                showModal('Nada configurado', 'Ative pelo menos um dia e selecione horários no padrão semanal antes de salvar.');
+                showModal('Nada configurado', 'Ative pelo menos um dia no padrão semanal antes de salvar.');
                 return;
             }
 
