@@ -771,7 +771,9 @@
             if (container) container.classList.add('active');
             if (flow === 'consultas') {
                 appointmentsPage = 0;
-                filterAppointments('all');
+                // Carrega do backend e re-renderiza com o filtro 'all'.
+                // loadAppointments() cuida do fetch + filterAppointments + badge.
+                loadAppointments();
             }
             if (flow === 'pacientes') {
                 patientsPage = 0;
@@ -798,107 +800,64 @@
         /* =========================
            CONSULTAS MARCADAS
            ========================= */
-        const appointments = [
-            {
-                id: 1,
-                patient: 'Ana Clara Mendes',
-                photo: 'AM',
-                date: '2026-05-21',
-                time: '09:00',
-                type: 'Individual',
-                status: 'confirmed',
-                modality: 'Presencial',
-                annotations: [
-                    { date: '2026-05-14', text: 'Paciente relatou melhora no sono após técnicas de respiração.' },
-                    { date: '2026-05-07', text: 'Discussão sobre estresse no trabalho. Introduzido diário de gratidão.' }
-                ]
-            },
-            {
-                id: 2,
-                patient: 'Bruno Oliveira',
-                photo: 'BO',
-                date: '2026-05-21',
-                time: '10:30',
-                type: 'Individual',
-                status: 'pending',
-                modality: 'Online',
-                annotations: []
-            },
-            {
-                id: 3,
-                patient: 'Carla Souza',
-                photo: 'CS',
-                date: '2026-05-21',
-                time: '14:00',
-                type: 'Primeira consulta',
-                status: 'confirmed',
-                modality: 'Presencial',
-                annotations: []
-            },
-            {
-                id: 4,
-                patient: 'Diego Ferreira',
-                photo: 'DF',
-                date: '2026-05-22',
-                time: '09:00',
-                type: 'Individual',
-                status: 'confirmed',
-                modality: 'Online',
-                annotations: [
-                    { date: '2026-05-15', text: 'Primeira sessão: queixa principal é ansiedade social. Criado plano de exposição gradual.' }
-                ]
-            },
-            {
-                id: 5,
-                patient: 'Elisa Rocha',
-                photo: 'ER',
-                date: '2026-05-23',
-                time: '11:00',
-                type: 'Casal',
-                status: 'pending',
-                modality: 'Presencial',
-                annotations: []
-            },
-            {
-                id: 6,
-                patient: 'Felipe Costa',
-                photo: 'FC',
-                date: '2026-05-24',
-                time: '16:00',
-                type: 'Individual',
-                status: 'confirmed',
-                modality: 'Online',
-                annotations: []
-            },
-            {
-                id: 7,
-                patient: 'Gabriela Lima',
-                photo: 'GL',
-                date: '2026-05-20',
-                time: '15:00',
-                type: 'Individual',
-                status: 'completed',
-                modality: 'Presencial',
-                annotations: [
-                    { date: '2026-05-20', text: 'Última sessão: paciente trouxe feedback positivo sobre dinâmica familiar.' },
-                    { date: '2026-05-13', text: 'Trabalhado reconhecimento de padrões de comunicação assertiva.' },
-                    { date: '2026-05-06', text: 'Início do tratamento: queixa de conflitos recorrentes com familiares.' }
-                ]
-            },
-            {
-                id: 8,
-                patient: 'Henrique Dias',
-                photo: 'HD',
-                date: '2026-05-19',
-                time: '10:00',
-                type: 'Individual',
-                status: 'cancelled',
-                modality: 'Online',
-                annotations: [],
-                cancelReason: 'Paciente solicitou adiamento para a próxima semana devido a compromisso inadiável.',
-                cancelReasonAuthor: 'Paciente'
+        // Estado populado por loadAppointments(). Mantemos em memória
+        // porque o front renderiza a partir daqui. A fonte da verdade é
+        // a tabela public.appointments; re-fetch após mutações.
+        let appointmentsAll = [];
+        let appointmentsLoading = false;
+        let appointmentsFetchGen = 0;
+
+        async function loadAppointments() {
+            if (appointmentsLoading) return;
+            const myGen = ++appointmentsFetchGen;
+            appointmentsLoading = true;
+            try {
+                const res = await InspirareAuth.api('/appointments?as=professional&with=patient');
+                if (myGen !== appointmentsFetchGen) return;
+                appointmentsAll = (res && res.appointments) || [];
+            } catch (e) {
+                if (myGen !== appointmentsFetchGen) return;
+                appointmentsAll = [];
+            } finally {
+                if (myGen === appointmentsFetchGen) appointmentsLoading = false;
             }
-        ];
+            if (myGen !== appointmentsFetchGen) return;
+
+            const activeFilter =
+                document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+            filterAppointments(activeFilter);
+            updateAppointmentBadge();
+        }
+
+        // Helpers de normalização entre shape do banco (snake, valores crus)
+        // e o que o render espera.
+        function patientInitials(name) {
+            if (!name) return '??';
+            return name
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((w) => w[0].toUpperCase())
+                .join('');
+        }
+        function modalityLabel(mod) {
+            return mod === 'presencial' ? 'Presencial' : 'Online';
+        }
+        // O schema do banco não tem 'pending'/'confirmed' — só 'scheduled'.
+        // Pra reaproveitar as classes CSS (status-confirmed) e o filtro
+        // do template, normalizamos 'scheduled' -> 'confirmed' no objeto
+        // local antes de mandar pro render. Não muta appointmentsAll.
+        function normalizeForUi(a) {
+            const status = a.status === 'scheduled' ? 'confirmed' : a.status;
+            return {
+                ...a,
+                status,
+                modalityLabel: modalityLabel(a.modality),
+                initials: patientInitials(a.patient),
+                typeLabel: a.type || a.plan_title || '—',
+                annotations: a.annotations || [],
+            };
+        }
 
         const patients = [
             { id: 1, name: 'Ana Clara Mendes', email: 'ana.mendes@email.com', phone: '(11) 98765-4321', type: 'Paciente', createdAt: '2025-12-10' },
@@ -1099,13 +1058,13 @@
             container.innerHTML = pageItems.map(a => `
                 <div class="appointment-row ${a.status}">
                     <div class="appointment-main">
-                        <div class="appointment-avatar">${a.photo}</div>
+                        <div class="appointment-avatar">${a.initials}</div>
                         <div class="appointment-details">
                             <h4>${a.patient}</h4>
                             <div class="appointment-meta">
                                 <span><i data-lucide="calendar"></i> ${formatDate(a.date)}</span>
                                 <span><i data-lucide="clock"></i> ${a.time}</span>
-                                <span><i data-lucide="${a.modality === 'Presencial' ? 'user' : 'video'}"></i> ${a.modality}</span>
+                                <span><i data-lucide="${a.modality === 'presencial' ? 'user' : 'video'}"></i> ${a.modalityLabel}</span>
                             </div>
                             <div class="appointment-tags">
                                 <span class="tag-status ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
@@ -1126,19 +1085,23 @@
 
         function filterAppointments(filter) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+            const btn = document.querySelector(`[data-filter="${filter}"]`);
+            if (btn) btn.classList.add('active');
 
-            let filtered = appointments;
+            // Banco retorna 'scheduled'/'completed'/'cancelled'. O template
+            // espera 'confirmed' (cobre o caso 'Marcadas'); completamos o
+            // mapeamento aqui.
+            let filtered = appointmentsAll;
             if (filter === 'all') {
-                filtered = appointments.filter(a => a.status === 'confirmed');
+                filtered = appointmentsAll.filter(a => a.status === 'scheduled');
             } else if (filter === 'completed') {
-                filtered = appointments.filter(a => a.status === 'completed');
+                filtered = appointmentsAll.filter(a => a.status === 'completed');
             } else if (filter === 'cancelled') {
-                filtered = appointments.filter(a => a.status === 'cancelled');
+                filtered = appointmentsAll.filter(a => a.status === 'cancelled');
             }
 
             appointmentsPage = 0;
-            renderAppointments(filtered);
+            renderAppointments(filtered.map(normalizeForUi));
         }
 
         let appointmentsPage = 0;
@@ -1165,24 +1128,22 @@
             downBtn.disabled = appointmentsPage >= totalPages - 1 || totalPages <= 1;
         }
 
-        function cancelAppointment(id) {
-            const a = appointments.find(x => x.id === id);
-            if (a) {
-                a.status = 'cancelled';
-                showModal('Cancelado', `Consulta de ${a.patient} foi cancelada.`);
-                filterAppointments(document.querySelector('.filter-btn.active').dataset.filter);
-                updateAppointmentBadge();
-            }
+        // No-op legado. O cancel real acontece em confirmCancelAppointment,
+        // que chama a API e depois loadAppointments(). Mantida só pra
+        // não quebrar nenhum call site antigo que ainda chame direto.
+        function cancelAppointment(_id) {
+            // intentionally empty
         }
 
         let currentModalId = null;
 
         function openAppointmentModal(id) {
-            const a = appointments.find(x => x.id === id);
-            if (!a) return;
+            const raw = appointmentsAll.find(x => x.id === id);
+            if (!raw) return;
+            const a = normalizeForUi(raw);
             currentModalId = id;
 
-            document.getElementById('modal-avatar').textContent = a.photo;
+            document.getElementById('modal-avatar').textContent = a.initials;
             document.getElementById('modal-patient-name').textContent = a.patient;
 
             const statusEl = document.getElementById('modal-status');
@@ -1191,21 +1152,24 @@
 
             document.getElementById('modal-date').textContent = formatDate(a.date);
             document.getElementById('modal-time').textContent = a.time;
-            document.getElementById('modal-modality').textContent = a.modality;
+            document.getElementById('modal-modality').textContent = a.modalityLabel;
             const modalityIcon = document.getElementById('modal-modality-icon');
             if (modalityIcon) {
-                modalityIcon.setAttribute('data-lucide', a.modality === 'Presencial' ? 'user' : 'video');
+                modalityIcon.setAttribute('data-lucide', a.modality === 'presencial' ? 'user' : 'video');
             }
-            document.getElementById('modal-type').textContent = a.type;
+            document.getElementById('modal-type').textContent = a.typeLabel;
 
             const cancelBtn = document.getElementById('modal-cancel-btn');
             const reasonBtn = document.getElementById('modal-reason-btn');
-            if (a.status === 'confirmed' || a.status === 'pending') {
+            // 'confirmed' é o que o template (já normalizado) usa para
+            // 'scheduled' do banco. Só mostra o botão de cancelar para
+            // consultas que ainda não aconteceram nem foram canceladas.
+            if (a.status === 'confirmed') {
                 cancelBtn.style.display = 'inline-flex';
                 reasonBtn.style.display = 'none';
             } else {
                 cancelBtn.style.display = 'none';
-                if (a.status === 'cancelled' && a.cancelReason) {
+                if (a.status === 'cancelled' && a.cancel_reason) {
                     reasonBtn.style.display = 'inline-flex';
                 } else {
                     reasonBtn.style.display = 'none';
@@ -1229,10 +1193,12 @@
         }
 
         function modalViewCancelReason() {
-            const a = appointments.find(x => x.id === currentModalId);
-            if (!a || !a.cancelReason) return;
-            const author = a.cancelReasonAuthor || 'Não informado';
-            const text = `Escrito por: ${author}\n\n${a.cancelReason}`;
+            const a = appointmentsAll.find(x => x.id === currentModalId);
+            if (!a || !a.cancel_reason) return;
+            // v1: não rastreamos o autor (user/profissional). Hardcoded
+            // em 'Psicólogo' porque esse modal só é aberto pelo admin/
+            // funcionário; o user tem o próprio motivo no "Minhas Consultas".
+            const text = `Motivo: ${a.cancel_reason}`;
             showModal('Motivo do cancelamento', text);
         }
 
@@ -1256,8 +1222,8 @@
             document.getElementById('cancel-modal').style.display = 'none';
         }
 
-        function confirmCancelAppointment() {
-            const a = appointments.find(x => x.id === currentModalId);
+        async function confirmCancelAppointment() {
+            const a = appointmentsAll.find(x => x.id === currentModalId);
             if (!a) return;
 
             const checkbox = document.getElementById('cancel-reason-check');
@@ -1267,12 +1233,19 @@
                 showModal('Aviso', 'Por favor, escreva o motivo do cancelamento.');
                 return;
             }
+            const reason = checkbox.checked ? reasonText : '';
 
-            a.cancelReason = checkbox.checked ? reasonText : '';
-            a.cancelReasonAuthor = checkbox.checked ? 'Psicólogo' : '';
-            closeCancelModal();
-            closeAppointmentModal();
-            cancelAppointment(currentModalId);
+            try {
+                await InspirareAuth.api(`/appointments/${a.id}/cancel`, {
+                    method: 'POST',
+                    body: { reason },
+                });
+                closeCancelModal();
+                closeAppointmentModal();
+                await loadAppointments();
+            } catch (e) {
+                showModal('Erro', e.message || 'Não foi possível cancelar a consulta.');
+            }
         }
 
         let currentAnnotationId = null;
@@ -1285,7 +1258,7 @@
         let annotationPage = 0;
 
         function openAnnotations(id) {
-            const a = appointments.find(x => x.id === id);
+            const a = appointmentsAll.find(x => x.id === id);
             if (!a) return;
             currentAnnotationId = id;
 
@@ -1299,7 +1272,8 @@
             document.getElementById('anotacoes-patient-name').textContent = a.patient;
             annotationPage = 0;
 
-            renderAnnotations(a.annotations);
+            // API ainda não tem annotations; cai no empty state.
+            renderAnnotations(a.annotations || []);
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
@@ -1315,7 +1289,7 @@
             });
             document.getElementById('sort-dropdown-menu').classList.remove('open');
 
-            const a = appointments.find(x => x.id === currentAnnotationId);
+            const a = appointmentsAll.find(x => x.id === currentAnnotationId);
             if (a) {
                 renderAnnotations(a.annotations);
             }
@@ -1456,7 +1430,7 @@
                 showModal('Aviso', 'Escreva algo antes de salvar.');
                 return;
             }
-            const a = appointments.find(x => x.id === currentAnnotationId);
+            const a = appointmentsAll.find(x => x.id === currentAnnotationId);
             if (!a) return;
 
             const date = document.getElementById('new-note-date').value;
@@ -1534,7 +1508,7 @@
 
             note.text = newText;
 
-            const a = appointments.find(x => x.id === currentAnnotationId);
+            const a = appointmentsAll.find(x => x.id === currentAnnotationId);
             if (a) {
                 renderAnnotations(a.annotations);
             }
@@ -1552,7 +1526,7 @@
                 'Confirmar exclusão',
                 'Tem certeza que deseja deletar esta anotação?',
                 () => {
-                    const a = appointments.find(x => x.id === currentAnnotationId);
+                    const a = appointmentsAll.find(x => x.id === currentAnnotationId);
                     if (!a) return;
 
                     a.annotations = a.annotations.filter(n => n !== note);
@@ -1877,16 +1851,21 @@
         }
 
         function viewDetails(id) {
-            const a = appointments.find(x => x.id === id);
+            const a = appointmentsAll.find(x => x.id === id);
             if (a) {
+                const modality = modalityLabel(a.modality);
                 showModal('Detalhes da Consulta',
-                    `Paciente: ${a.patient}\nData: ${formatDate(a.date)} às ${a.time}\nTipo: ${a.type}\nModalidade: ${a.modality}\nStatus: ${getStatusLabel(a.status)}`
+                    `Paciente: ${a.patient}\n` +
+                    `Data: ${formatDate(a.date)} às ${a.time}\n` +
+                    `Plano: ${a.plan_title || '—'}\n` +
+                    `Modalidade: ${modality}\n` +
+                    `Status: ${getStatusLabel(a.status === 'scheduled' ? 'confirmed' : a.status)}`
                 );
             }
         }
 
         function updateAppointmentBadge() {
-            const count = appointments.filter(a => a.status === 'confirmed').length;
+            const count = appointmentsAll.filter(a => a.status === 'scheduled').length;
             const badge = document.getElementById('badge-consultas');
             if (badge) {
                 badge.textContent = count;

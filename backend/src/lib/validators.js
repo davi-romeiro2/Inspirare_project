@@ -94,3 +94,46 @@ export function validateResetPassword(body) {
     data: { resetToken, newPassword },
   };
 }
+
+// --- Appointments --------------------------------------------------------
+
+const APPT_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const APPT_TIME_RE = /^\d{2}:\d{2}$/;
+const APPT_SLUG_RE = /^[a-z0-9-]{1,60}$/;
+const APPT_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function validateCreateAppointment(body) {
+  const errors = {};
+  const professionalId = (body?.professional_id ?? '').toString().trim();
+  const planSlug = (body?.plan_slug ?? '').toString().trim();
+  const date = (body?.date ?? '').toString().trim();
+  const time = (body?.time ?? '').toString().trim();
+  const modality = (body?.modality ?? '').toString();
+  const paymentMethod = (body?.payment_method ?? '').toString();
+
+  if (!APPT_UUID_RE.test(professionalId)) errors.professional_id = 'must be a uuid';
+  if (!APPT_SLUG_RE.test(planSlug)) errors.plan_slug = 'invalid';
+  if (!APPT_DATE_RE.test(date)) errors.date = 'must be YYYY-MM-DD';
+  if (!APPT_TIME_RE.test(time)) errors.time = 'must be HH:MM';
+  if (modality !== 'online' && modality !== 'presencial') {
+    errors.modality = 'must be online|presencial';
+  }
+  if (paymentMethod !== 'pix' && paymentMethod !== 'card') {
+    errors.payment_method = 'must be pix|card';
+  }
+
+  return {
+    ok: Object.keys(errors).length === 0,
+    errors,
+    data: { professionalId, planSlug, date, time, modality, paymentMethod },
+  };
+}
+
+export function validateCancelAppointment(body) {
+  const errors = {};
+  // reason é opcional: vazio/null é aceito (botão "Prefiro não dizer").
+  const reasonRaw = body?.reason;
+  const reason = (reasonRaw == null ? '' : String(reasonRaw)).trim();
+  if (reason.length > 500) errors.reason = 'must be <= 500 chars';
+  return { ok: Object.keys(errors).length === 0, errors, data: { reason } };
+}

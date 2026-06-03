@@ -358,118 +358,7 @@
             </div>
 
             <div id="appts-list">
-                <!-- Agendadas -->
-                <div class="appointment-item" data-status="scheduled">
-                    <div class="appointment-info">
-                        <h4>Consulta Online - Dra. Ana Beatriz</h4>
-                        <p>12 de Maio, 2026 - 14:00</p>
-                    </div>
-                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
-                </div>
-                <div class="appointment-item" data-status="scheduled">
-                    <div class="appointment-info">
-                        <h4>Consulta Presencial - Dr. Marcos Vinícius</h4>
-                        <p>15 de Maio, 2026 - 10:00</p>
-                    </div>
-                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
-                </div>
-                <div class="appointment-item" data-status="scheduled">
-                    <div class="appointment-info">
-                        <h4>Consulta Online - Dra. Cláudia Luna</h4>
-                        <p>18 de Maio, 2026 - 16:00</p>
-                    </div>
-                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
-                </div>
-                <div class="appointment-item" data-status="scheduled">
-                    <div class="appointment-info">
-                        <h4>Consulta Presencial - Dr. Ricardo Souza</h4>
-                        <p>20 de Maio, 2026 - 09:00</p>
-                    </div>
-                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
-                </div>
-                <div class="appointment-item" data-status="scheduled">
-                    <div class="appointment-info">
-                        <h4>Consulta Presencial - Dr. Ricardo Souza</h4>
-                        <p>20 de Maio, 2026 - 09:00</p>
-                    </div>
-                    <button class="btn-cancel" onclick="cancelAppt(this)">Cancelar</button>
-                </div>
-
-                <!-- Concluídas -->
-                <div class="appointment-item" data-status="completed">
-                    <div class="appointment-info">
-                        <h4>Consulta Online - Dra. Juliana Costa</h4>
-                        <p>1 de Maio, 2026 - 11:00</p>
-                    </div>
-                </div>
-                <div class="appointment-item" data-status="completed">
-                    <div class="appointment-info">
-                        <h4>Consulta Presencial - Dr. Fernando Lima</h4>
-                        <p>3 de Maio, 2026 - 14:00</p>
-                    </div>
-                </div>
-                <div class="appointment-item" data-status="completed">
-                    <div class="appointment-info">
-                        <h4>Consulta Online - Dra. Bianca Mendes</h4>
-                        <p>5 de Maio, 2026 - 15:00</p>
-                    </div>
-                </div>
-                <div class="appointment-item" data-status="completed">
-                    <div class="appointment-info">
-                        <h4>Consulta Presencial - Dra. Ana Beatriz</h4>
-                        <p>7 de Maio, 2026 - 10:00</p>
-                    </div>
-                </div>
-                <div class="appointment-item" data-status="completed">
-                    <div class="appointment-info">
-                        <h4>Consulta Online - Dr. Marcos Vinícius</h4>
-                        <p>8 de Maio, 2026 - 17:00</p>
-                    </div>
-                </div>
-                <div class="appointment-item" data-status="completed">
-                    <div class="appointment-info">
-                        <h4>Consulta Presencial - Dra. Cláudia Luna</h4>
-                        <p>9 de Maio, 2026 - 13:00</p>
-                    </div>
-                </div>
-                <div class="appointment-item" data-status="completed">
-                    <div class="appointment-info">
-                        <h4>Consulta Online - Dr. Ricardo Souza</h4>
-                        <p>10 de Maio, 2026 - 09:00</p>
-                    </div>
-                </div>
-
-                <!-- Canceladas -->
-                <div class="appointment-item" data-status="cancelled">
-                    <div class="appointment-info">
-                        <h4>Consulta Online - Dra. Juliana Costa</h4>
-                        <p>22 de Abril, 2026 - 11:00</p>
-                    </div>
-                </div>
-                <div class="appointment-item" data-status="cancelled">
-                    <div class="appointment-info">
-                        <h4>Consulta Presencial - Dr. Fernando Lima</h4>
-                        <p>24 de Abril, 2026 - 14:00</p>
-                    </div>
-                </div>
-                <div class="appointment-item" data-status="cancelled">
-                    <div class="appointment-info">
-                        <h4>Consulta Online - Dra. Bianca Mendes</h4>
-                        <p>26 de Abril, 2026 - 16:00</p>
-                    </div>
-                </div>
-                <div class="appointment-item" data-status="cancelled">
-                    <div class="appointment-info">
-                        <h4>Consulta Presencial - Dra. Ana Beatriz</h4>
-                        <p>28 de Abril, 2026 - 10:00</p>
-                    </div>
-                </div>
-                <div class="appointment-item" data-status="cancelled">
-                    <div class="appointment-info">
-                        <h4>Consulta Online - Dr. Marcos Vinícius</h4>
-                        <p>29 de Abril, 2026 - 15:00</p>
-                    </div>
-                </div>
+                <!-- Rendered by renderAppointmentsList() from /api/appointments -->
             </div>
 
             <div id="appts-pagination" class="appts-pagination" style="display:none;">
@@ -488,6 +377,22 @@
            ========================= */
         let currentScheduleStep = 1;
         let parcelasOpen = false;
+
+        // Estado do fluxo de agendamento (steps 1-4). Carregado em
+        // selectPaymentType / selectPsych / selectConsultationType /
+        // selectPaymentMethod e enviado em confirmAppointment().
+        let userSelectedProfessionalId = null;
+        let userSelectedPlanSlug = null;
+        let userSelectedPlanPrice = null;
+        let userSelectedModality = null;
+        let userSelectedPaymentMethod = null;
+
+        // Estado da lista de Minhas Consultas.
+        let apptsAll = [];
+        let apptsLoading = false;
+        let apptsLoadedAt = 0;
+        let apptsFetchGen = 0;
+        let professionalsCache = [];   // usado para resolver nome a partir do id
 
         let tutorialCurrentStep = 0;
         let tutorialSteps = [];
@@ -601,17 +506,30 @@
         /* =========================
            PROFISSIONAIS - PAGINAÇÃO
            ========================= */
-        const professionals = [
-            { name: 'Dra. Ana Beatriz', specialty: 'Especialista em Ansiedade e Terapia Cognitivo-Comportamental.' },
-            { name: 'Dr. Marcos Vinícius', specialty: 'Foco em Depressão, Luto e Desenvolvimento Pessoal.' },
-            { name: 'Dra. Cláudia Luna', specialty: 'Experiente em Relacionamentos e Terapia Sistêmica.' },
-            { name: 'Dr. Ricardo Souza', specialty: 'Especialista em TDAH e Terapia Infantil.' },
-            { name: 'Dra. Juliana Costa', specialty: 'Foco em Trauma, PTSD e Terapia EMDR.' },
-            { name: 'Dr. Fernando Lima', specialty: 'Especialista em Terapia de Casal e Familiar.' },
-            { name: 'Dra. Bianca Mendes', specialty: 'Experiente em Burnout e Qualidade de Vida.' }
-        ];
+        // Carregado de GET /api/appointments/professionals.
+        // Cada item: { id, fullname, specialty }.
+        let professionals = [];
         let psychCurrentPage = 0;
         let psychActiveList = null; // null = lista completa; array = lista filtrada
+
+        async function loadProfessionals() {
+            try {
+                const res = await InspirareAuth.api('/appointments/professionals');
+                professionals = (res && res.professionals) || [];
+                // Cache para resolver nome a partir do id na lista de consultas.
+                professionalsCache = professionals.slice();
+            } catch (e) {
+                console.warn('[professionals] load failed:', e?.message || e);
+                professionals = [];
+            }
+            // Se o step 2 estiver visível, re-renderiza.
+            const step2 = document.getElementById('sched-step-2');
+            if (step2 && step2.style.display !== 'none') {
+                psychCurrentPage = 0;
+                psychActiveList = null;
+                renderProfessionalsPage();
+            }
+        }
 
         function getItemsPerPage() {
             return window.innerWidth >= 1024 ? 6 : 2;
@@ -630,10 +548,11 @@
             pageItems.forEach(prof => {
                 const card = document.createElement('div');
                 card.className = 'psych-card';
+                card.dataset.id = prof.id || '';
                 card.onclick = function () { selectPsych(this); };
                 card.innerHTML = `
                     <div class="psych-photo-placeholder">FOTO</div>
-                    <h4>${prof.name}</h4>
+                    <h4>${prof.fullname}</h4>
                     <p>${prof.specialty}</p>
                 `;
                 grid.appendChild(card);
@@ -657,7 +576,7 @@
             const query = document.getElementById('psych-search').value.toLowerCase().trim();
             if (query) {
                 psychActiveList = professionals.filter(prof =>
-                    prof.name.toLowerCase().includes(query) ||
+                    prof.fullname.toLowerCase().includes(query) ||
                     prof.specialty.toLowerCase().includes(query)
                 );
             } else {
@@ -870,7 +789,7 @@
         /* =========================
            FLUXOS (HOME / SCHEDULE / APPOINTMENTS)
            ========================= */
-        function openFlow(flow) {
+        async function openFlow(flow) {
             document.getElementById('view-home').style.display = 'none';
             const container = document.getElementById('flow-' + flow);
             container.classList.add('active');
@@ -879,6 +798,7 @@
                 document.getElementById('appts-search').value = '';
                 apptsSearchQuery = '';
                 const firstBtn = document.querySelector('#flow-appointments .filter-btn[data-filter="scheduled"]');
+                await loadAppointments();
                 filterAppts('scheduled', firstBtn);
             }
         }
@@ -920,6 +840,12 @@
             document.querySelectorAll('.option-card.selected').forEach(c => c.classList.remove('selected'));
             userSelectedDateKey = null;
             userSelectedTime = null;
+            // Limpa estado de seleção de plano/profissional/pagamento.
+            userSelectedProfessionalId = null;
+            userSelectedPlanSlug = null;
+            userSelectedPlanPrice = null;
+            userSelectedModality = null;
+            userSelectedPaymentMethod = null;
             // Limpa inputs do cartão
             ['card-name', 'card-number', 'card-expiry', 'card-cvv'].forEach(function(id) {
                 const el = document.getElementById(id);
@@ -964,12 +890,18 @@
 
         function selectPaymentType(type, price) {
             // Step 1 -> 2 (psicólogo). O pagamento foi pro final do fluxo.
+            userSelectedPlanSlug = type;
+            userSelectedPlanPrice = price;
+            userSelectedProfessionalId = null;
             goToScheduleStep(2);
+            // Carrega profissionais (async; renderiza quando voltar).
+            loadProfessionals();
         }
 
         function selectPaymentMethod(method) {
             // Step 4: mostra o detalhe do método escolhido (Pix ou Cartão) e
             // o botão "Pagar e Confirmar Agendamento".
+            userSelectedPaymentMethod = method;
             document.getElementById('pix-detail').style.display = method === 'pix' ? 'flex' : 'none';
             document.getElementById('card-detail').style.display = method === 'card' ? 'block' : 'none';
             document.getElementById('final-confirm-btn').style.display = 'block';
@@ -1004,11 +936,15 @@
             element.classList.add('selected');
             const btn = document.getElementById('next-to-date-btn');
             if (btn) btn.style.display = 'block';
+            // O data-id é setado em renderProfessionalsPage a partir do
+            // payload da API. Sem id, a consulta não pode ser criada.
+            userSelectedProfessionalId = element.dataset.id || null;
         }
 
         function selectConsultationType(element, type) {
             document.querySelectorAll('.consultation-type-card').forEach(card => card.classList.remove('selected'));
             element.classList.add('selected');
+            userSelectedModality = type;
         }
 
         function generateDates() {
@@ -1261,7 +1197,52 @@
             if (next) next.addEventListener('click', function() { userNavigateCalendar(1); });
         }
 
-        function confirmAppointment() {
+        async function confirmAppointment() {
+            // Validação client-side rápida: se algum passo ficou em branco
+            // (ex: usuário navegou direto pro step 4 sem preencher).
+            if (!userSelectedProfessionalId || !userSelectedPlanSlug
+                || !userSelectedDateKey || !userSelectedTime
+                || !userSelectedModality || !userSelectedPaymentMethod) {
+                showModal('Atenção', 'Preencha todos os passos do agendamento antes de confirmar.');
+                return;
+            }
+
+            // Desabilita o botão pra evitar double-click enquanto o POST roda.
+            const btn = document.getElementById('final-confirm-btn');
+            const originalText = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = 'Confirmando…'; }
+
+            const payload = {
+                professional_id: userSelectedProfessionalId,
+                plan_slug: userSelectedPlanSlug,
+                date: userSelectedDateKey,
+                time: userSelectedTime,
+                modality: userSelectedModality,
+                payment_method: userSelectedPaymentMethod,
+            };
+
+            let created;
+            try {
+                const res = await InspirareAuth.api('/appointments', {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                });
+                created = res && res.appointment;
+            } catch (e) {
+                if (btn) { btn.disabled = false; btn.textContent = originalText; }
+                const msg = (e && e.message) || 'Não foi possível confirmar o agendamento.';
+                showModal('Erro', msg);
+                return;
+            }
+            if (btn) { btn.disabled = false; btn.textContent = originalText; }
+
+            // Pre-warm da lista de Minhas Consultas: quando o user abrir
+            // o flow "appointments", os dados já estão lá.
+            loadAppointments();
+
+            // Reset do estado do fluxo de agendamento.
+            resetScheduleFlow();
+
             // Se o tutorial está ativo, closeTutorial() cuida de mostrar o
             // balão "Precisa de ajuda?" — então finishFlow não deve duplicar.
             const finishFlow = () => {
@@ -1314,6 +1295,99 @@
         let apptsPageState = { scheduled: 0, completed: 0, cancelled: 0 };
         let apptsCurrentFilter = 'scheduled';
         let apptsSearchQuery = '';
+
+        /* =========================
+           MINHAS CONSULTAS — BACKEND
+           ========================= */
+        const APPT_MONTHS_PT = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+
+        function formatPtDate(dateKey) {
+            // dateKey = 'YYYY-MM-DD'
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return dateKey;
+            const [y, m, d] = dateKey.split('-').map(Number);
+            return `${d} de ${APPT_MONTHS_PT[m - 1]}, ${y}`;
+        }
+
+        async function loadAppointments() {
+            if (apptsLoading) return;
+            const myGen = ++apptsFetchGen;
+            apptsLoading = true;
+            try {
+                const res = await InspirareAuth.api('/appointments');
+                if (myGen !== apptsFetchGen) return;   // chamada mais nova começou
+                apptsAll = (res && res.appointments) || [];
+                apptsLoadedAt = Date.now();
+            } catch (e) {
+                if (myGen !== apptsFetchGen) return;
+                console.warn('[appointments] load failed:', e?.message || e);
+                apptsAll = [];
+            } finally {
+                if (myGen === apptsFetchGen) apptsLoading = false;
+            }
+            if (myGen === apptsFetchGen) renderAppointmentsList();
+        }
+
+        function renderAppointmentsList() {
+            const list = document.getElementById('appts-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            if (!apptsAll.length) {
+                const empty = document.createElement('div');
+                empty.className = 'appts-empty';
+                empty.style.padding = '24px';
+                empty.style.textAlign = 'center';
+                empty.style.color = 'var(--accent-color)';
+                empty.textContent = 'Você ainda não tem consultas.';
+                list.appendChild(empty);
+                applyApptsPagination(apptsCurrentFilter);
+                return;
+            }
+
+            apptsAll.forEach((a) => {
+                const prof = professionalsCache.find((p) => p.id === a.professional_id);
+                const modalityLabel = a.modality === 'online' ? 'Consulta Online' : 'Consulta Presencial';
+                const profSuffix = prof ? ' - ' + prof.fullname : '';
+                const titleText = modalityLabel + profSuffix;
+
+                const item = document.createElement('div');
+                item.className = 'appointment-item';
+                item.dataset.id = a.id;
+                item.dataset.status = a.status;
+                item.dataset.date = a.date_key;
+                item.dataset.time = a.time_slot;
+                item.dataset.modality = a.modality;
+                item.dataset.planTitle = a.plan_title || '';
+                item.dataset.profName = prof ? prof.fullname : '';
+                if (a.cancel_reason) item.dataset.cancelReason = a.cancel_reason;
+                item.dataset.cancelAuthor = a.cancel_reason ? 'Paciente' : '';
+
+                const info = document.createElement('div');
+                info.className = 'appointment-info';
+                const h4 = document.createElement('h4');
+                h4.textContent = titleText;
+                const p = document.createElement('p');
+                p.textContent = `${formatPtDate(a.date_key)} - ${a.time_slot}`;
+                info.appendChild(h4);
+                info.appendChild(p);
+                item.appendChild(info);
+
+                if (a.status === 'scheduled') {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn-cancel';
+                    cancelBtn.textContent = 'Cancelar';
+                    cancelBtn.onclick = function () { cancelAppt(this); };
+                    item.appendChild(cancelBtn);
+                }
+
+                list.appendChild(item);
+            });
+
+            applyApptsPagination(apptsCurrentFilter);
+        }
 
         function getFilteredAppts(status) {
             const allItems = Array.from(document.querySelectorAll('.appointment-item'))
@@ -1738,22 +1812,58 @@
             return value;
         }
 
-        function submitCancelReason() {
+        async function submitCancelReason() {
             if (!cancelReasonTargetBtn) return;
             const item = cancelReasonTargetBtn.closest('.appointment-item');
+            const id = item && item.dataset.id;
             const reason = getCancelReason();
-            if (reason) {
-                item.dataset.cancelReason = reason;
+
+            // Defensive: linha que não veio da API (ex: clone de tutorial
+            // sem id) não pode ser cancelada via backend.
+            if (!id) {
+                closeCancelReasonModal();
+                return;
+            }
+
+            // Desabilita ambos botões do modal pra evitar double-submit.
+            const confirmBtn = document.querySelector('#cancel-reason-modal .cancel-reason-actions .btn-confirm-cancel');
+            const backBtn = document.querySelector('#cancel-reason-modal .cancel-reason-actions .btn-modal-secondary');
+            if (confirmBtn) confirmBtn.disabled = true;
+            if (backBtn) backBtn.disabled = true;
+
+            let updated;
+            try {
+                const res = await InspirareAuth.api('/appointments/' + encodeURIComponent(id) + '/cancel', {
+                    method: 'POST',
+                    body: JSON.stringify({ reason }),
+                });
+                updated = res && res.appointment;
+            } catch (e) {
+                if (confirmBtn) confirmBtn.disabled = false;
+                if (backBtn) backBtn.disabled = false;
+                const msg = (e && e.message) || 'Não foi possível cancelar a consulta.';
+                showModal('Erro', msg);
+                return;
+            }
+
+            // Sucesso: atualiza in-memory + DOM.
+            if (updated) {
+                const idx = apptsAll.findIndex((a) => a.id === updated.id);
+                if (idx >= 0) apptsAll[idx] = updated;
+            }
+            item.dataset.status = 'cancelled';
+            if (updated && updated.cancel_reason) {
+                item.dataset.cancelReason = updated.cancel_reason;
                 item.dataset.cancelAuthor = 'Paciente';
             } else {
                 delete item.dataset.cancelReason;
                 delete item.dataset.cancelAuthor;
             }
-            item.dataset.status = 'cancelled';
             const btnCancel = item.querySelector('.btn-cancel');
-            if (btnCancel) btnCancel.style.display = 'none';
-            const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
+            if (btnCancel) btnCancel.remove();
+
             apptsPageState.scheduled = 0;
+            const activeBtn = document.querySelector('#flow-appointments .filter-btn.active');
             filterAppts('scheduled', activeBtn);
             closeCancelReasonModal();
             // Mostra modal de sucesso
@@ -1896,7 +2006,7 @@
                         const query = document.getElementById('psych-search').value.toLowerCase().trim();
                         if (query) {
                             const filtered = professionals.filter(prof =>
-                                prof.name.toLowerCase().includes(query) ||
+                                prof.fullname.toLowerCase().includes(query) ||
                                 prof.specialty.toLowerCase().includes(query)
                             );
                             psychActiveList = filtered.length > 0 ? filtered : null;
